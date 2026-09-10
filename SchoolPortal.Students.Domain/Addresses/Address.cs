@@ -1,0 +1,72 @@
+using SchoolPortal.SharedKernel.Results;
+using SchoolPortal.Students.Domain.Students;
+
+namespace SchoolPortal.Students.Domain.Addresses;
+
+public sealed class Address
+{
+    public string City { get; private set; } = null!;
+    public string State { get; private set; } = null!;
+    public string ZipCode { get; private set; } = null!;
+    public string Country { get; private set; } = null!;
+    public int BuildingNumber { get; private set; }
+
+    private Address() {}
+
+    private Address(
+        string city,
+        string state,
+        string zipCode,
+        string country,
+        int buildingNumber)
+    {
+        City = city;
+        State = state;
+        ZipCode = zipCode;
+        Country = country;
+        BuildingNumber = buildingNumber;
+    }
+
+    public static Result<Address> Create(
+        string city,
+        string state,
+        string zipCode,
+        string country,
+        int buildingNumber)
+    {
+        if (string.IsNullOrWhiteSpace(city) ||
+            city.Trim().Length > Constants.MaxCityLength)
+        {
+            return Result<Address>.Failure(AddressErrors.InvalidCity);
+        }
+
+        if (string.IsNullOrWhiteSpace(state) ||
+            state.Trim().Length > Constants.MaxStateLength)
+        {
+            return Result<Address>.Failure(AddressErrors.InvalidState);
+        }
+
+        if (string.IsNullOrWhiteSpace(zipCode) ||
+            zipCode.Trim().Length > Constants.MaxZipCodeLength)
+        {
+            return Result<Address>.Failure(AddressErrors.InvalidZipCode);
+        }
+
+        if (string.IsNullOrWhiteSpace(country) ||
+            country.Trim().Length > Constants.MaxCountryLength)
+        {
+            return Result<Address>.Failure(AddressErrors.InvalidCountry);
+        }
+
+        if (buildingNumber <= 0)
+            return Result<Address>.Failure(AddressErrors.InvalidBuildingNumber);
+
+        return Result<Address>.Success(
+            new Address(
+                city.Trim(),
+                state.Trim(),
+                zipCode.Trim(),
+                country.Trim(),
+                buildingNumber));
+    }
+}

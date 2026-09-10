@@ -1,0 +1,12 @@
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\bin\Debug\net10.0\StudentPortal.Grades.Application.deps.json
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\bin\Debug\net10.0\StudentPortal.Grades.Application.dll
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\bin\Debug\net10.0\StudentPortal.Grades.Application.pdb
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\obj\Debug\net10.0\StudentPortal.Grades.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\obj\Debug\net10.0\StudentPortal.Grades.Application.AssemblyInfoInputs.cache
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\obj\Debug\net10.0\StudentPortal.Grades.Application.AssemblyInfo.cs
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\obj\Debug\net10.0\StudentPortal.Grades.Application.csproj.CoreCompileInputs.cache
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\obj\Debug\net10.0\StudentPortal.Grades.Application.sourcelink.json
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\obj\Debug\net10.0\StudentPortal.Grades.Application.dll
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\obj\Debug\net10.0\refint\StudentPortal.Grades.Application.dll
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\obj\Debug\net10.0\StudentPortal.Grades.Application.pdb
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Application\obj\Debug\net10.0\ref\StudentPortal.Grades.Application.dll

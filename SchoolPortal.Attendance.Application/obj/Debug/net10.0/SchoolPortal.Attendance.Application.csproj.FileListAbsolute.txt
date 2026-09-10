@@ -1,0 +1,12 @@
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\bin\Debug\net10.0\SchoolPortal.Attendance.Application.deps.json
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\bin\Debug\net10.0\SchoolPortal.Attendance.Application.dll
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\bin\Debug\net10.0\SchoolPortal.Attendance.Application.pdb
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\obj\Debug\net10.0\SchoolPortal.Attendance.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\obj\Debug\net10.0\SchoolPortal.Attendance.Application.AssemblyInfoInputs.cache
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\obj\Debug\net10.0\SchoolPortal.Attendance.Application.AssemblyInfo.cs
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\obj\Debug\net10.0\SchoolPortal.Attendance.Application.csproj.CoreCompileInputs.cache
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\obj\Debug\net10.0\SchoolPortal.Attendance.Application.sourcelink.json
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\obj\Debug\net10.0\SchoolPortal.Attendance.Application.dll
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\obj\Debug\net10.0\refint\SchoolPortal.Attendance.Application.dll
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\obj\Debug\net10.0\SchoolPortal.Attendance.Application.pdb
+C:\Users\SH\RiderProjects\SchoolPortal\SchoolPortal.Attendance.Application\obj\Debug\net10.0\ref\SchoolPortal.Attendance.Application.dll

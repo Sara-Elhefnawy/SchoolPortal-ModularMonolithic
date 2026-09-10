@@ -1,0 +1,16 @@
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\bin\Debug\net10.0\StudentPortal.Grades.Domain.deps.json
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\bin\Debug\net10.0\StudentPortal.Grades.Domain.dll
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\bin\Debug\net10.0\StudentPortal.Grades.Domain.pdb
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\bin\Debug\net10.0\SchoolPortal.SharedKernel.dll
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\bin\Debug\net10.0\SchoolPortal.SharedKernel.pdb
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\StudentPortal.Grades.Domain.csproj.AssemblyReference.cache
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\StudentPortal.Grades.Domain.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\StudentPortal.Grades.Domain.AssemblyInfoInputs.cache
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\StudentPortal.Grades.Domain.AssemblyInfo.cs
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\StudentPortal.Grades.Domain.csproj.CoreCompileInputs.cache
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\StudentPortal.Grades.Domain.sourcelink.json
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\StudentP.19231F85.Up2Date
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\StudentPortal.Grades.Domain.dll
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\refint\StudentPortal.Grades.Domain.dll
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\StudentPortal.Grades.Domain.pdb
+C:\Users\SH\RiderProjects\SchoolPortal\StudentPortal.Grades.Domain\obj\Debug\net10.0\ref\StudentPortal.Grades.Domain.dll
