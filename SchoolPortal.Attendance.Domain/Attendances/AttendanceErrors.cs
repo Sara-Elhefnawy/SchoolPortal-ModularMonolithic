@@ -15,7 +15,4 @@ public static class AttendanceErrors
 
     public static readonly Error InvalidStatus =
         Error.Validation("Attendance.InvalidStatus", "Status is incorrect.");
-
-    public static readonly Error InvalidDate =
-        Error.Validation("Attendance.InvalidDate", "Date is required.");
 }

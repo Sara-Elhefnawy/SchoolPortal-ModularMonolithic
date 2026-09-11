@@ -1,6 +1,6 @@
 using SchoolPortal.Students.Application.Dtos;
 using Microsoft.EntityFrameworkCore;
-using SchoolPortal.Students.Application.Abstractions;
+using SchoolPortal.Students.Application.Directories;
 
 namespace SchoolPortal.Students.Infrastructure.Directories;
 
