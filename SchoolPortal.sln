@@ -16,11 +16,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.ArchTests", "S
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Attendance", "Attendance", "{07FA53F8-673D-4F4D-9026-89A3364097DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.Attendance.Domain", "SchoolPortal.Attendance.Domain\SchoolPortal.Attendance.Domain.csproj", "{CE48362A-B5C3-4226-8F52-4F1BBCCC2C0A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.Attendances.Domain", "SchoolPortal.Attendances.Domain\SchoolPortal.Attendances.Domain.csproj", "{CE48362A-B5C3-4226-8F52-4F1BBCCC2C0A}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.Attendance.Infrastructure", "SchoolPortal.Attendance.Infrastructure\SchoolPortal.Attendance.Infrastructure.csproj", "{D2F7A9BA-8BFC-4A85-9879-C32979EE43E7}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.Attendances.Infrastructure", "SchoolPortal.Attendances.Infrastructure\SchoolPortal.Attendances.Infrastructure.csproj", "{D2F7A9BA-8BFC-4A85-9879-C32979EE43E7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.Attendance.Application", "SchoolPortal.Attendance.Application\SchoolPortal.Attendance.Application.csproj", "{BA489ADF-640B-452A-83A0-99AE319A22FE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.Attendances.Application", "SchoolPortal.Attendances.Application\SchoolPortal.Attendances.Application.csproj", "{BA489ADF-640B-452A-83A0-99AE319A22FE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Students", "Students", "{4A5AE69C-F17A-4DF3-A6BD-29014E0C5FF1}"
 EndProject
@@ -37,10 +37,6 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.Grades.Infrastructure", "SchoolPortal.Grades.Infrastructure\SchoolPortal.Grades.Infrastructure.csproj", "{3394571D-6713-4980-B641-EE29D2609399}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.Grades.Application", "SchoolPortal.Grades.Application\SchoolPortal.Grades.Application.csproj", "{8F8C23F8-E1F9-437A-8BD4-108B60192E0A}"
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "AcademicYear", "AcademicYear", "{5E663745-EE85-43A4-BDE4-A98E03421FCF}"
-EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SchoolPortal.AcademicYear.Domain", "SchoolPortal.AcademicYear.Domain\SchoolPortal.AcademicYear.Domain.csproj", "{AAC16E1C-0FB0-4DBB-98B8-AF53A544F183}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -96,10 +92,6 @@ Global
 		{8F8C23F8-E1F9-437A-8BD4-108B60192E0A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{8F8C23F8-E1F9-437A-8BD4-108B60192E0A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{8F8C23F8-E1F9-437A-8BD4-108B60192E0A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AAC16E1C-0FB0-4DBB-98B8-AF53A544F183}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AAC16E1C-0FB0-4DBB-98B8-AF53A544F183}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AAC16E1C-0FB0-4DBB-98B8-AF53A544F183}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AAC16E1C-0FB0-4DBB-98B8-AF53A544F183}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{0B458541-CC0B-408A-B2A9-976D76F4BED1} = {7229D345-715E-457C-AD64-ACF1D5D26B24}
@@ -119,7 +111,5 @@ Global
 		{E0AB1DD2-C9A7-4E28-863F-191D81EA6E52} = {25C2D389-17A9-4BA9-A99E-726DCB05983C}
 		{3394571D-6713-4980-B641-EE29D2609399} = {25C2D389-17A9-4BA9-A99E-726DCB05983C}
 		{8F8C23F8-E1F9-437A-8BD4-108B60192E0A} = {25C2D389-17A9-4BA9-A99E-726DCB05983C}
-		{5E663745-EE85-43A4-BDE4-A98E03421FCF} = {222FC0F5-FDE6-4C74-9AC3-40B985303810}
-		{AAC16E1C-0FB0-4DBB-98B8-AF53A544F183} = {5E663745-EE85-43A4-BDE4-A98E03421FCF}
 	EndGlobalSection
 EndGlobal

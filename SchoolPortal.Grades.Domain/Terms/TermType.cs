@@ -1,4 +1,4 @@
-namespace StudentPortal.Grades.Domain.Terms;
+namespace SchoolPortal.Grades.Domain.Terms;
 
 public enum TermType
 {

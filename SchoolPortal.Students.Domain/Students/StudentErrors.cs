@@ -18,9 +18,9 @@ public static class StudentErrors
     public static readonly Error InvalidDateOfBirth = Error.Validation("Student.InvalidDateOfBirth",
         "Date Of Birth is required and must be a valid date.");
 
-    public static readonly Error InvalidEnrollmentDate = Error.Validation("Student.InvalidEnrollmentDate",
-        "Enrollment Date is required and must be a valid date.");
+    public static readonly Error InvalidAdmissionDate = Error.Validation("Student.InvalidAdmissionDate",
+        "Admission Date is required and must be a valid date.");
 
     public static readonly Error InvalidGender = Error.Validation("Student.InvalidGender",
-        "Gender is required and must be male of female.");
+        "Gender is required and must be male or female.");
 }

@@ -1,7 +1,7 @@
 using SchoolPortal.SharedKernel;
 using SchoolPortal.SharedKernel.Results;
 
-namespace StudentPortal.Grades.Domain.Terms;
+namespace SchoolPortal.Grades.Domain.Terms;
 
 public sealed class Term : BaseEntity
 {

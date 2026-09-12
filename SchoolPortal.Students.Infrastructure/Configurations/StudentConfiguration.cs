@@ -37,11 +37,5 @@ public sealed class StudentConfiguration : IEntityTypeConfiguration<Student>
         builder.HasIndex(x => x.Email).IsUnique();
         
         builder.HasQueryFilter(u => !u.IsDeleted);
-        
-        // Added this cuz You currently have:
-        //   b.MigrationsHistoryTable("__EFMigrationsHistory", "students")
-        //      That controls the migration history table,
-        //      but it doesn't automatically mean your Students table goes into the students schema.
-        builder.ToTable("Students", "students");
     }
 }

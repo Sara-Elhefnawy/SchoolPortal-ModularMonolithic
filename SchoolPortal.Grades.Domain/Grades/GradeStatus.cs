@@ -1,4 +1,4 @@
-namespace StudentPortal.Grades.Domain.Grades;
+namespace SchoolPortal.Grades.Domain.Grades;
 
 public enum GradeStatus
 {

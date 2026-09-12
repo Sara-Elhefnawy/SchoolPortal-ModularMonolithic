@@ -1,7 +1,7 @@
 using SchoolPortal.SharedKernel;
 using SchoolPortal.SharedKernel.Results;
 
-namespace StudentPortal.Grades.Domain.Grades;
+namespace SchoolPortal.Grades.Domain.Grades;
 
 public class Grade : BaseEntity
 {

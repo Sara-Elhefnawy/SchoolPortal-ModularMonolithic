@@ -1,6 +1,6 @@
 using SchoolPortal.SharedKernel.Results.Errors;
 
-namespace StudentPortal.Grades.Domain.Terms;
+namespace SchoolPortal.Grades.Domain.Terms;
 
 public static class TermErrors
 {

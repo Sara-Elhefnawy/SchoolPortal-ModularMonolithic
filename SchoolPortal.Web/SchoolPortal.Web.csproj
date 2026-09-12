@@ -8,7 +8,8 @@
   </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\SchoolPortal.Attendance.Infrastructure\SchoolPortal.Attendance.Infrastructure.csproj" />
+      <ProjectReference Include="..\SchoolPortal.Attendances.Infrastructure\SchoolPortal.Attendances.Infrastructure.csproj" />
+      <ProjectReference Include="..\SchoolPortal.Grades.Infrastructure\SchoolPortal.Grades.Infrastructure.csproj" />
       <ProjectReference Include="..\SchoolPortal.Students.Infrastructure\SchoolPortal.Students.Infrastructure.csproj" />
     </ItemGroup>
 

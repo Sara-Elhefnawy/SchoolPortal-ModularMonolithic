@@ -14,10 +14,11 @@ public sealed class Student : BaseEntity
     public DateOnly DateOfBirth { get; private set; }
     public Gender Gender { get; private set; }
     public Address Address { get; private set; } = null!;
-    public DateOnly EnrollmentDate { get; private set; }
+    // the date this student was admitted to the school
+    public DateOnly AdmissionDate { get; private set; }
     public StudentStatus Status { get; private set; }
     
-    public Student() {}
+    private Student() {}
 
     private Student(
         string name,
@@ -26,7 +27,7 @@ public sealed class Student : BaseEntity
         Address address,
         DateOnly dateOfBirth,
         Gender gender,
-        DateOnly enrollmentDate)
+        DateOnly admissionDate)
     {
         Name = name;
         Email = email;
@@ -34,7 +35,7 @@ public sealed class Student : BaseEntity
         Address = address;
         DateOfBirth = dateOfBirth;
         Gender = gender;
-        EnrollmentDate = enrollmentDate;
+        AdmissionDate = admissionDate;
         Status = StudentStatus.Active;
     }
 
@@ -45,7 +46,7 @@ public sealed class Student : BaseEntity
         Address address,
         DateOnly dateOfBirth,
         Gender gender,
-        DateOnly enrollmentDate)
+        DateOnly admissionDate)
     {
         var validationResult = ValidateAll(
             name,
@@ -54,7 +55,7 @@ public sealed class Student : BaseEntity
             address,
             dateOfBirth,
             gender,
-            enrollmentDate);
+            admissionDate);
 
         if (validationResult.IsFailure)
             return Result<Student>.Failure(validationResult.Error);
@@ -66,7 +67,7 @@ public sealed class Student : BaseEntity
             address,
             dateOfBirth,
             gender,
-            enrollmentDate);
+            admissionDate);
 
         return Result<Student>.Success(student);
     }
@@ -78,7 +79,7 @@ public sealed class Student : BaseEntity
         Address address,
         DateOnly dateOfBirth,
         Gender gender,
-        DateOnly enrollmentDate)
+        DateOnly admissionDate)
     {
         var nameResult = ValidateName(name);
         if (nameResult.IsFailure)
@@ -100,9 +101,9 @@ public sealed class Student : BaseEntity
         if (dateOfBirthResult.IsFailure)
             return dateOfBirthResult;
         
-        var enrollmentDateResult = ValidateEnrollmentDate(enrollmentDate);
-        if (enrollmentDateResult.IsFailure)
-            return enrollmentDateResult;
+        var admissionDateResult = ValidateAdmissionDate(admissionDate);
+        if (admissionDateResult.IsFailure)
+            return admissionDateResult;
         
         var genderResult = ValidateGender(gender);
         if (genderResult.IsFailure)
@@ -111,8 +112,8 @@ public sealed class Student : BaseEntity
         return Result.Success();
     }
 
-    private static Result ValidateEnrollmentDate(DateOnly enrollmentDate)
-        => enrollmentDate > DateOnly.FromDateTime(DateTime.Now) ? Result.Failure(StudentErrors.InvalidEnrollmentDate) : Result.Success();
+    private static Result ValidateAdmissionDate(DateOnly admissionDate)
+        => admissionDate > DateOnly.FromDateTime(DateTime.Now) ? Result.Failure(StudentErrors.InvalidAdmissionDate) : Result.Success();
 
     private static Result ValidateName(string name)
     {

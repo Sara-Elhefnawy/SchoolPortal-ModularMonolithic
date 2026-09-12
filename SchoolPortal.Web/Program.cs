@@ -1,4 +1,5 @@
-using SchoolPortal.Attendance.Infrastructure;
+using SchoolPortal.Attendances.Infrastructure;
+using SchoolPortal.Grades.Infrastructure;
 using SchoolPortal.Students.Infrastructure;
 
 namespace SchoolPortal.Web;
@@ -12,7 +13,7 @@ public class Program
         // Add services to the container.
         builder.Services.AddControllersWithViews();
 
-        builder.Services.AddStudentsModule(builder.Configuration).AddAttendanceModule(builder.Configuration);
+        builder.Services.AddStudentsModule(builder.Configuration).AddAttendanceModule(builder.Configuration).AddGradesModule(builder.Configuration);
         
         var app = builder.Build();
 

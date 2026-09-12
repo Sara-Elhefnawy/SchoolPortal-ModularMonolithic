@@ -1,6 +1,6 @@
 using SchoolPortal.SharedKernel.Results.Errors;
 
-namespace StudentPortal.Grades.Domain.Grades;
+namespace SchoolPortal.Grades.Domain.Grades;
 
 public static class GradeErrors
 {
