@@ -72,6 +72,36 @@ public sealed class Student : BaseEntity
         return Result<Student>.Success(student);
     }
 
+    public Result UpdateEmail(string email)
+    {
+        var emailResult = ValidateEmail(email);
+        if (emailResult.IsFailure) return emailResult;
+
+        Email = email.Trim().ToLowerInvariant();
+        
+        return Result.Success();
+    }
+
+    public Result UpdatePhoneNumber(string phoneNumber)
+    {
+        var phoneResult = ValidatePhoneNumber(phoneNumber);
+        if (phoneResult.IsFailure) return phoneResult;
+
+        PhoneNumber = phoneNumber.Trim();
+
+        return Result.Success();
+    }
+
+    public Result UpdateAddress(Address address)
+    {
+        var addressResult = ValidateAddress(address);
+        if (addressResult.IsFailure) return addressResult;
+
+        Address.UpdateAddress(address);
+        
+        return Result.Success();
+    }
+
     private static Result ValidateAll(
         string name,
         string email,

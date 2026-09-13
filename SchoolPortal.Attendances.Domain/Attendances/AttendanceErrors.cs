@@ -15,4 +15,10 @@ public static class AttendanceErrors
 
     public static readonly Error InvalidNote =
         Error.Validation("Attendance.InvalidNote", "Note must be 250 characters or fewer.");
+
+    public static readonly Error AlreadyRecorded =
+        Error.Validation("Attendance.AlreadyRecorded", "attendance already recorded for the student id in this session.");
+
+    public static readonly Error NotFound =
+        Error.Validation("Attendance.NotFound", "attendance id id not found.");
 }

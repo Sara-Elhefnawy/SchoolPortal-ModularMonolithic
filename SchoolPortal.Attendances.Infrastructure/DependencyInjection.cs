@@ -1,8 +1,12 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SchoolPortal.Attendances.Application.Abstractions;
+using SchoolPortal.Attendances.Application.DbContexts;
+using SchoolPortal.Attendances.Application.Directories;
+using SchoolPortal.Attendances.Application.Features.Sessions.Command.Create;
 using SchoolPortal.Attendances.Infrastructure.Directories;
+using SchoolPortal.Attendances.Infrastructure.Persistence;
 
 namespace SchoolPortal.Attendances.Infrastructure;
 
@@ -19,6 +23,10 @@ public static class DependencyInjection
 
         services.AddScoped<IAttendanceDirectory, AttendanceDirectory>();
         
+        services.AddScoped<IAttendancesDbContext>(sp => sp.GetRequiredService<AttendancesDbContext>());
+
+        services.AddValidatorsFromAssembly(typeof(CreateSessionCommandValidator).Assembly);
+
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
             typeof(DependencyInjection).Assembly,
             typeof(IAttendanceDirectory).Assembly));

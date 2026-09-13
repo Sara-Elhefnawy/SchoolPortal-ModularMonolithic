@@ -1,6 +1,6 @@
 using SchoolPortal.Attendances.Domain.Attendances;
 
-namespace SchoolPortal.Attendances.Application.Abstractions;
+namespace SchoolPortal.Attendances.Application.Directories;
 
 public interface IAttendanceDirectory
 {

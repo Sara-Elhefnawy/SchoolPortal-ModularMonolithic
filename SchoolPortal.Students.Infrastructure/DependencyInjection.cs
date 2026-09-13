@@ -1,8 +1,12 @@
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SchoolPortal.Students.Application.DbContexts;
 using SchoolPortal.Students.Application.Directories;
+using SchoolPortal.Students.Application.Features.Students.Commands.Create;
 using SchoolPortal.Students.Infrastructure.Directories;
+using SchoolPortal.Students.Infrastructure.Persistence;
 
 namespace SchoolPortal.Students.Infrastructure;
 
@@ -22,10 +26,15 @@ public static class DependencyInjection
             typeof(DependencyInjection).Assembly,
             typeof(IStudentDirectory).Assembly));
 
-        // This is the ONE thing this module exposes to other modules.
-        // Grades will depend on this interface — never on StudentsDbContext directly.
-        services.AddScoped<IStudentDirectory, StudentDirectory>();
+        // The interface, not the concrete class — this is what makes the handler's
+        // constructor injection of IStudentsDbContext actually resolve to something.
+        services.AddScoped<IStudentsDbContext>(sp => sp.GetRequiredService<StudentsDbContext>());
 
+        services.AddScoped<IStudentDirectory, StudentDirectory>();
+        
+        // Registers every AbstractValidator<T> found in this assembly
+        services.AddValidatorsFromAssembly(typeof(CreateStudentCommandValidator).Assembly);
+        
         return services;
     }
 }

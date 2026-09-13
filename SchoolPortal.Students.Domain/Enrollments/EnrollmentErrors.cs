@@ -18,4 +18,10 @@ public static class EnrollmentErrors
 
     public static readonly Error InvalidTransitionToCompleted =
         Error.Validation("Enrollment.InvalidTransitionToCompleted", "Only an active enrollment can be completed.");
+    
+    public static readonly Error AlreadyEnrolled =
+        Error.Validation("Enrollment.AlreadyEnrolled", "Student already enrolled in the same course section.");
+    
+    public static readonly Error NotFound =
+        Error.Validation("Enrollment.NotFound", "Enrollment not found.");
 }

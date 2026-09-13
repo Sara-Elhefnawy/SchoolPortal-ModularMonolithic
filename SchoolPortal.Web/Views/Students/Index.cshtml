@@ -1,0 +1,171 @@
+@{
+    ViewData["Title"] = "Students";
+}
+
+<h1>Students</h1>
+
+<div class="accordion" id="studentsAccordion">
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#createStudentPanel">
+        Create Student
+      </button>
+    </h2>
+    <div id="createStudentPanel" class="accordion-collapse collapse show" data-bs-parent="#studentsAccordion">
+      <div class="accordion-body">
+        <form id="createStudentForm">
+          <div class="mb-3"><label class="form-label">Name</label><input class="form-control" name="name" required></div>
+          <div class="mb-3"><label class="form-label">Email</label><input class="form-control" type="email" name="email" required></div>
+          <div class="mb-3"><label class="form-label">Phone Number</label><input class="form-control" name="phoneNumber" required></div>
+          <div class="mb-3"><label class="form-label">Date of Birth</label><input class="form-control" type="date" name="dateOfBirth" required></div>
+          <div class="mb-3">
+            <label class="form-label">Gender</label>
+            <select class="form-select" name="gender">
+              <option value="0">Male</option>
+              <option value="1">Female</option>
+            </select>
+          </div>
+          <div class="mb-3"><label class="form-label">Admission Date</label><input class="form-control" type="date" name="admissionDate" required></div>
+          <div class="mb-3"><label class="form-label">City</label><input class="form-control" name="city" required></div>
+          <div class="mb-3"><label class="form-label">State</label><input class="form-control" name="state" required></div>
+          <div class="mb-3"><label class="form-label">Zip Code</label><input class="form-control" name="zipCode" required></div>
+          <div class="mb-3"><label class="form-label">Country</label><input class="form-control" name="country" required></div>
+          <div class="mb-3"><label class="form-label">Building Number</label><input class="form-control" type="number" min="1" name="buildingNumber" required></div>
+          <button type="submit" class="btn btn-primary">Create</button>
+          <pre class="alert mt-2 d-none" id="createStudentResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#updateContactPanel">
+        Update Contact Info
+      </button>
+    </h2>
+    <div id="updateContactPanel" class="accordion-collapse collapse" data-bs-parent="#studentsAccordion">
+      <div class="accordion-body">
+        <form id="updateContactForm">
+          <div class="mb-3"><label class="form-label">Student Id</label><input class="form-control" type="number" min="1" name="studentId" required></div>
+          <div class="mb-3"><label class="form-label">Email</label><input class="form-control" type="email" name="email" required></div>
+          <div class="mb-3"><label class="form-label">Phone Number</label><input class="form-control" name="phoneNumber" required></div>
+          <div class="mb-3"><label class="form-label">City</label><input class="form-control" name="city" required></div>
+          <div class="mb-3"><label class="form-label">State</label><input class="form-control" name="state" required></div>
+          <div class="mb-3"><label class="form-label">Zip Code</label><input class="form-control" name="zipCode" required></div>
+          <div class="mb-3"><label class="form-label">Country</label><input class="form-control" name="country" required></div>
+          <div class="mb-3"><label class="form-label">Building Number</label><input class="form-control" type="number" min="1" name="buildingNumber" required></div>
+          <button type="submit" class="btn btn-primary">Update</button>
+          <pre class="alert mt-2 d-none" id="updateContactResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#enrollPanel">
+        Enroll Student
+      </button>
+    </h2>
+    <div id="enrollPanel" class="accordion-collapse collapse" data-bs-parent="#studentsAccordion">
+      <div class="accordion-body">
+        <form id="enrollForm">
+          <div class="mb-3"><label class="form-label">Student Id</label><input class="form-control" type="number" min="1" name="studentId" required></div>
+          <div class="mb-3"><label class="form-label">Course Section Id</label><input class="form-control" type="number" min="1" name="courseSectionId" required></div>
+          <div class="mb-3"><label class="form-label">Date</label><input class="form-control" type="date" name="date" required></div>
+          <button type="submit" class="btn btn-primary">Enroll</button>
+          <pre class="alert mt-2 d-none" id="enrollResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#withdrawPanel">
+        Withdraw Enrollment
+      </button>
+    </h2>
+    <div id="withdrawPanel" class="accordion-collapse collapse" data-bs-parent="#studentsAccordion">
+      <div class="accordion-body">
+        <form id="withdrawForm">
+          <div class="mb-3"><label class="form-label">Enrollment Id</label><input class="form-control" type="number" min="1" name="enrollmentId" required></div>
+          <button type="submit" class="btn btn-warning">Withdraw</button>
+          <pre class="alert mt-2 d-none" id="withdrawResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#completePanel">
+        Complete Enrollment
+      </button>
+    </h2>
+    <div id="completePanel" class="accordion-collapse collapse" data-bs-parent="#studentsAccordion">
+      <div class="accordion-body">
+        <form id="completeForm">
+          <div class="mb-3"><label class="form-label">Enrollment Id</label><input class="form-control" type="number" min="1" name="enrollmentId" required></div>
+          <button type="submit" class="btn btn-success">Complete</button>
+          <pre class="alert mt-2 d-none" id="completeResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+@section Scripts {
+<script src="~/js/api-helpers.js" asp-append-version="true"></script>
+<script>
+  // Unhides the <pre> the first time a result actually needs to show —
+  // the static HTML version used a plain <div>, this uses <pre class="d-none">
+  // so it stays invisible until there's something to report, matching how
+  // Bootstrap alerts are meant to appear/disappear rather than sitting empty.
+  function show(el) { el.classList.remove('d-none'); }
+
+  document.getElementById('createStudentForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const body = formToObject(e.target, ['gender', 'buildingNumber']);
+    const el = document.getElementById('createStudentResult');
+    show(el);
+    callApi(el, 'POST', '/api/students', body);
+  });
+
+  document.getElementById('updateContactForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const body = formToObject(e.target, ['buildingNumber']);
+    const { studentId, ...rest } = body;
+    const el = document.getElementById('updateContactResult');
+    show(el);
+    callApi(el, 'PUT', `/api/students/${studentId}/contact-info`, rest);
+  });
+
+  document.getElementById('enrollForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const body = formToObject(e.target, ['studentId', 'courseSectionId']);
+    const el = document.getElementById('enrollResult');
+    show(el);
+    callApi(el, 'POST', '/api/enrollments', body);
+  });
+
+  document.getElementById('withdrawForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const { enrollmentId } = formToObject(e.target, ['enrollmentId']);
+    const el = document.getElementById('withdrawResult');
+    show(el);
+    callApi(el, 'POST', `/api/enrollments/${enrollmentId}/withdraw`);
+  });
+
+  document.getElementById('completeForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const { enrollmentId } = formToObject(e.target, ['enrollmentId']);
+    const el = document.getElementById('completeResult');
+    show(el);
+    callApi(el, 'POST', `/api/enrollments/${enrollmentId}/complete`);
+  });
+</script>
+}

@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using SchoolPortal.Attendances.Application.Abstractions;
+using SchoolPortal.Attendances.Application.Directories;
 using SchoolPortal.Attendances.Domain.Attendances;
+using SchoolPortal.Attendances.Infrastructure.Persistence;
 
 namespace SchoolPortal.Attendances.Infrastructure.Directories;
 
