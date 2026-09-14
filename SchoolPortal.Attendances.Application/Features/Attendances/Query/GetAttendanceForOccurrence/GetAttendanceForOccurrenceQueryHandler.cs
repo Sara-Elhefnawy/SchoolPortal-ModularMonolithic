@@ -1,21 +1,23 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using SchoolPortal.Attendances.Application.DbContexts;
+using SchoolPortal.Attendances.Application.Directories;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Attendances.Application.Features.Attendances.Query.GetAttendanceForOccurrence;
 
-public sealed class GetAttendanceForOccurrenceQueryHandler(IAttendancesDbContext db)
-    : IRequestHandler<GetAttendanceForOccurrenceQuery, Result<List<GetAttendanceForOccurrenceQueryDto>>>
+public sealed class GetAttendanceForOccurrenceQueryHandler(IAttendanceDirectory directory)
+    : IRequestHandler<GetAttendanceForOccurrenceQuery, Result<IReadOnlyList<GetAttendanceForOccurrenceQueryDto>>>
 {
-    public async Task<Result<List<GetAttendanceForOccurrenceQueryDto>>> Handle(
+    public async Task<Result<IReadOnlyList<GetAttendanceForOccurrenceQueryDto>>> Handle(
         GetAttendanceForOccurrenceQuery request, CancellationToken ct)
     {
-        var rows = await db.Attendances
-            .Where(a => a.SessionOccurrenceId == request.SessionOccurrenceId)
-            .Select(a => new GetAttendanceForOccurrenceQueryDto(a.Id, a.StudentId, a.Status, a.Note))
-            .ToListAsync(ct);
+        // GetForSessionAsync already existed on your interface — this used to bypass it
+        // and query an exposed IQueryable directly instead.
+        var attendances = await directory.GetForSessionAsync(request.SessionOccurrenceId, ct);
 
-        return Result<List<GetAttendanceForOccurrenceQueryDto>>.Success(rows);
+        var rows = attendances
+            .Select(a => new GetAttendanceForOccurrenceQueryDto(a.Id, a.StudentId, a.Status, a.Note))
+            .ToList();
+
+        return Result<IReadOnlyList<GetAttendanceForOccurrenceQueryDto>>.Success(rows);
     }
 }

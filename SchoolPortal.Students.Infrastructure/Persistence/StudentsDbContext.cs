@@ -1,11 +1,10 @@
 using Microsoft.EntityFrameworkCore;
-using SchoolPortal.Students.Application.DbContexts;
 using SchoolPortal.Students.Domain.Enrollments;
 using SchoolPortal.Students.Domain.Students;
 
 namespace SchoolPortal.Students.Infrastructure.Persistence;
 
-public sealed class StudentsDbContext(DbContextOptions<StudentsDbContext> options) : DbContext(options), IStudentsDbContext
+public sealed class StudentsDbContext(DbContextOptions<StudentsDbContext> options) : DbContext(options)
 {
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();

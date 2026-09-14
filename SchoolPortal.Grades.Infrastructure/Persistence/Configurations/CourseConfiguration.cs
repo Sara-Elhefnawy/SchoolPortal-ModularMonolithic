@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolPortal.Grades.Domain.Courses;
 
-namespace SchoolPortal.Grades.Infrastructure.Configurations;
+namespace SchoolPortal.Grades.Infrastructure.Persistence.Configurations;
 
 public sealed class CourseConfiguration : IEntityTypeConfiguration<Course>
 {

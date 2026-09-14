@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolPortal.Grades.Domain.Assessments;
 using SchoolPortal.Grades.Domain.Grades;
 
-namespace SchoolPortal.Grades.Infrastructure.Configurations;
+namespace SchoolPortal.Grades.Infrastructure.Persistence.Configurations;
 
 public sealed class GradeConfiguration : IEntityTypeConfiguration<Grade>
 {

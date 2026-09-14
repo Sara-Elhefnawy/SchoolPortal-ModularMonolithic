@@ -1,0 +1,283 @@
+@{
+ViewData["Title"] = "Grades";
+}
+
+<h1>Grades</h1>
+
+<div class="accordion" id="gradesAccordion">
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#createYearPanel">
+        Create Academic Year
+      </button>
+    </h2>
+    <div id="createYearPanel" class="accordion-collapse collapse show" data-bs-parent="#gradesAccordion">
+      <div class="accordion-body">
+        <form id="createYearForm">
+          <div class="mb-3"><label class="form-label">Name</label><input class="form-control" name="name" placeholder="2025-2026" required></div>
+          <div class="mb-3"><label class="form-label">Start Date</label><input class="form-control" type="date" name="startDate" required></div>
+          <div class="mb-3"><label class="form-label">End Date</label><input class="form-control" type="date" name="endDate" required></div>
+          <button type="submit" class="btn btn-primary">Create</button>
+          <pre class="alert mt-2 d-none" id="createYearResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#markCurrentPanel">
+        Mark Academic Year as Current
+      </button>
+    </h2>
+    <div id="markCurrentPanel" class="accordion-collapse collapse" data-bs-parent="#gradesAccordion">
+      <div class="accordion-body">
+        <form id="markCurrentForm">
+          <div class="mb-3"><label class="form-label">Academic Year Id</label><input class="form-control" type="number" min="1" name="id" required></div>
+          <button type="submit" class="btn btn-primary">Mark Current</button>
+          <pre class="alert mt-2 d-none" id="markCurrentResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#createTermPanel">
+        Create Term
+      </button>
+    </h2>
+    <div id="createTermPanel" class="accordion-collapse collapse" data-bs-parent="#gradesAccordion">
+      <div class="accordion-body">
+        <form id="createTermForm">
+          <div class="mb-3"><label class="form-label">Name</label><input class="form-control" name="name" placeholder="Fall 2025" required></div>
+          <div class="mb-3">
+            <label class="form-label">Type</label>
+            <select class="form-select" name="type">
+              <option value="Semester">Semester</option>
+              <option value="Trimester">Trimester</option>
+              <option value="Quarter">Quarter</option>
+            </select>
+          </div>
+          <div class="mb-3"><label class="form-label">Start Date</label><input class="form-control" type="date" name="startDate" required></div>
+          <div class="mb-3"><label class="form-label">End Date</label><input class="form-control" type="date" name="endDate" required></div>
+          <div class="mb-3"><label class="form-label">Academic Year Id</label><input class="form-control" type="number" min="1" name="academicYearId" required></div>
+          <button type="submit" class="btn btn-primary">Create</button>
+          <pre class="alert mt-2 d-none" id="createTermResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#createCoursePanel">
+        Create Course
+      </button>
+    </h2>
+    <div id="createCoursePanel" class="accordion-collapse collapse" data-bs-parent="#gradesAccordion">
+      <div class="accordion-body">
+        <form id="createCourseForm">
+          <div class="mb-3"><label class="form-label">Name</label><input class="form-control" name="name" required></div>
+          <div class="mb-3"><label class="form-label">Code</label><input class="form-control" name="code" placeholder="CS201" required></div>
+          <div class="mb-3"><label class="form-label">Credit Hours</label><input class="form-control" type="number" step="0.5" min="0.5" name="creditHours" required></div>
+          <button type="submit" class="btn btn-primary">Create</button>
+          <pre class="alert mt-2 d-none" id="createCourseResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#createSectionPanel">
+        Create Course Section
+      </button>
+    </h2>
+    <div id="createSectionPanel" class="accordion-collapse collapse" data-bs-parent="#gradesAccordion">
+      <div class="accordion-body">
+        <form id="createSectionForm">
+          <div class="mb-3"><label class="form-label">Course Id</label><input class="form-control" type="number" min="1" name="courseId" required></div>
+          <div class="mb-3"><label class="form-label">Term Id</label><input class="form-control" type="number" min="1" name="termId" required></div>
+          <button type="submit" class="btn btn-primary">Create</button>
+          <pre class="alert mt-2 d-none" id="createSectionResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#createAssessmentPanel">
+        Create Assessment
+      </button>
+    </h2>
+    <div id="createAssessmentPanel" class="accordion-collapse collapse" data-bs-parent="#gradesAccordion">
+      <div class="accordion-body">
+        <form id="createAssessmentForm">
+          <div class="mb-3"><label class="form-label">Course Section Id</label><input class="form-control" type="number" min="1" name="courseSectionId" required></div>
+          <div class="mb-3"><label class="form-label">Name</label><input class="form-control" name="name" placeholder="Midterm" required></div>
+          <div class="mb-3">
+            <label class="form-label">Type</label>
+            <select class="form-select" name="type">
+              <option value="Exam">Exam</option>
+              <option value="Quiz">Quiz</option>
+              <option value="Homework">Homework</option>
+              <option value="Project">Project</option>
+            </select>
+          </div>
+          <div class="mb-3"><label class="form-label">Maximum Score</label><input class="form-control" type="number" step="0.01" min="0.01" name="maximumScore" required></div>
+          <div class="mb-3"><label class="form-label">Weight (0–1)</label><input class="form-control" type="number" step="0.001" min="0.001" max="1" name="weight" required></div>
+          <div class="mb-3"><label class="form-label">Date</label><input class="form-control" type="date" name="date" required></div>
+          <button type="submit" class="btn btn-primary">Create</button>
+          <pre class="alert mt-2 d-none" id="createAssessmentResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#createGradePanel">
+        Record Grade
+      </button>
+    </h2>
+    <div id="createGradePanel" class="accordion-collapse collapse" data-bs-parent="#gradesAccordion">
+      <div class="accordion-body">
+        <form id="createGradeForm">
+          <div class="mb-3"><label class="form-label">Student Id</label><input class="form-control" type="number" min="1" name="studentId" required></div>
+          <div class="mb-3"><label class="form-label">Assessment Id</label><input class="form-control" type="number" min="1" name="assessmentId" required></div>
+          <div class="mb-3"><label class="form-label">Score</label><input class="form-control" type="number" step="0.01" min="0" name="score" required></div>
+          <button type="submit" class="btn btn-primary">Record</button>
+          <pre class="alert mt-2 d-none" id="createGradeResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#gradeWorkflowPanel">
+        Grade Workflow (Submit / Publish / Lock)
+      </button>
+    </h2>
+    <div id="gradeWorkflowPanel" class="accordion-collapse collapse" data-bs-parent="#gradesAccordion">
+      <div class="accordion-body">
+        <form id="gradeWorkflowForm">
+          <div class="mb-3"><label class="form-label">Grade Id</label><input class="form-control" type="number" min="1" name="gradeId" required></div>
+          <div class="mb-3">
+            <label class="form-label">Action</label>
+            <select class="form-select" name="action">
+              <option value="submit">Submit</option>
+              <option value="publish">Publish</option>
+              <option value="lock">Lock</option>
+            </select>
+          </div>
+          <button type="submit" class="btn btn-primary">Apply</button>
+          <pre class="alert mt-2 d-none" id="gradeWorkflowResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#rankingsPanel">
+        Class Rankings
+      </button>
+    </h2>
+    <div id="rankingsPanel" class="accordion-collapse collapse" data-bs-parent="#gradesAccordion">
+      <div class="accordion-body">
+        <form id="rankingsForm">
+          <div class="mb-3"><label class="form-label">Course Section Id</label><input class="form-control" type="number" min="1" name="courseSectionId" required></div>
+          <button type="submit" class="btn btn-primary">View Rankings</button>
+          <pre class="alert mt-2 d-none" id="rankingsResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+@section Scripts {
+
+<script src="~/js/api-helpers.js" asp-append-version="true"></script>
+
+<script>
+  function show(el) { el.classList.remove('d-none'); }
+
+  document.getElementById('createYearForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const body = formToObject(e.target);
+    const el = document.getElementById('createYearResult');
+    show(el);
+    callApi(el, 'POST', '/api/academic-years', body);
+  });
+
+  document.getElementById('markCurrentForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const { id } = formToObject(e.target, ['id']);
+    const el = document.getElementById('markCurrentResult');
+    show(el);
+    callApi(el, 'POST', `/api/academic-years/${id}/mark-current`);
+  });
+
+  document.getElementById('createTermForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const body = formToObject(e.target, ['academicYearId']);
+    const el = document.getElementById('createTermResult');
+    show(el);
+    callApi(el, 'POST', '/api/terms', body);
+  });
+
+  document.getElementById('createCourseForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const body = formToObject(e.target, ['creditHours']);
+    const el = document.getElementById('createCourseResult');
+    show(el);
+    callApi(el, 'POST', '/api/courses', body);
+  });
+
+  document.getElementById('createSectionForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const body = formToObject(e.target, ['courseId', 'termId']);
+    const el = document.getElementById('createSectionResult');
+    show(el);
+    callApi(el, 'POST', '/api/course-sections', body);
+  });
+
+  document.getElementById('createAssessmentForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const body = formToObject(e.target, ['courseSectionId', 'maximumScore', 'weight']);
+    const el = document.getElementById('createAssessmentResult');
+    show(el);
+    callApi(el, 'POST', '/api/assessments', body);
+  });
+
+  document.getElementById('createGradeForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const body = formToObject(e.target, ['studentId', 'assessmentId', 'score']);
+    const el = document.getElementById('createGradeResult');
+    show(el);
+    callApi(el, 'POST', '/api/grades', body);
+  });
+
+  document.getElementById('gradeWorkflowForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const { gradeId, action } = formToObject(e.target, ['gradeId']);
+    const el = document.getElementById('gradeWorkflowResult');
+    show(el);
+    callApi(el, 'POST', `/api/grades/${gradeId}/${action}`);
+  });
+
+  document.getElementById('rankingsForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    const { courseSectionId } = formToObject(e.target, ['courseSectionId']);
+    const el = document.getElementById('rankingsResult');
+    show(el);
+    callApi(el, 'GET', `/api/course-sections/${courseSectionId}/rankings`, undefined);
+  });
+</script>
+
+}

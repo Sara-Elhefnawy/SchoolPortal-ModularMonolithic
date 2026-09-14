@@ -5,7 +5,9 @@ using SchoolPortal.Grades.Infrastructure;
 using SchoolPortal.SharedKernel.Behaviors;
 using SchoolPortal.Students.Infrastructure;
 using SchoolPortal.Web.Endpoints.Attendances;
+using SchoolPortal.Web.Endpoints.Grades;
 using SchoolPortal.Web.Endpoints.Students;
+using System.Text.Json.Serialization;
 
 namespace SchoolPortal.Web;
 
@@ -30,6 +32,12 @@ public class Program
                 Title = "SchoolPortal API",
                 Version = "v1"
             });
+        });
+        
+        builder.Services.ConfigureHttpJsonOptions(options =>
+        {
+            options.SerializerOptions.Converters.Add(
+                new JsonStringEnumConverter());
         });
         
         var app = builder.Build();
@@ -61,6 +69,7 @@ public class Program
         
         app.MapStudentEndpoints();
         app.MapAttendanceEndpoints();
+        app.MapGradesEndpoints();
         
         app.MapControllers(); // needed for Students/Grades/Attendances MVC controllers to route at all
         app.MapDefaultControllerRoute(); // or whatever your existing MVC route mapping is

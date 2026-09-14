@@ -6,7 +6,7 @@ using SchoolPortal.Grades.Domain.CourseSections;
 using SchoolPortal.Grades.Domain.Grades;
 using SchoolPortal.Grades.Domain.Terms;
 
-namespace SchoolPortal.Grades.Infrastructure;
+namespace SchoolPortal.Grades.Infrastructure.Persistence;
 
 public sealed class GradesDbContext(DbContextOptions<GradesDbContext> options) : DbContext(options)
 {

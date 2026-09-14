@@ -2,7 +2,6 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using SchoolPortal.Students.Application.DbContexts;
 using SchoolPortal.Students.Application.Directories;
 using SchoolPortal.Students.Application.Features.Students.Commands.Create;
 using SchoolPortal.Students.Infrastructure.Directories;
@@ -17,23 +16,19 @@ public static class DependencyInjection
         var connectionString = config.GetConnectionString("SchoolPortalDb") 
                                ?? throw new InvalidOperationException( "Connection string 'SchoolPortalDb' was not found.");
 
-        services.AddDbContext<StudentsDbContext>(opt =>
-            opt.UseNpgsql(connectionString,
-                // tells EF to only ever touch the "students" schema 
-                npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "students")));
+        services.AddDbContext<StudentsDbContext>(opt => opt.UseNpgsql(connectionString,
+            // tells EF to only ever touch the "students" schema 
+            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "students")));
+
+        services.AddScoped<IStudentDirectory, StudentDirectory>();
+        services.AddScoped<IEnrollmentDirectory, EnrollmentDirectory>();
+        
+        // Registers every AbstractValidator<T> found in this assembly
+        services.AddValidatorsFromAssembly(typeof(CreateStudentCommandValidator).Assembly);
 
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
             typeof(DependencyInjection).Assembly,
             typeof(IStudentDirectory).Assembly));
-
-        // The interface, not the concrete class — this is what makes the handler's
-        // constructor injection of IStudentsDbContext actually resolve to something.
-        services.AddScoped<IStudentsDbContext>(sp => sp.GetRequiredService<StudentsDbContext>());
-
-        services.AddScoped<IStudentDirectory, StudentDirectory>();
-        
-        // Registers every AbstractValidator<T> found in this assembly
-        services.AddValidatorsFromAssembly(typeof(CreateStudentCommandValidator).Assembly);
         
         return services;
     }

@@ -21,4 +21,10 @@ public static class GradeErrors
 
     public static readonly Error InvalidTransitionToLocked =
         Error.Validation("Grade.InvalidTransitionToLocked", "Only a Published grade can be locked.");
+
+    public static readonly Error AlreadyExists =
+        Error.Validation("Grade.AlreadyExists", "Grade already exists.");
+    
+    public static readonly Error NotFound =
+        Error.Validation("Grade.NotFound", "Grade is not found.");
 }

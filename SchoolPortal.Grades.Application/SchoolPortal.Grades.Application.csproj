@@ -4,7 +4,15 @@
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>StudentPortal.Grades.Application</RootNamespace>
     </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\SchoolPortal.Grades.Domain\SchoolPortal.Grades.Domain.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="Features\AcademicYears\" />
+      <Folder Include="Features\Courses\Command\" />
+    </ItemGroup>
 
 </Project>

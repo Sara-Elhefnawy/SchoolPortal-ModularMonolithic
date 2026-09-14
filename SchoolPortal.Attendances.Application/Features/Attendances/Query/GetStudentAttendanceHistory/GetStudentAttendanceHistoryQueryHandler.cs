@@ -1,23 +1,23 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
-using SchoolPortal.Attendances.Application.DbContexts;
+using SchoolPortal.Attendances.Application.Directories;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Attendances.Application.Features.Attendances.Query.GetStudentAttendanceHistory;
 
-public sealed class GetStudentAttendanceHistoryQueryHandler(IAttendancesDbContext db)
-    : IRequestHandler<GetStudentAttendanceHistoryQuery, Result<List<AttendanceHistoryRowDto>>>
+public sealed class GetStudentAttendanceHistoryQueryHandler(IAttendanceDirectory directory)
+    : IRequestHandler<GetStudentAttendanceHistoryQuery, Result<IReadOnlyList<GetStudentAttendanceHistoryDto>>>
 {
-    public async Task<Result<List<AttendanceHistoryRowDto>>> Handle(
+    public async Task<Result<IReadOnlyList<GetStudentAttendanceHistoryDto>>> Handle(
         GetStudentAttendanceHistoryQuery request, CancellationToken ct)
     {
-        var rows = await db.Attendances
-            .Where(a => a.StudentId == request.StudentId)
-            .Join(db.SessionOccurrences, a => a.SessionOccurrenceId, o => o.Id,
-                (a, o) => new AttendanceHistoryRowDto(o.Id, o.Date, a.Status, a.Note))
-            .OrderByDescending(r => r.Date)
-            .ToListAsync(ct);
+        // GetHistoryForStudentAsync does the SessionOccurrence join inside the directory
+        // implementation instead, where the DbContext actually lives.
+        var rows = await directory.GetHistoryForStudentAsync(request.StudentId, ct);
 
-        return Result<List<AttendanceHistoryRowDto>>.Success(rows);
+        var orderedRows = rows
+            .OrderByDescending(r => r.Date)
+            .ToList();
+
+        return Result<IReadOnlyList<GetStudentAttendanceHistoryDto>>.Success(orderedRows);
     }
 }

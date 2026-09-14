@@ -1,0 +1,546 @@
+@{
+ViewData["Title"] = "Attendances";
+}
+
+<h1>Attendances</h1>
+
+<div class="accordion" id="attendancesAccordion">
+
+  <!-- Create Session -->
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#createSessionPanel">
+        Create Session
+      </button>
+    </h2>
+
+    <div id="createSessionPanel"
+         class="accordion-collapse collapse show"
+         data-bs-parent="#attendancesAccordion">
+
+      <div class="accordion-body">
+        <form id="createSessionForm">
+
+          <div class="mb-3">
+            <label class="form-label">Course Section Id</label>
+            <input class="form-control"
+                   type="number"
+                   min="1"
+                   name="courseSectionId"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Day of Week</label>
+
+            <select class="form-select" name="dayOfWeek">
+              <option value="Sunday">Sunday</option>
+              <option value="Monday">Monday</option>
+              <option value="Tuesday">Tuesday</option>
+              <option value="Wednesday">Wednesday</option>
+              <option value="Thursday">Thursday</option>
+              <option value="Friday">Friday</option>
+              <option value="Saturday">Saturday</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Start Time</label>
+            <input class="form-control"
+                   type="time"
+                   name="startTime"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">End Time</label>
+            <input class="form-control"
+                   type="time"
+                   name="endTime"
+                   required>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            Create
+          </button>
+
+          <pre class="alert mt-2 d-none"
+               id="createSessionResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Create Session Occurrence -->
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#createOccurrencePanel">
+        Create Session Occurrence
+      </button>
+    </h2>
+
+    <div id="createOccurrencePanel"
+         class="accordion-collapse collapse"
+         data-bs-parent="#attendancesAccordion">
+
+      <div class="accordion-body">
+        <form id="createOccurrenceForm">
+
+          <div class="mb-3">
+            <label class="form-label">Session Id</label>
+            <input class="form-control"
+                   type="number"
+                   min="1"
+                   name="sessionId"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input class="form-control"
+                   type="date"
+                   name="date"
+                   required>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            Create
+          </button>
+
+          <pre class="alert mt-2 d-none"
+               id="createOccurrenceResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Record Attendance -->
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#recordAttendancePanel">
+        Record Attendance
+      </button>
+    </h2>
+
+    <div id="recordAttendancePanel"
+         class="accordion-collapse collapse"
+         data-bs-parent="#attendancesAccordion">
+
+      <div class="accordion-body">
+        <form id="recordAttendanceForm">
+
+          <div class="mb-3">
+            <label class="form-label">Student Id</label>
+            <input class="form-control"
+                   type="number"
+                   min="1"
+                   name="studentId"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Session Occurrence Id</label>
+            <input class="form-control"
+                   type="number"
+                   min="1"
+                   name="sessionOccurrenceId"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Status</label>
+
+            <select class="form-select" name="status">
+              <option value="Present">Present</option>
+              <option value="Absent">Absent</option>
+              <option value="Late">Late</option>
+              <option value="Excused">Excused</option>
+              <option value="EarlyLeave">EarlyLeave</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Note (optional)</label>
+            <input class="form-control" name="note">
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            Record
+          </button>
+
+          <pre class="alert mt-2 d-none"
+               id="recordAttendanceResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Update Attendance -->
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#updateAttendancePanel">
+        Update Attendance Status
+      </button>
+    </h2>
+
+    <div id="updateAttendancePanel"
+         class="accordion-collapse collapse"
+         data-bs-parent="#attendancesAccordion">
+
+      <div class="accordion-body">
+        <form id="updateAttendanceForm">
+
+          <div class="mb-3">
+            <label class="form-label">Attendance Id</label>
+            <input class="form-control"
+                   type="number"
+                   min="1"
+                   name="attendanceId"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">New Status</label>
+
+            <select class="form-select" name="status">
+              <option value="Present">Present</option>
+              <option value="Absent">Absent</option>
+              <option value="Late">Late</option>
+              <option value="Excused">Excused</option>
+              <option value="EarlyLeave">EarlyLeave</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Note (optional)</label>
+            <input class="form-control" name="note">
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            Update
+          </button>
+
+          <pre class="alert mt-2 d-none"
+               id="updateAttendanceResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- View Attendance For Occurrence -->
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#viewBySessionPanel">
+        View Attendance for a Session Occurrence
+      </button>
+    </h2>
+
+    <div id="viewBySessionPanel"
+         class="accordion-collapse collapse"
+         data-bs-parent="#attendancesAccordion">
+
+      <div class="accordion-body">
+        <form id="viewBySessionForm">
+
+          <div class="mb-3">
+            <label class="form-label">
+              Session Occurrence Id
+            </label>
+
+            <input class="form-control"
+                   type="number"
+                   min="1"
+                   name="sessionOccurrenceId"
+                   required>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            View
+          </button>
+
+          <pre class="alert mt-2 d-none"
+               id="viewBySessionResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- View Student Attendance History -->
+  <div class="accordion-item">
+    <h2 class="accordion-header">
+      <button class="accordion-button collapsed"
+              type="button"
+              data-bs-toggle="collapse"
+              data-bs-target="#viewStudentHistoryPanel">
+        View Attendance History for a Student
+      </button>
+    </h2>
+
+    <div id="viewStudentHistoryPanel"
+         class="accordion-collapse collapse"
+         data-bs-parent="#attendancesAccordion">
+
+      <div class="accordion-body">
+        <form id="viewStudentHistoryForm">
+
+          <div class="mb-3">
+            <label class="form-label">Student Id</label>
+
+            <input class="form-control"
+                   type="number"
+                   min="1"
+                   name="studentId"
+                   required>
+          </div>
+
+          <button type="submit" class="btn btn-primary">
+            View History
+          </button>
+
+          <pre class="alert mt-2 d-none"
+               id="viewStudentHistoryResult"></pre>
+        </form>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+@section Scripts {
+
+```
+<script src="~/js/api-helpers.js" asp-append-version="true"></script>
+
+<script>
+
+  function show(el) {
+    el.classList.remove('d-none');
+  }
+
+
+  // ---------------------------------------------------------
+  // CREATE SESSION
+  // POST /api/sessions
+  // ---------------------------------------------------------
+
+  document
+    .getElementById('createSessionForm')
+    .addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const body = formToObject(
+        e.target,
+        ['courseSectionId']
+      );
+
+      const el = document.getElementById(
+        'createSessionResult'
+      );
+
+      show(el);
+
+      callApi(
+        el,
+        'POST',
+        '/api/sessions',
+        body
+      );
+    });
+
+
+  // ---------------------------------------------------------
+  // CREATE SESSION OCCURRENCE
+  // POST /api/sessions/{sessionId}/occurrences
+  // ---------------------------------------------------------
+
+  document
+    .getElementById('createOccurrenceForm')
+    .addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const {
+        sessionId,
+        date
+      } = formToObject(
+        e.target,
+        ['sessionId']
+      );
+
+      const el = document.getElementById(
+        'createOccurrenceResult'
+      );
+
+      show(el);
+
+      callApi(
+        el,
+        'POST',
+        `/api/sessions/${sessionId}/occurrences`,
+        { date }
+      );
+    });
+
+
+  // ---------------------------------------------------------
+  // RECORD ATTENDANCE
+  // POST /api/attendances
+  // ---------------------------------------------------------
+
+  document
+    .getElementById('recordAttendanceForm')
+    .addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const body = formToObject(
+        e.target,
+        ['studentId', 'sessionOccurrenceId']
+      );
+
+      if (!body.note) {
+        body.note = null;
+      }
+
+      const el = document.getElementById(
+        'recordAttendanceResult'
+      );
+
+      show(el);
+
+      callApi(
+        el,
+        'POST',
+        '/api/attendances',
+        body
+      );
+    });
+
+
+  // ---------------------------------------------------------
+  // UPDATE ATTENDANCE
+  // PUT /api/attendances/{id}
+  // ---------------------------------------------------------
+
+  document
+    .getElementById('updateAttendanceForm')
+    .addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const {
+        attendanceId,
+        status,
+        note
+      } = formToObject(
+        e.target,
+        ['attendanceId']
+      );
+
+      const el = document.getElementById(
+        'updateAttendanceResult'
+      );
+
+      show(el);
+
+      callApi(
+        el,
+        'PUT',
+        `/api/attendances/${attendanceId}`,
+        {
+          status,
+          note: note || null
+        }
+      );
+    });
+
+
+  // ---------------------------------------------------------
+  // VIEW ATTENDANCE FOR OCCURRENCE
+  // GET /api/attendances/by-occurrence/{id}
+  // ---------------------------------------------------------
+
+  document
+    .getElementById('viewBySessionForm')
+    .addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const {
+        sessionOccurrenceId
+      } = formToObject(
+        e.target,
+        ['sessionOccurrenceId']
+      );
+
+      const el = document.getElementById(
+        'viewBySessionResult'
+      );
+
+      show(el);
+
+      callApi(
+        el,
+        'GET',
+        `/api/attendances/by-occurrence/${sessionOccurrenceId}`,
+        undefined
+      );
+    });
+
+
+  // ---------------------------------------------------------
+  // VIEW STUDENT ATTENDANCE HISTORY
+  // GET /api/attendances/by-student/{id}
+  // ---------------------------------------------------------
+
+  document
+    .getElementById('viewStudentHistoryForm')
+    .addEventListener('submit', (e) => {
+
+      e.preventDefault();
+
+      const {
+        studentId
+      } = formToObject(
+        e.target,
+        ['studentId']
+      );
+
+      const el = document.getElementById(
+        'viewStudentHistoryResult'
+      );
+
+      show(el);
+
+      callApi(
+        el,
+        'GET',
+        `/api/attendances/by-student/${studentId}`,
+        undefined
+      );
+    });
+
+</script>
+
+}

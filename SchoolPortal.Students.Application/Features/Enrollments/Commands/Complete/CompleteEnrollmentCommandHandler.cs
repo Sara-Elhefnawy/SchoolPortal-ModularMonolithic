@@ -1,16 +1,16 @@
 using MediatR;
-using Microsoft.EntityFrameworkCore;
 using SchoolPortal.SharedKernel.Results;
-using SchoolPortal.Students.Application.DbContexts;
+using SchoolPortal.Students.Application.Directories;
 using SchoolPortal.Students.Domain.Enrollments;
 
 namespace SchoolPortal.Students.Application.Features.Enrollments.Commands.Complete;
 
-public sealed class CompleteEnrollmentCommandHandler(IStudentsDbContext dbContext) : IRequestHandler<CompleteEnrollmentCommand, Result>
+public sealed class CompleteEnrollmentCommandHandler(IEnrollmentDirectory directory)
+    : IRequestHandler<CompleteEnrollmentCommand, Result>
 {
     public async Task<Result> Handle(CompleteEnrollmentCommand request, CancellationToken ct)
     {
-        var enrollment = await dbContext.Enrollments.FirstOrDefaultAsync(e => e.Id == request.EnrollmentId, ct);
+        var enrollment = await directory.FindByIdAsync(request.EnrollmentId, ct);
         if (enrollment is null)
             return Result.Failure(EnrollmentErrors.NotFound);
 
@@ -18,7 +18,7 @@ public sealed class CompleteEnrollmentCommandHandler(IStudentsDbContext dbContex
         if (result.IsFailure)
             return result;
 
-        await dbContext.SaveChangesAsync(ct);
+        await directory.UpdateAsync(ct);
         return Result.Success();
     }
 }

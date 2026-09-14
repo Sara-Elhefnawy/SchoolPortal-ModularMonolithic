@@ -21,4 +21,10 @@ public static class AssessmentErrors
 
     public static readonly Error InvalidDate =
         Error.Validation("Assessment.InvalidDate", "Assessment date is required.");
+
+    public static readonly Error WeightExceedsSectionTotal =
+        Error.Validation("Assessment.WeightExceedsSectionTotal", "Weight can't exceed section total.");
+
+    public static readonly Error NotFound =
+        Error.Validation("Assessment.NotFound", "Assessment is not found.");
 }

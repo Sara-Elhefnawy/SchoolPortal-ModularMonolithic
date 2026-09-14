@@ -3,7 +3,7 @@ using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SchoolPortal.Grades.Domain.AcademicYears;
 using SchoolPortal.Grades.Domain.Terms;
 
-namespace SchoolPortal.Grades.Infrastructure.Configurations;
+namespace SchoolPortal.Grades.Infrastructure.Persistence.Configurations;
 
 public sealed class TermConfiguration : IEntityTypeConfiguration<Term>
 {

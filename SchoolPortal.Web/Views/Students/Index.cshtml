@@ -121,10 +121,6 @@
 @section Scripts {
 <script src="~/js/api-helpers.js" asp-append-version="true"></script>
 <script>
-  // Unhides the <pre> the first time a result actually needs to show —
-  // the static HTML version used a plain <div>, this uses <pre class="d-none">
-  // so it stays invisible until there's something to report, matching how
-  // Bootstrap alerts are meant to appear/disappear rather than sitting empty.
   function show(el) { el.classList.remove('d-none'); }
 
   document.getElementById('createStudentForm').addEventListener('submit', (e) => {

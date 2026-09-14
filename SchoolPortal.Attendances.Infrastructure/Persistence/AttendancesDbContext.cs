@@ -1,12 +1,11 @@
 using Microsoft.EntityFrameworkCore;
-using SchoolPortal.Attendances.Application.DbContexts;
 using SchoolPortal.Attendances.Domain.Attendances;
 using SchoolPortal.Attendances.Domain.Sessions;
 using SchoolPortal.Attendances.Domain.SessionOccurrences;
 
 namespace SchoolPortal.Attendances.Infrastructure.Persistence;
 
-public class AttendancesDbContext(DbContextOptions<AttendancesDbContext> options) : DbContext(options), IAttendancesDbContext
+public class AttendancesDbContext(DbContextOptions<AttendancesDbContext> options) : DbContext(options)
 {
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Session> Sessions => Set<Session>();

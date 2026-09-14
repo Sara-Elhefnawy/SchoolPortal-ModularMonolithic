@@ -4,7 +4,7 @@ using SchoolPortal.Grades.Domain.Courses;
 using SchoolPortal.Grades.Domain.CourseSections;
 using SchoolPortal.Grades.Domain.Terms;
 
-namespace SchoolPortal.Grades.Infrastructure.Configurations;
+namespace SchoolPortal.Grades.Infrastructure.Persistence.Configurations;
 
 public sealed class CourseSectionConfiguration : IEntityTypeConfiguration<CourseSection>
 {

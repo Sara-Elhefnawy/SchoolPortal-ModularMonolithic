@@ -12,4 +12,10 @@ public static class CourseErrors
     
     public static readonly Error InvalidCreditHours =
         Error.Validation("Course.InvalidCreditHours", "Credit hours must be greater than 0.");
+
+    public static readonly Error DuplicateCode =
+        Error.Validation("Course.DuplicateCode", "Code is duplicated.");
+    
+    public static readonly Error NotFound =
+        Error.Validation("Course.NotFound", "Course is not found.");
 }
