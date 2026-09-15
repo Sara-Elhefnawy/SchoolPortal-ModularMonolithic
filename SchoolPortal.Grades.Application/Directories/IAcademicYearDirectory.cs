@@ -4,9 +4,9 @@ namespace SchoolPortal.Grades.Application.Directories;
 
 public interface IAcademicYearDirectory
 {
-    Task<AcademicYear?> FindAsync(int id, CancellationToken ct);
+    Task<AcademicYear?> GetByIdAsync(int id, CancellationToken ct);
     Task<AcademicYear?> FindCurrentAsync(CancellationToken ct);
-    Task<bool> ExistsWithNameAsync(string name, CancellationToken ct);
-    Task AddAsync(AcademicYear academicYear, CancellationToken ct);
-    Task UpdateAsync(AcademicYear academicYear, CancellationToken ct);
+    Task<bool> NameExistsAsync(string name, CancellationToken ct);
+    void Add(AcademicYear academicYear);
+    void Update(AcademicYear academicYear);
 }

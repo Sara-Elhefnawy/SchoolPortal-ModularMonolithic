@@ -23,8 +23,23 @@ public static class StudentErrors
     public static readonly Error InvalidAdmissionDate = Error.Validation("Student.InvalidAdmissionDate",
         "Admission Date is required and must be a valid date.");
 
+    public static readonly Error InvalidEffectiveDate = Error.Validation("Student.InvalidEffectiveDate",
+        "Effective Date is required and must be a valid date.");
+
     public static readonly Error InvalidGender = Error.Validation("Student.InvalidGender",
         "Gender is required and must be male or female.");
+
+    public static readonly Error InvalidTransitionToWithdrawn = Error.Validation("Student.InvalidTransitionToWithdrawn",
+        "Student is already withdrawn.");
+
+    public static readonly Error InvalidTransitionToSuspended = Error.Validation("Student.InvalidTransitionToSuspended",
+        "Student is already suspended.");
+
+    public static readonly Error InvalidTransitionToGraduated = Error.Validation("Student.InvalidTransitionToGraduated",
+        "Only an active student can graduate.");
+
+    public static readonly Error InvalidTransitionToDeactivated = Error.Validation("Student.InvalidTransitionToDeactivated",
+        "Student is already inactive.");
     
     public static readonly Error EmailAlreadyExists = Error.Validation("Student.EmailAlreadyExists",
         "email already exists in database and can not be used.");

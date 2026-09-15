@@ -1,4 +1,6 @@
-using SchoolPortal.SharedKernel;
+using SchoolPortal.SharedKernel.Domain;
+using SchoolPortal.SharedKernel.Domain.Events.Attendances;
+using SchoolPortal.SharedKernel.Domain.Events.Attendances.SessionOccurrences;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Attendances.Domain.SessionOccurrences;
@@ -8,6 +10,7 @@ public sealed class SessionOccurrence : BaseEntity
 {
     public int SessionId { get; private set; }
     public DateOnly Date { get; private set; }
+    public bool IsCancelled { get; private set; }
 
     private SessionOccurrence() { }
 
@@ -24,6 +27,18 @@ public sealed class SessionOccurrence : BaseEntity
             return Result<SessionOccurrence>.Failure(validationResult.Error);
         
         return Result<SessionOccurrence>.Success(new SessionOccurrence(sessionId, date));
+    }
+    
+    public Result Cancel()
+    {
+        if (IsCancelled)
+            return Result.Failure(SessionOccurrenceErrors.InvalidTransitionToCancelled);
+
+        IsCancelled = true;
+
+        RaiseEvent(() => new SessionOccurrenceCancelled(Id, SessionId, Date));
+        
+        return Result.Success();
     }
 
     private static Result Validate(int sessionId, DateOnly date)

@@ -8,6 +8,12 @@ using SchoolPortal.Web.Endpoints.Attendances;
 using SchoolPortal.Web.Endpoints.Grades;
 using SchoolPortal.Web.Endpoints.Students;
 using System.Text.Json.Serialization;
+using SchoolPortal.Attendances.Application.Features.Attendances.Command.Cancel;
+using SchoolPortal.Grades.Application.Features.Grades.Command.Create;
+using SchoolPortal.Notifications.Application.EventHandlers.Attendances.SessionOccurrences;
+using SchoolPortal.Notifications.Application.EventHandlers.Grades;
+using SchoolPortal.Notifications.Application.EventHandlers.Students;
+using SchoolPortal.Students.Application.Features.Students.Commands.UpdatePhone;
 
 namespace SchoolPortal.Web;
 
@@ -39,6 +45,18 @@ public class Program
             options.SerializerOptions.Converters.Add(
                 new JsonStringEnumConverter());
         });
+        
+        // This is the ONE place in the whole solution allowed to reference every module's
+        // Application assembly at once — because it's the composition root, not a module.
+        // Each module's own DI setup only ever registers ITS OWN services (directories,
+        // unit of work) — never MediatR's cross-module scanning.
+        builder.Services.AddMediatR(cfg =>
+            cfg.RegisterServicesFromAssemblies(typeof(UpdateStudentPhoneCommandHandler).Assembly,
+                typeof(StudentPhoneNumberUpdatedHandler).Assembly,
+                typeof(CreateGradeCommandHandler).Assembly,
+                typeof(GradeCreatedHandler).Assembly,
+                typeof(CancelSessionOccurrenceCommandHandler).Assembly,
+                typeof(SessionOccurrenceCancelledHandler).Assembly));
         
         var app = builder.Build();
 

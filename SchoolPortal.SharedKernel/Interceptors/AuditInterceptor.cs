@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
+using SchoolPortal.SharedKernel.Domain;
 
 namespace SchoolPortal.SharedKernel.Interceptors;
 

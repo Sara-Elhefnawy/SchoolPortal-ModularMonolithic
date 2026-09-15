@@ -1,4 +1,5 @@
-using SchoolPortal.SharedKernel;
+using SchoolPortal.SharedKernel.Domain;
+using SchoolPortal.SharedKernel.Domain.Events.Students.Enrollments;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Students.Domain.Enrollments;
@@ -29,15 +30,26 @@ public sealed class Enrollment : BaseEntity
         if (validationResult.IsFailure)
             return Result<Enrollment>.Failure(validationResult.Error);
 
-        return Result<Enrollment>.Success(new Enrollment(studentId, courseSectionId, date));
+        var enrollment = new Enrollment(studentId, courseSectionId, date);
+
+        // Raised in Create(), not in a separate Enroll() call,
+        //      because "an enrollment was created" and "a student was enrolled" are he same fact here —
+        //          there's no separate step between them, unlike Grade where Create()
+        //          and Publish() are genuinely different points in time.
+        enrollment.RaiseEvent(() => new StudentEnrolled(enrollment.Id, studentId, courseSectionId));
+        
+        return Result<Enrollment>.Success(enrollment);
     }
 
-    public Result Withdraw()
+    public Result Withdraw(DateOnly effectiveDate)
     {
         if (Status != EnrollmentStatus.Active)
             return Result.Failure(EnrollmentErrors.InvalidTransitionToWithdrawn);
 
         Status = EnrollmentStatus.Withdrawn;
+        
+        RaiseEvent(() => new EnrollmentWithdrawn(Id, StudentId, CourseSectionId, effectiveDate));
+
         return Result.Success();
     }
 
@@ -47,6 +59,9 @@ public sealed class Enrollment : BaseEntity
             return Result.Failure(EnrollmentErrors.InvalidTransitionToCompleted);
 
         Status = EnrollmentStatus.Completed;
+        
+        RaiseEvent(() => new EnrollmentCompleted(Id, StudentId, CourseSectionId));
+
         return Result.Success();
     }
 

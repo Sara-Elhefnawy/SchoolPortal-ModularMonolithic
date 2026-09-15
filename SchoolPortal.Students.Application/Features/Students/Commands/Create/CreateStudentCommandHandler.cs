@@ -1,12 +1,15 @@
 using MediatR;
 using SchoolPortal.SharedKernel.Results;
 using SchoolPortal.Students.Application.Directories;
+using SchoolPortal.Students.Application.Persistence;
 using SchoolPortal.Students.Domain.Addresses;
 using SchoolPortal.Students.Domain.Students;
 
 namespace SchoolPortal.Students.Application.Features.Students.Commands.Create;
 
-public sealed class CreateStudentCommandHandler(IStudentDirectory directory)
+public sealed class CreateStudentCommandHandler(
+    IStudentDirectory directory,
+    IStudentsUnitOfWork unitOfWork)
     : IRequestHandler<CreateStudentCommand, Result<int>>
 {
     public async Task<Result<int>> Handle(CreateStudentCommand request, CancellationToken ct)
@@ -27,7 +30,8 @@ public sealed class CreateStudentCommandHandler(IStudentDirectory directory)
         if (studentResult.IsFailure)
             return Result<int>.Failure(studentResult.Error);
 
-        await directory.AddAsync(studentResult.Value, ct);
+        directory.Add(studentResult.Value);
+        await unitOfWork.SaveChangesAsync(ct);
 
         return Result<int>.Success(studentResult.Value.Id);
     }

@@ -5,17 +5,13 @@ using SchoolPortal.Grades.Infrastructure.Persistence;
 
 namespace SchoolPortal.Grades.Infrastructure.Directories;
 
-internal sealed class CourseSectionDirectory(GradesDbContext db) : ICourseSectionDirectory
+internal sealed class CourseSectionDirectory(GradesDbContext dbContext) : ICourseSectionDirectory
 {
-    public Task<CourseSection?> FindAsync(int id, CancellationToken ct)
-        => db.CourseSections.FirstOrDefaultAsync(cs => cs.Id == id, ct);
+    public async Task<CourseSection?> GetByIdAsync(int id, CancellationToken ct) =>
+        await dbContext.CourseSections.FirstOrDefaultAsync(cs => cs.Id == id, ct);
 
-    public Task<bool> ExistsAsync(int courseId, int termId, CancellationToken ct)
-        => db.CourseSections.AnyAsync(cs => cs.CourseId == courseId && cs.TermId == termId, ct);
+    public async Task<bool> CourseAndTermExistsAsync(int courseId, int termId, CancellationToken ct) =>
+        await dbContext.CourseSections.AnyAsync(cs => cs.CourseId == courseId && cs.TermId == termId, ct);
 
-    public Task AddAsync(CourseSection courseSection, CancellationToken ct)
-    {
-        db.CourseSections.Add(courseSection);
-        return db.SaveChangesAsync(ct);
-    }
+    public void Add(CourseSection courseSection) => dbContext.CourseSections.Add(courseSection);
 }

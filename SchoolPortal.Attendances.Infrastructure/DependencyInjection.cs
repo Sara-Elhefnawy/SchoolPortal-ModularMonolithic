@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolPortal.Attendances.Application.Directories;
 using SchoolPortal.Attendances.Application.Features.Sessions.Command.Create;
+using SchoolPortal.Attendances.Application.Persistence;
 using SchoolPortal.Attendances.Infrastructure.Directories;
 using SchoolPortal.Attendances.Infrastructure.Persistence;
 
@@ -30,6 +31,8 @@ public static class DependencyInjection
         services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
             typeof(DependencyInjection).Assembly,
             typeof(IAttendanceDirectory).Assembly));
+        
+        services.AddScoped<IAttendancesUnitOfWork, AttendancesUnitOfWork>();
         
         return services;
     }

@@ -8,23 +8,22 @@ namespace SchoolPortal.Attendances.Infrastructure.Directories;
 
 internal sealed class AttendanceDirectory(AttendancesDbContext dbContext) : IAttendanceDirectory
 {
-    public async Task<Attendance?> FindAsync(int studentId, int sessionOccurrenceId, CancellationToken ct) =>
+    public async Task<Attendance?> FindStudentAndSessionOccurrenceAsync(int studentId, int sessionOccurrenceId, CancellationToken ct) =>
         await dbContext.Attendances.FirstOrDefaultAsync(
             a => a.StudentId == studentId && a.SessionOccurrenceId == sessionOccurrenceId, ct);
 
-    public async Task<Attendance?> FindByIdAsync(int attendanceId, CancellationToken ct)
+    public async Task<Attendance?> GetByIdAsync(int id, CancellationToken ct)
         => await dbContext.Attendances.FirstOrDefaultAsync(
-            a => a.Id == attendanceId,
+            a => a.Id == id,
             ct);
 
-    public async Task AddAsync(Attendance attendance, CancellationToken ct)
-    {
-        dbContext.Attendances.Add(attendance);
-        await dbContext.SaveChangesAsync(ct);
-    }
-
-    public async Task UpdateAsync(CancellationToken ct) =>
-        await dbContext.SaveChangesAsync(ct); // already tracked
+    public void Add(Attendance attendance) => dbContext.Attendances.Add(attendance);
+    
+    
+    
+    
+    
+    
 
     public async Task<IReadOnlyList<Attendance>>
         GetForSessionAsync(int sessionOccurrenceId, CancellationToken ct) =>

@@ -1,12 +1,16 @@
 using MediatR;
 using SchoolPortal.Attendances.Application.Directories;
+using SchoolPortal.Attendances.Application.Persistence;
 using SchoolPortal.Attendances.Domain.Attendances;
 using SchoolPortal.Attendances.Domain.SessionOccurrences;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Attendances.Application.Features.Attendances.Command.Record;
 
-public sealed class RecordAttendanceCommandHandler(IAttendanceDirectory directory, ISessionOccurrenceDirectory occurrenceDirectory)
+public sealed class RecordAttendanceCommandHandler(
+    IAttendanceDirectory directory, 
+    ISessionOccurrenceDirectory occurrenceDirectory,
+    IAttendancesUnitOfWork unitOfWork)
     : IRequestHandler<RecordAttendanceCommand, Result<int>>
 {
     public async Task<Result<int>> Handle(RecordAttendanceCommand request, CancellationToken ct)
@@ -17,7 +21,7 @@ public sealed class RecordAttendanceCommandHandler(IAttendanceDirectory director
         if (!occurrenceExists)
             return Result<int>.Failure(SessionOccurrenceErrors.NotFound);
 
-        var alreadyRecorded = await directory.FindAsync(request.StudentId, request.SessionOccurrenceId, ct);
+        var alreadyRecorded = await directory.FindStudentAndSessionOccurrenceAsync(request.StudentId, request.SessionOccurrenceId, ct);
         if (alreadyRecorded is not null)
             return Result<int>.Failure(AttendanceErrors.AlreadyRecorded); // direct them to UpdateAttendanceStatus instead
 
@@ -26,7 +30,8 @@ public sealed class RecordAttendanceCommandHandler(IAttendanceDirectory director
         if (attendanceResult.IsFailure)
             return Result<int>.Failure(attendanceResult.Error);
 
-        await directory.AddAsync(attendanceResult.Value, ct);
+        directory.Add(attendanceResult.Value);
+        await unitOfWork.SaveChangesAsync(ct);
 
         return Result<int>.Success(attendanceResult.Value.Id);
     }

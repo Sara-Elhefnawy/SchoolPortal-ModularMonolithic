@@ -1,4 +1,5 @@
-using SchoolPortal.SharedKernel;
+using SchoolPortal.SharedKernel.Domain;
+using SchoolPortal.SharedKernel.Domain.Events.Grades;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Grades.Domain.Grades;
@@ -35,8 +36,12 @@ public class Grade : BaseEntity
         var validationResult = Validate(studentId, assessmentId, score, assessmentMaximumScore);
         if (validationResult.IsFailure)
             return Result<Grade>.Failure(validationResult.Error);
+
+        var grade = new Grade(studentId, assessmentId, score);
         
-        return Result<Grade>.Success(new Grade(studentId, assessmentId, score));
+        grade.RaiseEvent(() => new GradeCreated(grade.StudentId, grade.AssessmentId, grade.Score));
+        
+        return Result<Grade>.Success(grade);
     }
 
     // State-transition methods instead of a public Status setter — this stops
@@ -47,6 +52,9 @@ public class Grade : BaseEntity
             return Result.Failure(GradeErrors.InvalidTransitionToSubmitted);
 
         Status = GradeStatus.Submitted;
+        
+        RaiseEvent(() => new GradeSubmitted(Id, StudentId));
+        
         return Result.Success();
     }
 
@@ -56,6 +64,9 @@ public class Grade : BaseEntity
             return Result.Failure(GradeErrors.InvalidTransitionToPublished);
 
         Status = GradeStatus.Published;
+        
+        RaiseEvent(() => new GradePublished(Id, StudentId, AssessmentId));
+        
         return Result.Success();
     }
 
@@ -65,6 +76,35 @@ public class Grade : BaseEntity
             return Result.Failure(GradeErrors.InvalidTransitionToLocked);
 
         Status = GradeStatus.Locked;
+        
+        RaiseEvent(() => new GradeLocked(Id, StudentId));
+        
+        return Result.Success();
+    }
+    
+    public Result ReviseScore(decimal newScore)
+    {
+        if (Status is GradeStatus.Published or GradeStatus.Locked)
+            return Result.Failure(GradeErrors.InvalidRevise);
+
+        var oldScore = Score;
+        Score = newScore;
+
+        if (oldScore != newScore)
+            RaiseEvent(() => new GradeChanged(Id, StudentId, oldScore, newScore));
+
+        return Result.Success();
+    }
+    
+    public Result Unpublish()
+    {
+        if (Status != GradeStatus.Published)
+            return Result.Failure(GradeErrors.InvalidTransitionToUnpublish);
+
+        Status = GradeStatus.Draft;
+
+        RaiseEvent(() => new GradeUnpublished(Id, StudentId));
+        
         return Result.Success();
     }
 

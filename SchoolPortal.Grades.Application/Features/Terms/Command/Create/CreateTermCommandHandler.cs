@@ -1,12 +1,16 @@
 using MediatR;
 using SchoolPortal.Grades.Application.Directories;
+using SchoolPortal.Grades.Application.Persistence;
 using SchoolPortal.Grades.Domain.AcademicYears;
 using SchoolPortal.Grades.Domain.Terms;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Grades.Application.Features.Terms.Command.Create;
 
-public sealed class CreateTermCommandHandler(ITermDirectory termDirectory, IAcademicYearDirectory yearDirectory)
+public sealed class CreateTermCommandHandler(
+    ITermDirectory termDirectory, 
+    IAcademicYearDirectory yearDirectory,
+    IGradesUnitOfWork unitOfWork)
     : IRequestHandler<CreateTermCommand, Result<int>>
 {
     public async Task<Result<int>> Handle(CreateTermCommand request, CancellationToken ct)
@@ -14,11 +18,11 @@ public sealed class CreateTermCommandHandler(ITermDirectory termDirectory, IAcad
         // Cross-aggregate check, both within Grades — no module boundary crossed,
         // so a direct directory call here (unlike Students/CourseSectionId
         // elsewhere) is completely fine.
-        var yearExists = await yearDirectory.FindAsync(request.AcademicYearId, ct) is not null;
+        var yearExists = await yearDirectory.GetByIdAsync(request.AcademicYearId, ct) is not null;
         if (!yearExists)
             return Result<int>.Failure(AcademicYearErrors.NotFound);
 
-        var duplicate = await termDirectory.ExistsAsync(request.AcademicYearId, request.Name.Trim(), ct);
+        var duplicate = await termDirectory.AcademicYearAndNameExistsAsync(request.AcademicYearId, request.Name.Trim(), ct);
         if (duplicate)
             return Result<int>.Failure(TermErrors.AlreadyExists);
 
@@ -26,7 +30,9 @@ public sealed class CreateTermCommandHandler(ITermDirectory termDirectory, IAcad
         if (termResult.IsFailure)
             return Result<int>.Failure(termResult.Error);
 
-        await termDirectory.AddAsync(termResult.Value, ct);
+        termDirectory.Add(termResult.Value);
+        await unitOfWork.SaveChangesAsync(ct);
+        
         return Result<int>.Success(termResult.Value.Id);
     }
 }

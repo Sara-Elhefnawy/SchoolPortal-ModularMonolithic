@@ -7,9 +7,13 @@ using SchoolPortal.Grades.Application.Features.CourseSections.Command.Create;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Create;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Lock;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Publish;
+using SchoolPortal.Grades.Application.Features.Grades.Command.ReviseScore;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Submit;
+using SchoolPortal.Grades.Application.Features.Grades.Command.Unpublish;
 using SchoolPortal.Grades.Application.Features.Terms.Command.Create;
+using SchoolPortal.Grades.Application.Features.Terms.Command.End;
 using SchoolPortal.Grades.Application.Reporting.Queries;
+using SchoolPortal.Web.Endpoints.Grades.Requests;
 
 namespace SchoolPortal.Web.Endpoints.Grades;
 
@@ -34,6 +38,12 @@ public static class GradesEndpoints
         {
             var r = await m.Send(cmd, ct);
             return r.IsSuccess ? Results.Created($"/api/terms/{r.Value}", r.Value) : Results.BadRequest(r.Error);
+        });
+        
+        terms.MapPost("/{id:int}/end", async (int id, IMediator m, CancellationToken ct) =>
+        {
+            var r = await m.Send(new EndTermCommand(id), ct);
+            return r.IsSuccess ? Results.NoContent() : Results.BadRequest(r.Error);
         });
 
         var courses = app.MapGroup("/api/courses").WithTags("Courses");
@@ -76,6 +86,19 @@ public static class GradesEndpoints
         grades.MapPost("/{id:int}/lock", async (int id, IMediator m, CancellationToken ct) =>
         {
             var r = await m.Send(new LockGradeCommand(id), ct);
+            return r.IsSuccess ? Results.NoContent() : Results.BadRequest(r.Error);
+        });
+        
+        grades.MapPut("/{id:int}/score", async (
+            int id, ReviseGradeScoreRequest body, IMediator m, CancellationToken ct) =>
+        {
+            var r = await m.Send(new ReviseGradeScoreCommand(id, body.NewScore), ct);
+            return r.IsSuccess ? Results.NoContent() : Results.BadRequest(r.Error);
+        });
+
+        grades.MapPost("/{id:int}/unpublish", async (int id, IMediator m, CancellationToken ct) =>
+        {
+            var r = await m.Send(new UnpublishGradeCommand(id), ct);
             return r.IsSuccess ? Results.NoContent() : Results.BadRequest(r.Error);
         });
 

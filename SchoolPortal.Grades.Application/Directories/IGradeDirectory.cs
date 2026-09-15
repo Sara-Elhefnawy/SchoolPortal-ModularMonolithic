@@ -4,8 +4,7 @@ namespace SchoolPortal.Grades.Application.Directories;
 
 public interface IGradeDirectory
 {
-    Task<Grade?> FindAsync(int id, CancellationToken ct);
-    Task<Grade?> FindAsync(int studentId, int assessmentId, CancellationToken ct);
-    Task AddAsync(Grade grade, CancellationToken ct);
-    Task UpdateAsync(Grade grade, CancellationToken ct);
+    Task<Grade?> GetByIdAsync(int id, CancellationToken ct);
+    Task<Grade?> FindStudentAssessmentGradeAsync(int studentId, int assessmentId, CancellationToken ct);
+    void Add(Grade grade);
 }

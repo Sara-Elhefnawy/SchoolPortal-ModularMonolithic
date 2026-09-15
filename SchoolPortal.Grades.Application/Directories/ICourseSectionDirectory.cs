@@ -4,7 +4,7 @@ namespace SchoolPortal.Grades.Application.Directories;
 
 public interface ICourseSectionDirectory
 {
-    Task<CourseSection?> FindAsync(int id, CancellationToken ct);
-    Task<bool> ExistsAsync(int courseId, int termId, CancellationToken ct);
-    Task AddAsync(CourseSection courseSection, CancellationToken ct);
+    Task<CourseSection?> GetByIdAsync(int id, CancellationToken ct);
+    Task<bool> CourseAndTermExistsAsync(int courseId, int termId, CancellationToken ct);
+    void Add(CourseSection courseSection);
 }

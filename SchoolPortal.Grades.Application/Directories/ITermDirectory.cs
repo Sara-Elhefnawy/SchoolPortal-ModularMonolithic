@@ -4,7 +4,7 @@ namespace SchoolPortal.Grades.Application.Directories;
 
 public interface ITermDirectory
 {
-    Task<Term?> FindAsync(int id, CancellationToken ct);
-    Task<bool> ExistsAsync(int academicYearId, string name, CancellationToken ct);
-    Task AddAsync(Term term, CancellationToken ct);
+    Task<Term?> GetByIdAsync(int id, CancellationToken ct);
+    Task<bool> AcademicYearAndNameExistsAsync(int academicYearId, string name, CancellationToken ct);
+    void Add(Term term);
 }

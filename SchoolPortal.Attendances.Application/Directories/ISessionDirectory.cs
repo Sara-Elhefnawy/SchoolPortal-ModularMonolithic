@@ -6,5 +6,5 @@ public interface ISessionDirectory
 {
     Task<bool> ExistsAsync(int sessionId, CancellationToken ct);
     Task<bool> ConflictExistsAsync(int courseSectionId, DayOfWeek dayOfWeek, TimeOnly startTime, CancellationToken ct);
-    Task AddAsync(Session session, CancellationToken ct);
+    void Add(Session session);
 }

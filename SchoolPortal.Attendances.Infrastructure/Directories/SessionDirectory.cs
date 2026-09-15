@@ -15,9 +15,5 @@ public sealed class SessionDirectory(AttendancesDbContext dbContext) : ISessionD
         await dbContext.Sessions.AnyAsync(
             s => s.CourseSectionId == courseSectionId && s.DayOfWeek == dayOfWeek && s.StartTime >= startTime, ct);
 
-    public async Task AddAsync(Session session, CancellationToken ct)
-    {
-        dbContext.Sessions.Add(session);
-        await dbContext.SaveChangesAsync(ct);
-    }
+    public void Add(Session session) => dbContext.Sessions.Add(session);
 }

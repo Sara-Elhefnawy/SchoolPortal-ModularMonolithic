@@ -1,5 +1,6 @@
 using MediatR;
 using SchoolPortal.Grades.Application.Directories;
+using SchoolPortal.Grades.Application.Persistence;
 using SchoolPortal.Grades.Domain.Assessments;
 using SchoolPortal.Grades.Domain.CourseSections;
 using SchoolPortal.SharedKernel.Results;
@@ -7,12 +8,14 @@ using SchoolPortal.SharedKernel.Results;
 namespace SchoolPortal.Grades.Application.Features.Assessments.Command.Create;
 
 public sealed class CreateAssessmentCommandHandler(
-    IAssessmentDirectory assessmentDirectory, ICourseSectionDirectory sectionDirectory)
+    IAssessmentDirectory assessmentDirectory, 
+    ICourseSectionDirectory sectionDirectory,
+    IGradesUnitOfWork unitOfWork)
     : IRequestHandler<CreateAssessmentCommand, Result<int>>
 {
     public async Task<Result<int>> Handle(CreateAssessmentCommand request, CancellationToken ct)
     {
-        var sectionExists = await sectionDirectory.FindAsync(request.CourseSectionId, ct) is not null;
+        var sectionExists = await sectionDirectory.GetByIdAsync(request.CourseSectionId, ct) is not null;
         if (!sectionExists)
             return Result<int>.Failure(CourseSectionErrors.NotFound);
 
@@ -30,7 +33,9 @@ public sealed class CreateAssessmentCommandHandler(
         if (assessmentResult.IsFailure)
             return Result<int>.Failure(assessmentResult.Error);
 
-        await assessmentDirectory.AddAsync(assessmentResult.Value, ct);
+        assessmentDirectory.Add(assessmentResult.Value);
+        await unitOfWork.SaveChangesAsync(ct);
+        
         return Result<int>.Success(assessmentResult.Value.Id);
     }
 }

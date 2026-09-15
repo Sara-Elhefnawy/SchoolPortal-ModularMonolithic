@@ -1,4 +1,4 @@
-using SchoolPortal.SharedKernel;
+using SchoolPortal.SharedKernel.Domain;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Grades.Domain.AcademicYears;

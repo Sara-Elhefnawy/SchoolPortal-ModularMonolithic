@@ -1,11 +1,14 @@
 using MediatR;
 using SchoolPortal.Grades.Application.Directories;
+using SchoolPortal.Grades.Application.Persistence;
 using SchoolPortal.Grades.Domain.Courses;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Grades.Application.Features.Courses.Command.Create;
 
-sealed class CreateCourseCommandHandler(ICourseDirectory directory)
+sealed class CreateCourseCommandHandler(
+    ICourseDirectory directory,
+    IGradesUnitOfWork unitOfWork)
     : IRequestHandler<CreateCourseCommand, Result<int>>
 {
     public async Task<Result<int>> Handle(CreateCourseCommand request, CancellationToken ct)
@@ -23,7 +26,9 @@ sealed class CreateCourseCommandHandler(ICourseDirectory directory)
         if (courseResult.IsFailure)
             return Result<int>.Failure(courseResult.Error);
 
-        await directory.AddAsync(courseResult.Value, ct);
+        directory.Add(courseResult.Value);
+        await unitOfWork.SaveChangesAsync(ct);
+        
         return Result<int>.Success(courseResult.Value.Id);
     }
 }

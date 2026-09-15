@@ -5,10 +5,9 @@ namespace SchoolPortal.Attendances.Application.Directories;
 
 public interface IAttendanceDirectory
 {
-    Task<Attendance?> FindAsync(int studentId, int sessionOccurrenceId, CancellationToken ct);
-    Task<Attendance?> FindByIdAsync(int attendanceId, CancellationToken ct);
-    Task AddAsync(Attendance attendance, CancellationToken ct);
-    Task UpdateAsync(CancellationToken ct);
+    Task<Attendance?> FindStudentAndSessionOccurrenceAsync(int studentId, int sessionOccurrenceId, CancellationToken ct);
+    Task<Attendance?> GetByIdAsync(int id, CancellationToken ct);
+    void Add(Attendance attendance);
     Task<IReadOnlyList<Attendance>> GetForSessionAsync(int sessionOccurrenceId, CancellationToken ct);
     Task<IReadOnlyList<Attendance>> GetForStudentAsync(int studentId, CancellationToken ct);
     

@@ -22,6 +22,12 @@ public static class GradeErrors
     public static readonly Error InvalidTransitionToLocked =
         Error.Validation("Grade.InvalidTransitionToLocked", "Only a Published grade can be locked.");
 
+    public static readonly Error InvalidTransitionToUnpublish =
+        Error.Validation("Grade.InvalidTransitionToUnpublish", "Grade is not currently published.");
+
+    public static readonly Error InvalidRevise =
+        Error.Validation("Grade.InvalidRevise", "Cannot revise a published grade directly — unpublish first.");
+    
     public static readonly Error AlreadyExists =
         Error.Validation("Grade.AlreadyExists", "Grade already exists.");
     

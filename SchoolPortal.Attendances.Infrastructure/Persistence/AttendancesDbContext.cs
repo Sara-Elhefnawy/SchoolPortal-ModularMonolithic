@@ -1,11 +1,16 @@
+using MediatR;
 using Microsoft.EntityFrameworkCore;
 using SchoolPortal.Attendances.Domain.Attendances;
 using SchoolPortal.Attendances.Domain.Sessions;
 using SchoolPortal.Attendances.Domain.SessionOccurrences;
+using SchoolPortal.SharedKernel.Persistence;
 
 namespace SchoolPortal.Attendances.Infrastructure.Persistence;
 
-public class AttendancesDbContext(DbContextOptions<AttendancesDbContext> options) : DbContext(options)
+public class AttendancesDbContext(
+    DbContextOptions<AttendancesDbContext> options, 
+    IPublisher publisher)
+    : ModuleDbContext(options, publisher)
 {
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Session> Sessions => Set<Session>();

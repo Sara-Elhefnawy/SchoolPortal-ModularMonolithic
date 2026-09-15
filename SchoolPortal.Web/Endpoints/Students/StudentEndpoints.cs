@@ -3,6 +3,9 @@ using SchoolPortal.Students.Application.Features.Enrollments.Commands.Complete;
 using SchoolPortal.Students.Application.Features.Enrollments.Commands.Enroll;
 using SchoolPortal.Students.Application.Features.Enrollments.Commands.Withdraw;
 using SchoolPortal.Students.Application.Features.Students.Commands.Create;
+using SchoolPortal.Students.Application.Features.Students.Commands.Deactivate;
+using SchoolPortal.Students.Application.Features.Students.Commands.Graduate;
+using SchoolPortal.Students.Application.Features.Students.Commands.Suspend;
 using SchoolPortal.Students.Application.Features.Students.Commands.UpdateAddress;
 using SchoolPortal.Students.Application.Features.Students.Commands.UpdateEmail;
 using SchoolPortal.Students.Application.Features.Students.Commands.UpdatePhone;
@@ -48,6 +51,27 @@ public static class StudentEndpoints
             var command = new UpdateStudentEmailCommand(
                 id, body.Email);
             var result = await mediator.Send(command, ct);
+            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+        });
+        
+        group.MapPost("/{id:int}/suspend", async (
+            int id, SuspendStudentRequest body, IMediator mediator, CancellationToken ct) =>
+        {
+            var result = await mediator.Send(new SuspendStudentCommand(id, body.Reason), ct);
+            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+        });
+
+        group.MapPost("/{id:int}/graduate", async (
+            int id, GraduateStudentRequest body, IMediator mediator, CancellationToken ct) =>
+        {
+            var result = await mediator.Send(new GraduateStudentCommand(id, body.GraduationDate), ct);
+            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+        });
+
+        group.MapPost("/{id:int}/deactivate", async (
+            int id, IMediator mediator, CancellationToken ct) =>
+        {
+            var result = await mediator.Send(new DeactivateStudentCommand(id), ct);
             return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
         });
 

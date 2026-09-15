@@ -1,16 +1,19 @@
 using MediatR;
 using SchoolPortal.Grades.Application.Directories;
+using SchoolPortal.Grades.Application.Persistence;
 using SchoolPortal.Grades.Domain.AcademicYears;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Grades.Application.Features.AcademicYears.Command.MarkAsCurrent;
 
-public sealed class MarkAcademicYearAsCurrentCommandHandler(IAcademicYearDirectory directory)
+public sealed class MarkAcademicYearAsCurrentCommandHandler(
+    IAcademicYearDirectory directory,
+    IGradesUnitOfWork unitOfWork)
     : IRequestHandler<MarkAcademicYearAsCurrentCommand, Result>
 {
     public async Task<Result> Handle(MarkAcademicYearAsCurrentCommand request, CancellationToken ct)
     {
-        var target = await directory.FindAsync(request.AcademicYearId, ct);
+        var target = await directory.GetByIdAsync(request.AcademicYearId, ct);
         if (target is null)
             return Result.Failure(AcademicYearErrors.NotFound);
 
@@ -24,14 +27,16 @@ public sealed class MarkAcademicYearAsCurrentCommandHandler(IAcademicYearDirecto
             if (unmarkResult.IsFailure)
                 return unmarkResult;
 
-            await directory.UpdateAsync(currentYear, ct);
+            directory.Update(currentYear);
         }
 
         var markResult = target.MarkAsCurrent();
         if (markResult.IsFailure)
             return markResult;
 
-        await directory.UpdateAsync(target, ct);
+        directory.Update(target);
+        await unitOfWork.SaveChangesAsync(ct);
+        
         return Result.Success();
     }
 }

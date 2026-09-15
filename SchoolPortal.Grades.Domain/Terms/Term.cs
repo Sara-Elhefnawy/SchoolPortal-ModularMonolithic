@@ -1,4 +1,5 @@
-using SchoolPortal.SharedKernel;
+using SchoolPortal.SharedKernel.Domain;
+using SchoolPortal.SharedKernel.Domain.Events.Grades.Terms;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Grades.Domain.Terms;
@@ -10,6 +11,7 @@ public sealed class Term : BaseEntity
     public DateOnly StartDate { get; private set; }
     public DateOnly EndDate { get; private set; }
     public int AcademicYearId { get; private set; }
+    public bool HasEnded { get; private set; }
 
     private Term()
     {
@@ -36,6 +38,24 @@ public sealed class Term : BaseEntity
             return Result<Term>.Failure(validationResult.Error);
 
         return Result<Term>.Success(new Term(name.Trim(), type, startDate, endDate, academicYearId));
+    }
+    
+    public Result End()
+    {
+        if (HasEnded)
+            return Result.Failure(TermErrors.InvalidTransitionToEnded);
+
+        HasEnded = true;
+        
+        RaiseEvent(() => Type switch
+        {
+            TermType.FirstTerm => new FirstTermEnded(Id, EndDate),
+            TermType.SecondTerm => new SecondTermEnded(Id, EndDate),
+            TermType.Final => new FinalTermEnded(Id, EndDate),
+            _ => throw new InvalidOperationException($"Unhandled term type: {Type}")
+        });
+        
+        return Result.Success();
     }
 
     private static Result Validate(string name, TermType type, DateOnly startDate, DateOnly endDate, int academicYearId)

@@ -10,6 +10,7 @@
     <ItemGroup>
       <ProjectReference Include="..\SchoolPortal.Attendances.Infrastructure\SchoolPortal.Attendances.Infrastructure.csproj" />
       <ProjectReference Include="..\SchoolPortal.Grades.Infrastructure\SchoolPortal.Grades.Infrastructure.csproj" />
+      <ProjectReference Include="..\SchoolPortal.Notifications.Application\SchoolPortal.Notifications.Application.csproj" />
       <ProjectReference Include="..\SchoolPortal.Students.Infrastructure\SchoolPortal.Students.Infrastructure.csproj" />
     </ItemGroup>
 

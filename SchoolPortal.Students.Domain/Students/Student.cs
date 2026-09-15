@@ -1,5 +1,6 @@
 using System.Net.Mail;
-using SchoolPortal.SharedKernel;
+using SchoolPortal.SharedKernel.Domain;
+using SchoolPortal.SharedKernel.Domain.Events.Students;
 using SchoolPortal.SharedKernel.Results;
 using SchoolPortal.Students.Domain.Addresses;
 using SchoolPortal.Students.Domain.enums;
@@ -68,6 +69,8 @@ public sealed class Student : BaseEntity
             dateOfBirth,
             gender,
             admissionDate);
+        
+        student.RaiseEvent(() => new StudentCreated(student.Id, student.Name));
 
         return Result<Student>.Success(student);
     }
@@ -87,7 +90,14 @@ public sealed class Student : BaseEntity
         var phoneResult = ValidatePhoneNumber(phoneNumber);
         if (phoneResult.IsFailure) return phoneResult;
 
-        PhoneNumber = phoneNumber.Trim();
+        var normalizedPhone = phoneNumber.Trim();
+
+        if (PhoneNumber == normalizedPhone)
+            return Result.Success();
+
+        PhoneNumber = normalizedPhone;
+        
+        RaiseEvent(() => new StudentPhoneNumberUpdated(Id, normalizedPhone));
 
         return Result.Success();
     }
@@ -99,6 +109,54 @@ public sealed class Student : BaseEntity
 
         Address.UpdateAddress(address);
         
+        return Result.Success();
+    }
+    
+    public Result Withdraw(DateOnly effectiveDate)
+    {
+        if (Status is StudentStatus.Withdrawn or StudentStatus.Graduated or StudentStatus.Inactive)
+            return Result.Failure(StudentErrors.InvalidTransitionToWithdrawn);
+
+        if (effectiveDate == default)
+            return Result.Failure(StudentErrors.InvalidEffectiveDate);
+
+        Status = StudentStatus.Withdrawn;
+        
+        RaiseEvent(() => new StudentWithdrawn(Id, effectiveDate));
+        
+        return Result.Success();
+    }
+    
+    public Result Suspend(string reason)
+    {
+        if (Status == StudentStatus.Suspended)
+            return Result.Failure(StudentErrors.InvalidTransitionToSuspended);
+
+        Status = StudentStatus.Suspended;
+        
+        RaiseEvent(() => new StudentSuspended(Id, reason));
+        
+        return Result.Success();
+        
+    }
+
+    public Result Graduate(DateOnly graduationDate)
+    {
+        if (Status != StudentStatus.Active)
+            return Result.Failure(StudentErrors.InvalidTransitionToGraduated);
+
+        Status = StudentStatus.Graduated;
+        RaiseEvent(() => new StudentGraduated(Id, graduationDate));
+        return Result.Success();
+    }
+
+    public Result Deactivate()
+    {
+        if (Status == StudentStatus.Inactive)
+            return Result.Failure(StudentErrors.InvalidTransitionToDeactivated);
+
+        Status = StudentStatus.Inactive;
+        RaiseEvent(() => new StudentDeactivated(Id));
         return Result.Success();
     }
 

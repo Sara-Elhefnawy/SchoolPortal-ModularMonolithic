@@ -1,12 +1,16 @@
 using MediatR;
 using SchoolPortal.SharedKernel.Results;
 using SchoolPortal.Students.Application.Directories;
+using SchoolPortal.Students.Application.Persistence;
 using SchoolPortal.Students.Domain.Enrollments;
 using SchoolPortal.Students.Domain.Students;
 
 namespace SchoolPortal.Students.Application.Features.Enrollments.Commands.Enroll;
 
-public sealed class EnrollStudentCommandHandler(IStudentDirectory studentDirectory, IEnrollmentDirectory enrollmentDirectory)
+public sealed class EnrollStudentCommandHandler(
+    IStudentDirectory studentDirectory, 
+    IEnrollmentDirectory enrollmentDirectory,
+    IStudentsUnitOfWork unitOfWork)
     : IRequestHandler<EnrollStudentCommand, Result<int>>
 {
     public async Task<Result<int>> Handle(EnrollStudentCommand request, CancellationToken ct)
@@ -19,7 +23,7 @@ public sealed class EnrollStudentCommandHandler(IStudentDirectory studentDirecto
         if (!courseSectionExists)
             return Result<int>.Failure(CourseSectionErrors.NotFound);*/
 
-        var alreadyEnrolled = await enrollmentDirectory.ExistsAsync(request.StudentId, request.CourseSectionId, ct);
+        var alreadyEnrolled = await enrollmentDirectory.StudentAndCourseSectionExistsAsync(request.StudentId, request.CourseSectionId, ct);
         if (alreadyEnrolled)
             return Result<int>.Failure(EnrollmentErrors.AlreadyEnrolled);
 
@@ -27,7 +31,8 @@ public sealed class EnrollStudentCommandHandler(IStudentDirectory studentDirecto
         if (enrollmentResult.IsFailure)
             return Result<int>.Failure(enrollmentResult.Error);
 
-        await enrollmentDirectory.AddAsync(enrollmentResult.Value, ct);
+        enrollmentDirectory.Add(enrollmentResult.Value);
+        await unitOfWork.SaveChangesAsync(ct);
 
         return Result<int>.Success(enrollmentResult.Value.Id);
     }

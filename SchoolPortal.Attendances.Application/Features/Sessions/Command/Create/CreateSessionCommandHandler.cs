@@ -1,11 +1,14 @@
 using MediatR;
 using SchoolPortal.Attendances.Application.Directories;
+using SchoolPortal.Attendances.Application.Persistence;
 using SchoolPortal.Attendances.Domain.Sessions;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Attendances.Application.Features.Sessions.Command.Create;
 
-public sealed class CreateSessionCommandHandler(ISessionDirectory  directory)
+public sealed class CreateSessionCommandHandler(
+    ISessionDirectory  directory,
+    IAttendancesUnitOfWork unitOfWork)
     : IRequestHandler<CreateSessionCommand, Result<int>>
 {
     public async Task<Result<int>> Handle(CreateSessionCommand request, CancellationToken ct)
@@ -18,7 +21,8 @@ public sealed class CreateSessionCommandHandler(ISessionDirectory  directory)
         if (sessionResult.IsFailure)
             return Result<int>.Failure(sessionResult.Error);
 
-        await directory.AddAsync(sessionResult.Value, ct);
+        directory.Add(sessionResult.Value);
+        await unitOfWork.SaveChangesAsync(ct);
 
         return Result<int>.Success(sessionResult.Value.Id);
     }
