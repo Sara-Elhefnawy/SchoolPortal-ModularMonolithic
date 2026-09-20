@@ -15,6 +15,8 @@ public sealed class GradesDbContext(
     IPublisher publisher)
     : ModuleDbContext(options, publisher)
 {
+    public const string Schema = "grades";
+    
     public DbSet<Grade> Grades => Set<Grade>();
     public DbSet<Term> Terms => Set<Term>();
     public DbSet<Course> Courses => Set<Course>();
@@ -24,7 +26,7 @@ public sealed class GradesDbContext(
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema("grades");
+        modelBuilder.HasDefaultSchema(Schema);
         
         base.OnModelCreating(modelBuilder);
         

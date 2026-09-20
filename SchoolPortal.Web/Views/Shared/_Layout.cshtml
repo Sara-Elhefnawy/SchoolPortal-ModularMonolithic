@@ -18,6 +18,7 @@
     <nav class="navbar navbar-expand-sm border-bottom shadow-sm">
         <div class="container">
 
+  
         <a class="navbar-brand"
            asp-area=""
            asp-controller="Students"
@@ -32,7 +33,9 @@
                 aria-controls="mainNavigation"
                 aria-expanded="false"
                 aria-label="Toggle navigation">
+
             <span class="navbar-toggler-icon"></span>
+
         </button>
 
         <div id="mainNavigation"
@@ -64,13 +67,58 @@
                     </a>
                 </li>
 
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           asp-controller="Identity"
+                           asp-action="Index">
+                            Identity
+                        </a>
+                    </li>
+                }
+
+            </ul>
+
+            <ul class="navbar-nav">
+
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <li class="nav-item">
+                        <span class="nav-link">
+                            @User.Identity.Name
+                        </span>
+                    </li>
+
+                    <li class="nav-item">
+                        <button id="logoutButton"
+                                type="button"
+                                class="btn btn-link nav-link">
+                            Logout
+                        </button>
+                    </li>
+                }
+                else
+                {
+                    <li class="nav-item">
+                        <a class="nav-link"
+                           asp-controller="Account"
+                           asp-action="Index">
+                            Login
+                        </a>
+                    </li>
+                }
+
             </ul>
 
         </div>
+
     </div>
 </nav>
+  
 
 </header>
+
 
 <div class="container">
     <main role="main" class="pb-4">
@@ -93,6 +141,28 @@
 <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
 
 <script src="~/js/site.js" asp-append-version="true"></script>
+
+@if (User.Identity?.IsAuthenticated == true)
+{ <script>
+document
+.getElementById("logoutButton")
+?.addEventListener("click", async function () {
+
+  
+            const response =
+                await fetch("/api/account/logout", {
+                    method: "POST"
+                });
+
+            if (response.ok) {
+                window.location.href = "/Account";
+            }
+        });
+</script>
+      
+
+}
+
 
 @await RenderSectionAsync("Scripts", required: false)
 

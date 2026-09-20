@@ -1,6 +1,6 @@
 using MediatR;
 using Microsoft.Extensions.Logging;
-using SchoolPortal.Notifications.Application.Persistence;
+using SchoolPortal.Notifications.Application.Directories;
 using SchoolPortal.Notifications.Domain.Notifications;
 using SchoolPortal.SharedKernel.Domain.Events.Students;
 

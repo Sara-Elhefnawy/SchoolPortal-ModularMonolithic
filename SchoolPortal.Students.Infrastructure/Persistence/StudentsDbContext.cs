@@ -11,12 +11,14 @@ public sealed class StudentsDbContext(
     IPublisher publisher)
     : ModuleDbContext(options, publisher)
 {
+    public const string Schema = "students";
+    
     public DbSet<Student> Students => Set<Student>();
     public DbSet<Enrollment> Enrollments => Set<Enrollment>();
     
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema("students");
+        modelBuilder.HasDefaultSchema(Schema);
         
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(StudentsDbContext).Assembly);
         

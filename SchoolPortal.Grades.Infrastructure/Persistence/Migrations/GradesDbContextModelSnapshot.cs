@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using SchoolPortal.Grades.Infrastructure;
 using SchoolPortal.Grades.Infrastructure.Persistence;
 
 #nullable disable
@@ -35,6 +34,9 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -58,7 +60,17 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("IsCurrent")
+                        .IsUnique()
+                        .HasFilter("\"IsCurrent\" = true");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
 
                     b.ToTable("AcademicYears", "grades");
                 });
@@ -76,6 +88,9 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
 
                     b.Property<DateOnly>("Date")
                         .HasColumnType("date");
@@ -102,8 +117,12 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("Weight")
-                        .HasColumnType("decimal(4,3)");
+                        .HasPrecision(4, 3)
+                        .HasColumnType("numeric(4,3)");
 
                     b.HasKey("Id");
 
@@ -126,6 +145,9 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -137,6 +159,9 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -164,8 +189,12 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("CreditHours")
-                        .HasColumnType("decimal(5,2)");
+                        .HasPrecision(4, 1)
+                        .HasColumnType("numeric(4,1)");
 
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
@@ -180,6 +209,9 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -203,6 +235,9 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -210,7 +245,8 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
                         .HasColumnType("boolean");
 
                     b.Property<decimal>("Score")
-                        .HasColumnType("decimal(6,2)");
+                        .HasPrecision(6, 2)
+                        .HasColumnType("numeric(6,2)");
 
                     b.Property<string>("Status")
                         .IsRequired()
@@ -222,6 +258,9 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
 
                     b.HasKey("Id");
 
@@ -247,11 +286,17 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.Property<DateOnly>("EndDate")
                         .HasColumnType("date");
+
+                    b.Property<bool>("HasEnded")
+                        .HasColumnType("boolean");
 
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("boolean");
@@ -272,9 +317,13 @@ namespace SchoolPortal.Grades.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
-                    b.HasIndex("AcademicYearId");
+                    b.HasIndex("AcademicYearId", "Name")
+                        .IsUnique();
 
                     b.ToTable("Terms", "grades");
                 });

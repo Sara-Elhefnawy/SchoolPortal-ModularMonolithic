@@ -15,6 +15,11 @@ public abstract class BaseEntity : IHasDomainEvents
     public bool IsDeleted { get; set; }
     public DateTime? DeletedAt { get; set; }
     
+    // int — matches ApplicationUser : IdentityUser<int>.Id
+    public int? CreatedByUserId { get; set; }
+    public int? UpdatedByUserId { get; set; }
+    public int? DeletedByUserId { get; set; }
+    
     // Needed so ModuleDbContext can check "does this entity have pending events?"
     // BEFORE save, without actually invoking the factories yet
     // (invoking them early would just reproduce the zero-Id bug one line later, at a different call site).
@@ -27,11 +32,7 @@ public abstract class BaseEntity : IHasDomainEvents
     public IReadOnlyCollection<IDomainEvent> DomainEvents =>
         _domainEventFactories.Select(factory => factory()).ToList().AsReadOnly();
     
-    // after Authentication & Authorization
-    /*public int? CreatedBy { get; set; }
-    public int? UpdatedBy { get; set; }*/
-
-    public void MarkAsDeleted()
+    public void MarkAsDeleted(int? userId)
     {
         IsDeleted = true;
         DeletedAt = DateTime.UtcNow;

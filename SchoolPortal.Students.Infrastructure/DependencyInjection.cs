@@ -19,7 +19,7 @@ public static class DependencyInjection
 
         services.AddDbContext<StudentsDbContext>(opt => opt.UseNpgsql(connectionString,
             // tells EF to only ever touch the "students" schema 
-            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "students")));
+            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", StudentsDbContext.Schema)));
 
         services.AddScoped<IStudentDirectory, StudentDirectory>();
         services.AddScoped<IEnrollmentDirectory, EnrollmentDirectory>();

@@ -20,8 +20,8 @@ public static class DependencyInjection
                                throw new InvalidOperationException("Connection string 'SchoolPortalDb' was not found.");
 
         services.AddDbContext<GradesDbContext>(opt => opt.UseNpgsql(connectionString,
-            // tells EF to only ever touch the "attendance" schema 
-            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "grades")));
+            // tells EF to only ever touch the "grades" schema 
+            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", GradesDbContext.Schema)));
         
         services.AddScoped<IAcademicYearDirectory, AcademicYearDirectory>();
         services.AddScoped<ITermDirectory, TermDirectory>();

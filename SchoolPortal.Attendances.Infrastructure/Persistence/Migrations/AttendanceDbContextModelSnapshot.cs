@@ -4,7 +4,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
-using SchoolPortal.Attendances.Infrastructure;
 using SchoolPortal.Attendances.Infrastructure.Persistence;
 
 #nullable disable
@@ -35,6 +34,9 @@ namespace SchoolPortal.Attendances.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime?>("DeletedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -58,6 +60,9 @@ namespace SchoolPortal.Attendances.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("SessionOccurrenceId");
@@ -68,7 +73,50 @@ namespace SchoolPortal.Attendances.Infrastructure.Migrations
                     b.ToTable("Attendances", "attendance");
                 });
 
-            modelBuilder.Entity("SchoolPortal.Attendances.Domain.Session.Session", b =>
+            modelBuilder.Entity("SchoolPortal.Attendances.Domain.SessionOccurrences.SessionOccurrence", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateOnly>("Date")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("DeletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("IsCancelled")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("SessionId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("SessionId", "Date")
+                        .IsUnique();
+
+                    b.ToTable("SessionOccurrences", "attendance");
+                });
+
+            modelBuilder.Entity("SchoolPortal.Attendances.Domain.Sessions.Session", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -81,6 +129,9 @@ namespace SchoolPortal.Attendances.Infrastructure.Migrations
 
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<int?>("CreatedByUserId")
+                        .HasColumnType("integer");
 
                     b.Property<string>("DayOfWeek")
                         .IsRequired()
@@ -102,6 +153,9 @@ namespace SchoolPortal.Attendances.Infrastructure.Migrations
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<int?>("UpdatedByUserId")
+                        .HasColumnType("integer");
+
                     b.HasKey("Id");
 
                     b.HasIndex("CourseSectionId", "DayOfWeek", "StartTime")
@@ -110,52 +164,18 @@ namespace SchoolPortal.Attendances.Infrastructure.Migrations
                     b.ToTable("Sessions", "attendance");
                 });
 
-            modelBuilder.Entity("SchoolPortal.Attendances.Domain.SessionOccurrence.SessionOccurrence", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateOnly>("Date")
-                        .HasColumnType("date");
-
-                    b.Property<DateTime?>("DeletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("boolean");
-
-                    b.Property<int>("SessionId")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("SessionId", "Date")
-                        .IsUnique();
-
-                    b.ToTable("SessionOccurrences", "attendance");
-                });
-
             modelBuilder.Entity("SchoolPortal.Attendances.Domain.Attendances.Attendance", b =>
                 {
-                    b.HasOne("SchoolPortal.Attendances.Domain.SessionOccurrence.SessionOccurrence", null)
+                    b.HasOne("SchoolPortal.Attendances.Domain.SessionOccurrences.SessionOccurrence", null)
                         .WithMany()
                         .HasForeignKey("SessionOccurrenceId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("SchoolPortal.Attendances.Domain.SessionOccurrence.SessionOccurrence", b =>
+            modelBuilder.Entity("SchoolPortal.Attendances.Domain.SessionOccurrences.SessionOccurrence", b =>
                 {
-                    b.HasOne("SchoolPortal.Attendances.Domain.Session.Session", null)
+                    b.HasOne("SchoolPortal.Attendances.Domain.Sessions.Session", null)
                         .WithMany()
                         .HasForeignKey("SessionId")
                         .OnDelete(DeleteBehavior.Restrict)

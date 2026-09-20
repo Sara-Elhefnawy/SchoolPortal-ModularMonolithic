@@ -12,13 +12,15 @@ public class AttendancesDbContext(
     IPublisher publisher)
     : ModuleDbContext(options, publisher)
 {
+    public const string Schema = "attendance";
+    
     public DbSet<Attendance> Attendances => Set<Attendance>();
     public DbSet<Session> Sessions => Set<Session>();
     public DbSet<SessionOccurrence> SessionOccurrences => Set<SessionOccurrence>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.HasDefaultSchema("attendance");
+        modelBuilder.HasDefaultSchema(Schema);
         
         base.OnModelCreating(modelBuilder);
         

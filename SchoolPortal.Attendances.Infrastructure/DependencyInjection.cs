@@ -19,7 +19,7 @@ public static class DependencyInjection
 
         services.AddDbContext<AttendancesDbContext>(opt => opt.UseNpgsql(connectionString,
             // tells EF to only ever touch the "attendance" schema 
-            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", "attendance")));
+            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", AttendancesDbContext.Schema)));
 
         services.AddScoped<IAttendanceDirectory, AttendanceDirectory>();
         services.AddScoped<ISessionDirectory, SessionDirectory>();

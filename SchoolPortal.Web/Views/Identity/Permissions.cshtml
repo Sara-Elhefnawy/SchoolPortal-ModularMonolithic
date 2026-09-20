@@ -1,0 +1,142 @@
+@{
+ViewData["Title"] = "Permissions";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+
+  
+<div>
+    <h1>Permissions</h1>
+
+    <p class="text-muted mb-0">
+        Available permissions in SchoolPortal.
+    </p>
+</div>
+
+<a asp-controller="Identity"
+   asp-action="Index"
+   class="btn btn-outline-secondary">
+    Back
+</a>
+  
+
+</div>
+
+<div id="message"
+     class="alert d-none">
+</div>
+
+<div class="card shadow-sm">
+
+  
+<div class="card-header d-flex justify-content-between">
+
+    <strong>Permission Catalog</strong>
+
+    <button id="refreshPermissions"
+            class="btn btn-sm btn-outline-primary">
+        Refresh
+    </button>
+
+</div>
+
+<div class="card-body">
+
+    <div class="table-responsive">
+
+        <table class="table table-hover">
+
+            <thead>
+
+            <tr>
+                <th>Id</th>
+                <th>Permission</th>
+                <th>Description</th>
+            </tr>
+
+            </thead>
+
+            <tbody id="permissionsTableBody">
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+  
+
+</div>
+
+@section Scripts {
+
+<script>
+
+    const permissionsUrl =
+        "/api/admin/permissions";
+
+    const messageElement =
+        document.getElementById("message");
+
+    async function loadPermissions() {
+
+        const response =
+            await fetch(permissionsUrl);
+
+        if (!response.ok) {
+
+            messageElement.textContent =
+                "Failed to load permissions.";
+
+            messageElement.className =
+                "alert alert-danger";
+
+            return;
+        }
+
+        const result =
+            await response.json();
+
+        const permissions =
+            result.value ?? result;
+
+        const tbody =
+            document.getElementById(
+                "permissionsTableBody");
+
+        tbody.innerHTML = "";
+
+        permissions.forEach(permission => {
+
+            const row =
+                document.createElement("tr");
+
+            row.innerHTML = `
+                <td>${permission.id}</td>
+
+                <td>
+                    <code>
+                        ${permission.name}
+                    </code>
+                </td>
+
+                <td>
+                    ${permission.description ?? ""}
+                </td>
+            `;
+
+            tbody.appendChild(row);
+        });
+    }
+
+    document
+        .getElementById("refreshPermissions")
+        .addEventListener(
+            "click",
+            loadPermissions);
+
+    loadPermissions();
+
+</script>
+
+}

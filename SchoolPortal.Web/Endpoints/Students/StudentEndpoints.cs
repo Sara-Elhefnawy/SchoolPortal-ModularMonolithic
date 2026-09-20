@@ -1,4 +1,5 @@
 using MediatR;
+using SchoolPortal.SharedKernel.Identity;
 using SchoolPortal.Students.Application.Features.Enrollments.Commands.Complete;
 using SchoolPortal.Students.Application.Features.Enrollments.Commands.Enroll;
 using SchoolPortal.Students.Application.Features.Enrollments.Commands.Withdraw;
@@ -17,84 +18,125 @@ public static class StudentEndpoints
 {
     public static void MapStudentEndpoints(this IEndpointRouteBuilder app)
     {
+        MapStudentOperations(app);
+        MapEnrollmentOperations(app);
+    }
+
+    private static void MapStudentOperations(IEndpointRouteBuilder app)
+    {
         var group = app.MapGroup("/api/students").WithTags("Students");
 
-        group.MapPost("/", async (CreateStudentCommand command, IMediator mediator, CancellationToken ct) =>
-        {
-            var result = await mediator.Send(command, ct);
-            return result.IsSuccess
-                ? Results.Created($"/api/students/{result.Value}", result.Value)
-                : Results.BadRequest(result.Error);
-        });
+        group.MapPost("/", CreateStudent).RequireAuthorization(Permissions.Students.Create);
 
-        group.MapPut("/{id:int}/address", async (
-            int id, UpdateStudentAddressRequest body, IMediator mediator, CancellationToken ct) =>
-        {
-            var command = new UpdateStudentAddressCommand(
-                id, body.City, body.State, body.ZipCode, body.Country, body.BuildingNumber);
-            var result = await mediator.Send(command, ct);
-            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-        });
+        group.MapPut("/{id:int}/address", UpdateStudentAddress).RequireAuthorization(Permissions.Students.Update);
 
-        group.MapPut("/{id:int}/phone", async (
-            int id, UpdateStudentPhoneRequest body, IMediator mediator, CancellationToken ct) =>
-        {
-            var command = new UpdateStudentPhoneCommand(
-                id, body.PhoneNumber);
-            var result = await mediator.Send(command, ct);
-            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-        });
+        group.MapPut("/{id:int}/phone", UpdateStudentPhone).RequireAuthorization(Permissions.Students.Update);
 
-        group.MapPut("/{id:int}/email", async (
-            int id, UpdateStudentEmailRequest body, IMediator mediator, CancellationToken ct) =>
-        {
-            var command = new UpdateStudentEmailCommand(
-                id, body.Email);
-            var result = await mediator.Send(command, ct);
-            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-        });
-        
-        group.MapPost("/{id:int}/suspend", async (
-            int id, SuspendStudentRequest body, IMediator mediator, CancellationToken ct) =>
-        {
-            var result = await mediator.Send(new SuspendStudentCommand(id, body.Reason), ct);
-            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-        });
+        group.MapPut("/{id:int}/email", UpdateStudentEmail).RequireAuthorization(Permissions.Students.Update);
 
-        group.MapPost("/{id:int}/graduate", async (
-            int id, GraduateStudentRequest body, IMediator mediator, CancellationToken ct) =>
-        {
-            var result = await mediator.Send(new GraduateStudentCommand(id, body.GraduationDate), ct);
-            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-        });
+        group.MapPost("/{id:int}/suspend", SuspendStudent).RequireAuthorization(Permissions.Students.Update);
 
-        group.MapPost("/{id:int}/deactivate", async (
-            int id, IMediator mediator, CancellationToken ct) =>
-        {
-            var result = await mediator.Send(new DeactivateStudentCommand(id), ct);
-            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-        });
+        group.MapPost("/{id:int}/graduate", GraduateStudent).RequireAuthorization(Permissions.Students.Update);
 
-        var enrollments = app.MapGroup("/api/enrollments").WithTags("Enrollments");
+        group.MapPost("/{id:int}/deactivate", DeactivateStudent).RequireAuthorization(Permissions.Students.Update);
+    }
 
-        enrollments.MapPost("/", async (EnrollStudentCommand command, IMediator mediator, CancellationToken ct) =>
-        {
-            var result = await mediator.Send(command, ct);
-            return result.IsSuccess
-                ? Results.Created($"/api/enrollments/{result.Value}", result.Value)
-                : Results.BadRequest(result.Error);
-        });
+    private static void MapEnrollmentOperations(IEndpointRouteBuilder app)
+    {
+        var group = app.MapGroup("/api/enrollments").WithTags("Enrollments");
 
-        enrollments.MapPost("/{id:int}/withdraw", async (int id, IMediator mediator, CancellationToken ct) =>
-        {
-            var result = await mediator.Send(new WithdrawEnrollmentCommand(id), ct);
-            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-        });
+        /*
+         * Enrollment changes student academic state,
+         * so we protect it with the Students.Update permission.
+         */
+        group.MapPost("/", EnrollStudent).RequireAuthorization(Permissions.Students.Update);
 
-        enrollments.MapPost("/{id:int}/complete", async (int id, IMediator mediator, CancellationToken ct) =>
-        {
-            var result = await mediator.Send(new CompleteEnrollmentCommand(id), ct);
-            return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-        });
+        group.MapPost("/{id:int}/withdraw", WithdrawEnrollment).RequireAuthorization(Permissions.Students.Update);
+
+        group.MapPost("/{id:int}/complete", CompleteEnrollment).RequireAuthorization(Permissions.Students.Update);
+    }
+
+    private static async Task<IResult> CreateStudent(CreateStudentCommand command, IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+
+        return result.IsSuccess
+            ? Results.Created($"/api/students/{result.Value}", result.Value)
+            : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> UpdateStudentAddress(int id, UpdateStudentAddressRequest body,
+        IMediator mediator, CancellationToken ct)
+    {
+        var command = new UpdateStudentAddressCommand(id, body.City, body.State, body.ZipCode, body.Country,
+            body.BuildingNumber);
+
+        var result = await mediator.Send(command, ct);
+
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> UpdateStudentPhone(int id, UpdateStudentPhoneRequest body, IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(new UpdateStudentPhoneCommand(id, body.PhoneNumber), ct);
+
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> UpdateStudentEmail(int id, UpdateStudentEmailRequest body, IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(new UpdateStudentEmailCommand(id, body.Email), ct);
+
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> SuspendStudent(int id, SuspendStudentRequest body, IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(new SuspendStudentCommand(id, body.Reason), ct);
+
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> GraduateStudent(int id, GraduateStudentRequest body, IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(new GraduateStudentCommand(id, body.GraduationDate), ct);
+
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> DeactivateStudent(int id, IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DeactivateStudentCommand(id), ct);
+
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> EnrollStudent(EnrollStudentCommand command, IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(command, ct);
+
+        return result.IsSuccess
+            ? Results.Created($"/api/enrollments/{result.Value}", result.Value)
+            : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> WithdrawEnrollment(int id, IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new WithdrawEnrollmentCommand(id), ct);
+
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> CompleteEnrollment(int id, IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CompleteEnrollmentCommand(id), ct);
+
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
     }
 }

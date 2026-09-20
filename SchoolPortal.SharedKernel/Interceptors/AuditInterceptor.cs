@@ -2,14 +2,19 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using SchoolPortal.SharedKernel.Domain;
+using SchoolPortal.SharedKernel.Identity.Users;
 
 namespace SchoolPortal.SharedKernel.Interceptors;
 
-public sealed class AuditInterceptor(ILogger<AuditInterceptor>? logger = null) : SaveChangesInterceptor
+public sealed class AuditInterceptor(
+    ICurrentUser currentUser,
+    ILogger<AuditInterceptor>? logger = null) 
+    : SaveChangesInterceptor
 {
     public void ApplyAudit(DbContext context)
     {
         var now = DateTime.UtcNow;
+        var userId = currentUser.UserId;
         var entries = context.ChangeTracker.Entries<BaseEntity>().ToList();
 
         // Only log in development (Debug level)
@@ -21,22 +26,27 @@ public sealed class AuditInterceptor(ILogger<AuditInterceptor>? logger = null) :
             switch (entry.State)
             {
                 case EntityState.Added:
-                    entry.Property(nameof(BaseEntity.CreatedAt)).CurrentValue = now;
-                    logger?.LogDebug("Set CreatedAt for {Type} to {Now}",
-                        entry.Entity.GetType().Name, now);
+                    entry.Entity.CreatedAt = now;
+                    entry.Entity.CreatedByUserId = userId;
+                    
+                    logger?.LogDebug("Created {Type} by user {UserId} at {Now}", entry.Entity.GetType().Name, userId,
+                        now);
                     break;
 
                 case EntityState.Modified:
-                    entry.Property(nameof(BaseEntity.UpdatedAt)).CurrentValue = now;
-                    logger?.LogDebug("Set UpdatedAt for {Type} to {Now}",
-                        entry.Entity.GetType().Name, now);
+                    entry.Entity.UpdatedAt = now;
+                    entry.Entity.UpdatedByUserId = userId;
+                    
+                    logger?.LogDebug("Updated {Type} by user {UserId} at {Now}", entry.Entity.GetType().Name, userId,
+                        now);
                     break;
 
                 case EntityState.Deleted:
                     entry.State = EntityState.Modified;
-                    entry.Entity.MarkAsDeleted();
-                    logger?.LogDebug("Soft-deleted {Type} at {Now}",
-                        entry.Entity.GetType().Name, now);
+                    entry.Entity.MarkAsDeleted(userId);
+
+                    logger?.LogDebug("Soft-deleted {Type} by user {UserId} at {Now}", entry.Entity.GetType().Name,
+                        userId, now);
                     break;
             }
         }

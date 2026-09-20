@@ -1,0 +1,98 @@
+@{
+ViewData["Title"] = "Login";
+}
+
+<div class="row justify-content-center mt-5">
+    <div class="col-md-5">
+        <div class="card shadow-sm">
+            <div class="card-body p-4">
+                <h2 class="text-center mb-4">SchoolPortal Login</h2>
+
+            <div id="loginError" class="alert alert-danger d-none"></div>
+
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="email" class="form-label">Email</label>
+                    <input id="email"
+                           name="email"
+                           type="email"
+                           class="form-control"
+                           required />
+                </div>
+
+                <div class="mb-3">
+                    <label for="password" class="form-label">Password</label>
+                    <input id="password"
+                           name="password"
+                           type="password"
+                           class="form-control"
+                           required />
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100">
+                    Login
+                </button>
+            </form>
+
+                <div class="text-center mt-3">
+                    <a asp-controller="Account"
+                       asp-action="ForgotPassword">
+                        Forgot password?
+                    </a>
+                </div>
+                
+                <div class="text-center mt-3">
+                    <a href="/Account/Signup">
+                        Don't have an account? Sign up
+                    </a>
+                </div>
+            </div>
+    </div>
+</div>
+
+
+</div>
+
+@section Scripts {
+
+<script>
+    document.getElementById("loginForm").addEventListener("submit", async function (event) {
+        event.preventDefault();
+
+        const errorElement = document.getElementById("loginError");
+        errorElement.classList.add("d-none");
+        errorElement.textContent = "";
+
+        const response = await fetch("/api/account/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                email: document.getElementById("email").value,
+                password: document.getElementById("password").value
+            })
+        });
+
+        if (response.ok) {
+            window.location.href = "/Students";
+            return;
+        }
+
+        let message = "Invalid email or password.";
+
+        try {
+            const data = await response.json();
+
+            if (data.error?.message) {
+                message = data.error.message;
+            }
+        } catch {
+        }
+
+        errorElement.textContent = message;
+        errorElement.classList.remove("d-none");
+    });
+</script>
+
+}
