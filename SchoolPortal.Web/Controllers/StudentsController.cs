@@ -8,4 +8,6 @@ namespace SchoolPortal.Web.Controllers;
 public sealed class StudentsController : Controller
 {
     public IActionResult Index() => View();
+    public IActionResult Create() => View();
+    public IActionResult Details(int id) => View();
 }

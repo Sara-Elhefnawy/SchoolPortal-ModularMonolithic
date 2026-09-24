@@ -25,6 +25,12 @@ public static class GradeErrors
     public static readonly Error InvalidTransitionToUnpublish =
         Error.Validation("Grade.InvalidTransitionToUnpublish", "Grade is not currently published.");
 
+    public static readonly Error InvalidTransitionToDraft =
+        Error.Validation("Grade.InvalidTransitionToDraft", "Grade is not currently published.");
+
+    public static readonly Error InvalidTransitionToUnlock =
+        Error.Validation("Grade.InvalidTransitionToUnlock", "Grade is not currently locked.");
+
     public static readonly Error InvalidRevise =
         Error.Validation("Grade.InvalidRevise", "Cannot revise a published grade directly — unpublish first.");
     

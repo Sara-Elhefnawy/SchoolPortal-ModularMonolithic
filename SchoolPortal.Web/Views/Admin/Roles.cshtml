@@ -1,0 +1,22 @@
+@{
+    ViewData["Title"] = "Roles";
+}
+<div class="page-toolbar"><div><h2>Roles</h2><p class="text-muted">Define roles and manage their permissions.</p></div>
+    @if (User.HasClaim("permission", "Users.Create")) { <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#roleModal">Add role</button> }</div>
+<div class="panel"><div class="table-responsive"><table class="table align-middle">
+    <thead><tr><th>Role</th><th>Status</th><th></th></tr></thead><tbody id="rolesBody"></tbody>
+</table></div></div>
+<div class="modal fade" id="roleModal" tabindex="-1"><div class="modal-dialog"><div class="modal-content"><div class="modal-body">
+    <form id="roleForm"><input name="name" class="form-control mb-3" placeholder="Role name" required /><button class="btn btn-primary w-100">Create role</button></form>
+</div></div></div></div>
+@section Scripts {
+    <script>
+async function loadRoles() {
+ const r=await callApi("/api/admin/roles","GET"), b=document.getElementById("rolesBody");
+ if(!r.ok){b.innerHTML=`<tr><td colspan="3">${escapeHtml(r.message)}</td></tr>`;return;}
+ b.innerHTML=(r.data||[]).map(x=>`<tr><td><strong>${escapeHtml(x.name)}</strong></td><td>${x.isDeleted?"Deleted":"Active"}</td><td class="text-end"><a class="btn btn-sm btn-outline-primary" href="/Admin/RoleDetails/${x.id}">Permissions</a></td></tr>`).join("");
+}
+document.getElementById("roleForm").addEventListener("submit",async e=>{e.preventDefault();const r=await callApi("/api/admin/roles","POST",formToObject(e.target));if(r.ok){bootstrap.Modal.getInstance(document.getElementById("roleModal")).hide();loadRoles();showToast("Role created.","success")}else showToast(r.message,"danger")});
+loadRoles();
+</script>
+}

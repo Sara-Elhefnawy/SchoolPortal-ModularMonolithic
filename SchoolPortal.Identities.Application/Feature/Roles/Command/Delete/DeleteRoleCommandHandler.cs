@@ -1,7 +1,7 @@
 using MediatR;
 using Microsoft.AspNetCore.Identity;
 using SchoolPortal.Identities.Domain.Roles;
-using SchoolPortal.SharedKernel.Identity.Users;
+using SchoolPortal.SharedKernel.Identity.Contracts;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Identities.Application.Feature.Roles.Command.Delete;

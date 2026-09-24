@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using SchoolPortal.Grades.Application.Directories;
+using SchoolPortal.Grades.Application.Features.AcademicYears.Query.GetAll;
 using SchoolPortal.Grades.Domain.AcademicYears;
 using SchoolPortal.Grades.Infrastructure.Persistence;
 
@@ -7,6 +8,10 @@ namespace SchoolPortal.Grades.Infrastructure.Directories;
 
 internal sealed class AcademicYearDirectory(GradesDbContext dbContext) : IAcademicYearDirectory
 {
+    public async Task<IReadOnlyList<GetAllAcademicYearsQueryDto>> GetAllAsync(CancellationToken ct) =>
+        await dbContext.AcademicYears.AsNoTracking().OrderByDescending(x => x.StartDate).Select(x =>
+            new GetAllAcademicYearsQueryDto(x.Id, x.Name, x.StartDate, x.EndDate, x.IsCurrent)).ToListAsync(ct);
+
     public async Task<AcademicYear?> GetByIdAsync(int id, CancellationToken ct) =>
         await dbContext.AcademicYears.FirstOrDefaultAsync(a => a.Id == id, ct);
 

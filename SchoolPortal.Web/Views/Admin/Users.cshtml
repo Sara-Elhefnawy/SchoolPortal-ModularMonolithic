@@ -1,0 +1,52 @@
+@{
+    ViewData["Title"] = "Users";
+}
+<div class="page-toolbar">
+    <div><h2>Users</h2><p class="text-muted">Manage accounts and roles.</p></div>
+    @if (User.HasClaim("permission", "Users.Create"))
+    {
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#createUserModal">Add user</button>
+    }
+</div>
+<div class="panel">
+    <input id="userSearch" class="form-control mb-3" placeholder="Search users..." />
+    <div class="table-responsive"><table class="table align-middle">
+        <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th><th></th></tr></thead>
+        <tbody id="usersBody"></tbody>
+    </table></div>
+</div>
+
+<div class="modal fade" id="createUserModal" tabindex="-1">
+<div class="modal-dialog"><div class="modal-content">
+<div class="modal-header"><h5>Create user</h5><button class="btn-close" data-bs-dismiss="modal"></button></div>
+<div class="modal-body">
+<form id="createUserForm">
+<input class="form-control mb-2" name="name" placeholder="Full name" required />
+<input class="form-control mb-2" name="email" type="email" placeholder="Email" required />
+<input class="form-control mb-2" name="password" type="password" placeholder="Password" required />
+<input class="form-control mb-2" name="role" placeholder="Role" required />
+<button class="btn btn-primary w-100">Create</button>
+</form>
+</div></div></div></div>
+
+@section Scripts {
+<script>
+async function loadUsers() {
+    const result = await callApi("/api/admin/users", "GET");
+    const body = document.getElementById("usersBody");
+    if (!result.ok) { body.innerHTML = `<tr><td colspan="5">${escapeHtml(result.message)}</td></tr>`; return; }
+    body.innerHTML = (result.data || []).map(u => `
+        <tr><td><strong>${escapeHtml(u.name)}</strong></td><td>${escapeHtml(u.email)}</td>
+        <td>${escapeHtml((u.roles || []).join(", "))}</td>
+        <td><span class="status-badge">${u.isActive === false ? "Inactive" : "Active"}</span></td>
+        <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="/Admin/UserDetails/${u.id}">View</a></td></tr>`).join("");
+}
+document.getElementById("createUserForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const result = await callApi("/api/admin/users", "POST", formToObject(e.target));
+    if (result.ok) { bootstrap.Modal.getInstance(document.getElementById("createUserModal")).hide(); loadUsers(); showToast("User created.", "success"); }
+    else showToast(result.message || "Could not create user.", "danger");
+});
+loadUsers();
+</script>
+}

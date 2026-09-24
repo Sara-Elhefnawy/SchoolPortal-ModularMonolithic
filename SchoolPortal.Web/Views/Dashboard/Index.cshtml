@@ -1,0 +1,43 @@
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<div class="welcome-card">
+    <div>
+        <span class="eyebrow">Overview</span>
+        <h2>Welcome back, @User.Identity?.Name</h2>
+        <p>Manage students, attendance and grades from one place.</p>
+    </div>
+</div>
+
+<div class="dashboard-grid">
+    <a class="feature-card" asp-controller="Students" asp-action="Index">
+        <div class="feature-icon">ST</div>
+        <h3>Students</h3>
+        <p>Search students, view profiles and manage their status and enrollment.</p>
+        <span>Open students →</span>
+    </a>
+
+    <a class="feature-card" asp-controller="Attendance" asp-action="Index">
+        <div class="feature-icon">AT</div>
+        <h3>Attendance</h3>
+        <p>Open today's classes and record attendance for students.</p>
+        <span>Open attendance →</span>
+    </a>
+
+    <a class="feature-card" asp-controller="Grades" asp-action="Index">
+        <div class="feature-icon">GR</div>
+        <h3>Grades</h3>
+        <p>Manage gradebooks, assessments, publishing and rankings.</p>
+        <span>Open grades →</span>
+    </a>
+
+    @if (User.IsInRole("Admin"))
+    {
+        <a class="feature-card" asp-controller="Admin" asp-action="Users">
+            <div class="feature-icon">AD</div>
+            <h3>Administration</h3>
+            <p>Manage users, roles and role permissions.</p>
+            <span>Open administration →</span>
+        </a>
+    }
+</div>

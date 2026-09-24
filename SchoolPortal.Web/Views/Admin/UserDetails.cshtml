@@ -1,0 +1,33 @@
+@{
+    ViewData["Title"] = "User details";
+    var id = ViewContext.RouteData.Values["id"];
+}
+<div class="page-toolbar"><div><a href="/Admin/Users" class="back-link">← Users</a><h2>User details</h2></div></div>
+<div id="userDetails" class="panel">Loading...</div>
+@section Scripts {
+    <script>
+const userId = "@id";
+async function loadUser() {
+    const result = await callApi(`/api/admin/users/${userId}`, "GET");
+    const box = document.getElementById("userDetails");
+    if (!result.ok) { box.innerHTML = `<div class="alert alert-danger">${escapeHtml(result.message)}</div>`; return; }
+    const u = result.data;
+    box.innerHTML = `
+        <div class="detail-grid">
+            <div><small>Name</small><strong>${escapeHtml(u.name)}</strong></div>
+            <div><small>Email</small><strong>${escapeHtml(u.email)}</strong></div>
+            <div><small>Role</small><strong>${escapeHtml((u.roles || []).join(", ") || "No role")}</strong></div>
+            <div><small>Status</small><strong>${u.isActive === false ? "Inactive" : "Active"}</strong></div>
+        </div>
+        <hr />
+        <h5>Actions</h5>
+        <div class="action-row">
+            <button class="btn btn-outline-primary" onclick="activate()">Activate</button>
+            <button class="btn btn-outline-warning" onclick="deactivate()">Deactivate</button>
+        </div>`;
+}
+async function activate() { const r=await callApi(`/api/admin/users/${userId}/activate`,"POST"); showToast(r.message||"Updated",r.ok?"success":"danger"); if(r.ok)loadUser(); }
+async function deactivate() { const r=await callApi(`/api/admin/users/${userId}/deactivate`,"POST"); showToast(r.message||"Updated",r.ok?"success":"danger"); if(r.ok)loadUser(); }
+loadUser();
+</script>
+}

@@ -1,163 +1,35 @@
 @{
-    ViewData["Title"] = "Sign Up";
+    ViewData["Title"] = "Create account";
 }
+<div class="auth-card">
+    <div class="brand auth-brand"><span class="brand-mark">SP</span> SchoolPortal</div>
+    <h1>Create account</h1>
+    <p class="text-muted">Create a SchoolPortal account.</p>
 
-<div class="row justify-content-center">
-    <div class="col-md-6">
-        <div class="card shadow-sm">
-            <div class="card-body">
-                <h2 class="card-title mb-4">Create Account</h2>
+    <form id="signupForm">
+        <label class="form-label">Full name</label>
+        <input class="form-control mb-3" name="name" required />
 
-                <div id="signupError"
-                     class="alert alert-danger d-none">
-                </div>
+        <label class="form-label">Email</label>
+        <input class="form-control mb-3" name="email" type="email" required />
 
-                <div id="signupSuccess"
-                     class="alert alert-success d-none">
-                </div>
+        <label class="form-label">Password</label>
+        <input class="form-control mb-3" name="password" type="password" required />
 
-                <form id="signupForm">
-
-                    <div class="mb-3">
-                        <label for="fullName"
-                               class="form-label">
-                            Full Name
-                        </label>
-
-                        <input id="fullName"
-                               name="fullName"
-                               type="text"
-                               class="form-control"
-                               required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="email"
-                               class="form-label">
-                            Email
-                        </label>
-
-                        <input id="email"
-                               name="email"
-                               type="email"
-                               class="form-control"
-                               required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="password"
-                               class="form-label">
-                            Password
-                        </label>
-
-                        <input id="password"
-                               name="password"
-                               type="password"
-                               class="form-control"
-                               required />
-                    </div>
-
-                    <div class="mb-3">
-                        <label for="confirmPassword"
-                               class="form-label">
-                            Confirm Password
-                        </label>
-
-                        <input id="confirmPassword"
-                               name="confirmPassword"
-                               type="password"
-                               class="form-control"
-                               required />
-                    </div>
-
-                    <button type="submit"
-                            class="btn btn-primary w-100">
-                        Create Account
-                    </button>
-                </form>
-
-                <div class="text-center mt-3">
-                    <a href="/Account">
-                        Already have an account? Login
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+        <button class="btn btn-primary w-100">Create account</button>
+    </form>
 </div>
 
 @section Scripts {
     <script>
-        document
-            .getElementById("signupForm")
-            .addEventListener("submit", async function (event) {
-                event.preventDefault();
-
-                const errorElement =
-                    document.getElementById("signupError");
-
-                const successElement =
-                    document.getElementById("signupSuccess");
-
-                errorElement.classList.add("d-none");
-                successElement.classList.add("d-none");
-
-                const fullName =
-                    document.getElementById("fullName").value.trim();
-
-                const email =
-                    document.getElementById("email").value.trim();
-
-                const password =
-                    document.getElementById("password").value;
-
-                const confirmPassword =
-                    document.getElementById("confirmPassword").value;
-
-                if (password !== confirmPassword) {
-                    errorElement.textContent =
-                        "Passwords do not match.";
-
-                    errorElement.classList.remove("d-none");
-                    return;
-                }
-
-                const response = await fetch(
-                    "/api/account/signup",
-                    {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify({
-                            fullName: fullName,
-                            email: email,
-                            password: password,
-                            confirmPassword: confirmPassword
-                        })
-                    });
-
-                if (response.ok) {
-                    window.location.href = "/Identity";
-                    return;
-                }
-
-                let message = "Signup failed.";
-
-                try {
-                    const result = await response.json();
-
-                    message =
-                        result.error?.message ??
-                        result.message ??
-                        message;
-                }
-                catch {
-                    // Keep default error message.
-                }
-
-                errorElement.textContent = message;
-                errorElement.classList.remove("d-none");
-            });
-    </script>
+document.getElementById("signupForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const result = await callApi("/api/account/signup", "POST", formToObject(e.target));
+    if (result.ok) {
+        window.location.href = "/Account/Login";
+    } else {
+        showToast(result.message || "Could not create account.", "danger");
+    }
+        });
+</script>
 }

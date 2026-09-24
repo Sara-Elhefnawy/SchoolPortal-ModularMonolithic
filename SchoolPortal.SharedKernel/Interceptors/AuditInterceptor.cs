@@ -2,7 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.Logging;
 using SchoolPortal.SharedKernel.Domain;
-using SchoolPortal.SharedKernel.Identity.Users;
+using SchoolPortal.SharedKernel.Identity.Contracts;
 
 namespace SchoolPortal.SharedKernel.Interceptors;
 

@@ -1,0 +1,38 @@
+@{
+    ViewData["Title"] = "Add student";
+}
+<div class="form-page">
+    <div class="page-toolbar">
+        <div><h2>New student</h2><p class="text-muted">Create the student's basic profile.</p></div>
+        <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
+    </div>
+
+    <div class="panel">
+        <form id="studentForm">
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Name</label><input name="name" class="form-control" required /></div>
+                <div class="col-md-6"><label class="form-label">Email</label><input name="email" type="email" class="form-control" required /></div>
+                <div class="col-md-6"><label class="form-label">Phone</label><input name="phoneNumber" class="form-control" /></div>
+                <div class="col-md-6"><label class="form-label">Date of birth</label><input name="dateOfBirth" type="date" class="form-control" required /></div>
+                <div class="col-md-6">
+                    <label class="form-label">Gender</label>
+                    <select name="gender" class="form-select">
+                        <option value="Male">Male</option><option value="Female">Female</option>
+                    </select>
+                </div>
+            </div>
+            <button class="btn btn-primary mt-4">Create student</button>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+document.getElementById("studentForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const result = await callApi("/api/students", "POST", formToObject(e.target));
+    if (result.ok) window.location.href = "/Students";
+    else showToast(result.message || "Could not create student.", "danger");
+});
+</script>
+}

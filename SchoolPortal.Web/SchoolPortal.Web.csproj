@@ -27,27 +27,4 @@
       <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.2.3" />
       <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.2.3" />
     </ItemGroup>
-
-    <ItemGroup>
-      <_ContentIncludedByDefault Remove="Views\Home\Index.cshtml" />
-      <_ContentIncludedByDefault Remove="Views\Home\Privacy.cshtml" />
-      <_ContentIncludedByDefault Remove="Views\Identity\Account\Index.cshtml" />
-      <_ContentIncludedByDefault Remove="Views\Grades\Identity\Index.cshtml" />
-      <_ContentIncludedByDefault Remove="Views\Grades\Identity\Permissions.cshtml" />
-      <_ContentIncludedByDefault Remove="Views\Grades\Identity\RoleDetails.cshtml" />
-      <_ContentIncludedByDefault Remove="Views\Grades\Identity\Roles.cshtml" />
-      <_ContentIncludedByDefault Remove="Views\Grades\Identity\UserDetails.cshtml" />
-      <_ContentIncludedByDefault Remove="Views\Grades\Identity\Users.cshtml" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <AdditionalFiles Include="Views\Account\Index.cshtml" />
-      <AdditionalFiles Include="Views\Identity\Index.cshtml" />
-      <AdditionalFiles Include="Views\Identity\Permissions.cshtml" />
-      <AdditionalFiles Include="Views\Identity\RoleDetails.cshtml" />
-      <AdditionalFiles Include="Views\Identity\Roles.cshtml" />
-      <AdditionalFiles Include="Views\Identity\UserDetails.cshtml" />
-      <AdditionalFiles Include="Views\Identity\Users.cshtml" />
-    </ItemGroup>
-
 </Project>

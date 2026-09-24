@@ -10,6 +10,7 @@ using SchoolPortal.Identities.Infrastructure.Authorization;
 using SchoolPortal.Identities.Infrastructure.Persistence;
 using SchoolPortal.Identities.Infrastructure.Persistence.Directories;
 using SchoolPortal.SharedKernel.Identity;
+using SchoolPortal.SharedKernel.Identity.Contracts;
 
 namespace SchoolPortal.Identities.Infrastructure;
 
@@ -110,6 +111,8 @@ public static class DependencyInjection
         });
         
         services.AddScoped<IIdentityDirectory, IdentityDirectory>();
+        
+        services.AddScoped<IUserContactDirectory, UserContactDirectory>();
         
         return services;
     }

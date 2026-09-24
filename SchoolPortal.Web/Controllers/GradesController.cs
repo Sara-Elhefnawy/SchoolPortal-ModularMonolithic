@@ -8,4 +8,7 @@ namespace SchoolPortal.Web.Controllers;
 public sealed class GradesController : Controller
 {
     public IActionResult Index() => View();
+    public IActionResult Gradebook() => View();
+    public IActionResult Details(int id) => View();
+    public IActionResult Rankings() => View();
 }

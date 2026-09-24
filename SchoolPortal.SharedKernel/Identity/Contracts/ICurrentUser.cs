@@ -1,4 +1,4 @@
-namespace SchoolPortal.SharedKernel.Identity.Users;
+namespace SchoolPortal.SharedKernel.Identity.Contracts;
 
 public interface ICurrentUser
 {

@@ -1,0 +1,63 @@
+@{
+    ViewData["Title"] = "Mark attendance";
+    var occurrenceId = ViewContext.RouteData.Values["id"];
+}
+<div class="page-toolbar">
+    <div><a href="/Attendance" class="back-link">← Attendance</a><h2>Mark attendance</h2></div>
+    <button id="saveAttendance" class="btn btn-primary">Save attendance</button>
+</div>
+
+<div class="panel">
+    <div id="attendanceMeta" class="mb-4">Loading...</div>
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>Student</th><th>Status</th><th>Note</th></tr></thead>
+            <tbody id="attendanceBody"></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+const occurrenceId = "@occurrenceId";
+
+async function loadAttendance() {
+    const result = await callApi(`/api/attendances/by-occurrence/${occurrenceId}`, "GET");
+    const body = document.getElementById("attendanceBody");
+
+    if (!result.ok) {
+        body.innerHTML = `<tr><td colspan="3"><div class="alert alert-danger">${escapeHtml(result.message)}</div></td></tr>`;
+        return;
+    }
+
+    const rows = result.data || [];
+    body.innerHTML = rows.map(a => `
+        <tr data-id="${a.id}" data-student="${a.studentId}">
+            <td><strong>${escapeHtml(a.studentName || `Student #${a.studentId}`)}</strong></td>
+            <td>
+                <select class="form-select attendance-status">
+                    ${["Present","Absent","Late","Excused","EarlyLeave"].map(x => `<option ${a.status === x ? "selected" : ""}>${x}</option>`).join("")}
+                </select>
+            </td>
+            <td><input class="form-control attendance-note" value="${escapeHtml(a.note || "")}" /></td>
+        </tr>`).join("");
+}
+document.getElementById("saveAttendance").addEventListener("click", async () => {
+    const rows = [...document.querySelectorAll("#attendanceBody tr")];
+    for (const row of rows) {
+        const id = row.dataset.id;
+        const payload = {
+            status: row.querySelector(".attendance-status").value,
+            note: row.querySelector(".attendance-note").value
+        };
+        const result = await callApi(`/api/attendances/${id}`, "PUT", payload);
+        if (!result.ok) {
+            showToast(result.message || "Some attendance records could not be saved.", "danger");
+            return;
+        }
+    }
+    showToast("Attendance saved.", "success");
+});
+loadAttendance();
+</script>
+}

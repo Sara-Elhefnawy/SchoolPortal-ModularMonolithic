@@ -1,19 +1,28 @@
-using MediatR;
 using SchoolPortal.Grades.Application.Features.AcademicYears.Command.Create;
 using SchoolPortal.Grades.Application.Features.AcademicYears.Command.MarkAsCurrent;
+using SchoolPortal.Grades.Application.Features.AcademicYears.Query.GetAll;
 using SchoolPortal.Grades.Application.Features.Assessments.Command.Create;
+using SchoolPortal.Grades.Application.Features.Assessments.Query.GetByCourseSection;
 using SchoolPortal.Grades.Application.Features.Courses.Command.Create;
+using SchoolPortal.Grades.Application.Features.Courses.Query.GetAll;
 using SchoolPortal.Grades.Application.Features.CourseSections.Command.Create;
+using SchoolPortal.Grades.Application.Features.CourseSections.Query.GetByTerm;
+using SchoolPortal.Grades.Application.Features.CourseSections.Query.GetRankings;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Create;
+using SchoolPortal.Grades.Application.Features.Grades.Command.Draft;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Lock;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Publish;
 using SchoolPortal.Grades.Application.Features.Grades.Command.ReviseScore;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Submit;
+using SchoolPortal.Grades.Application.Features.Grades.Command.Unlock;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Unpublish;
+using SchoolPortal.Grades.Application.Features.Grades.Query.GetByAssessment;
+using SchoolPortal.Grades.Application.Features.Grades.Query.GetById;
 using SchoolPortal.Grades.Application.Features.Terms.Command.Create;
 using SchoolPortal.Grades.Application.Features.Terms.Command.End;
-using SchoolPortal.Grades.Application.Reporting.Queries;
+using SchoolPortal.Grades.Application.Features.Terms.Query.GetByAcademicYear;
 using SchoolPortal.SharedKernel.Identity;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Web.Endpoints.Grades.Requests;
 
 namespace SchoolPortal.Web.Endpoints.Grades;
@@ -33,8 +42,8 @@ public static class GradesEndpoints
 
     private static void MapAcademicYearEndpoints(IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/academic-years").WithTags("AcademicYears");
-
+        var group = app.MapGroup("/api/academic-years").WithTags("Academic Years");
+        group.MapGet("/", GetAcademicYears).RequireAuthorization(Permissions.Grades.View);
         group.MapPost("/", CreateAcademicYear).RequireAuthorization(Permissions.Grades.Create);
 
         group.MapPost("/{id:int}/mark-current", MarkAcademicYearAsCurrent)
@@ -44,7 +53,7 @@ public static class GradesEndpoints
     private static void MapTermEndpoints(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/terms").WithTags("Terms");
-
+        group.MapGet("/", GetTerms).RequireAuthorization(Permissions.Grades.View);
         group.MapPost("/", CreateTerm).RequireAuthorization(Permissions.Grades.Create);
 
         group.MapPost("/{id:int}/end", EndTerm).RequireAuthorization(Permissions.Grades.Update);
@@ -53,14 +62,14 @@ public static class GradesEndpoints
     private static void MapCourseEndpoints(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/courses").WithTags("Courses");
-
+        group.MapGet("/", GetCourses).RequireAuthorization(Permissions.Grades.View);
         group.MapPost("/", CreateCourse).RequireAuthorization(Permissions.Grades.Create);
     }
 
     private static void MapCourseSectionEndpoints(IEndpointRouteBuilder app)
     {
-        var group = app.MapGroup("/api/course-sections").WithTags("CourseSections");
-
+        var group = app.MapGroup("/api/course-sections").WithTags("Course Sections");
+        group.MapGet("/", GetCourseSections).RequireAuthorization(Permissions.Grades.View);
         group.MapPost("/", CreateCourseSection).RequireAuthorization(Permissions.Grades.Create);
     }
 
@@ -68,6 +77,7 @@ public static class GradesEndpoints
     {
         var group = app.MapGroup("/api/assessments").WithTags("Assessments");
 
+        group.MapGet("/", GetAssessments).RequireAuthorization(Permissions.Grades.View);
         group.MapPost("/", CreateAssessment).RequireAuthorization(Permissions.Grades.Create);
     }
 
@@ -75,17 +85,17 @@ public static class GradesEndpoints
     {
         var group = app.MapGroup("/api/grades").WithTags("Grades");
 
+        group.MapGet("/", GetGrades).RequireAuthorization(Permissions.Grades.View);
+        group.MapGet("/{id:int}", GetGradeById).RequireAuthorization(Permissions.Grades.View);
         group.MapPost("/", CreateGrade).RequireAuthorization(Permissions.Grades.Create);
 
-        group.MapPost("/{id:int}/submit", SubmitGrade).RequireAuthorization(Permissions.Grades.Update);
-
         group.MapPost("/{id:int}/publish", PublishGrade).RequireAuthorization(Permissions.Grades.Update);
-
+        group.MapPost("/{id:int}/unpublish", UnpublishGrade).RequireAuthorization(policy => policy.RequireRole("Admin"));
         group.MapPost("/{id:int}/lock", LockGrade).RequireAuthorization(Permissions.Grades.Update);
-
-        group.MapPut("/{id:int}/score", ReviseGradeScore).RequireAuthorization(Permissions.Grades.Update);
-
-        group.MapPost("/{id:int}/unpublish", UnpublishGrade).RequireAuthorization(Permissions.Grades.Update);
+        group.MapPost("/{id:int}/unlock", UnlockGrade).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        group.MapPost("/{id:int}/draft", DraftGrade).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        group.MapPut("/{id:int}/score", ReviseGradeScore).RequireAuthorization(policy => policy.RequireRole("Admin"));
+        group.MapPost("/{id:int}/submit", SubmitGrade).RequireAuthorization(Permissions.Grades.Update);
     }
 
     private static void MapRankingEndpoints(IEndpointRouteBuilder app)
@@ -93,6 +103,62 @@ public static class GradesEndpoints
         var group = app.MapGroup("/api/course-sections").WithTags("Rankings");
 
         group.MapGet("/{courseSectionId:int}/rankings", GetClassRankings).RequireAuthorization(Permissions.Grades.View);
+    }
+
+    private static async Task<IResult> GetAcademicYears(IMediator m, CancellationToken ct)
+    {
+        var r = await m.Send(new GetAllAcademicYearsQuery(), ct);
+
+        return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
+    }
+
+    private static async Task<IResult> GetTerms(int academicYearId, IMediator m, CancellationToken ct)
+    {
+        var r = await m.Send(new GetTermsByAcademicYearQuery(academicYearId), ct);
+
+        return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
+    }
+
+    private static async Task<IResult> GetCourses(IMediator m, CancellationToken ct)
+    {
+        var r = await m.Send(new GetAllCoursesQuery(), ct);
+
+        return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
+    }
+
+    private static async Task<IResult> GetCourseSections(int termId, IMediator m, CancellationToken ct)
+    {
+        var r = await m.Send(new GetCourseSectionsByTermQuery(termId), ct);
+
+        return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
+    }
+
+    private static async Task<IResult> GetAssessments(int courseSectionId, IMediator m, CancellationToken ct)
+    {
+        var r = await m.Send(new GetAssessmentsBySectionQuery(courseSectionId), ct);
+
+        return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
+    }
+
+    private static async Task<IResult> GetGrades(int assessmentId, IMediator m, CancellationToken ct)
+    {
+        var r = await m.Send(new GetGradesByAssessmentQuery(assessmentId), ct);
+
+        return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
+    }
+
+    private static async Task<IResult> GetGradeById(int id, IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetGradeByIdQuery(id), ct);
+
+        return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound(result.Error);
+    }
+
+    private static async Task<IResult> GetClassRankings(int courseSectionId, IMediator m, CancellationToken ct)
+    {
+        var r = await m.Send(new GetCourseSectionRankingsQuery(courseSectionId), ct);
+
+        return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
     }
 
     private static async Task<IResult> CreateAcademicYear(CreateAcademicYearCommand command, IMediator mediator,
@@ -188,11 +254,25 @@ public static class GradesEndpoints
         return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
     }
 
+    private static async Task<IResult> UnlockGrade(int id, IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new UnlockGradeCommand(id), ct);
+        
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> DraftGrade(int id, IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new DraftGradeCommand(id), ct);
+        
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
+    }
+
     private static async Task<IResult> ReviseGradeScore(int id, ReviseGradeScoreRequest body, IMediator mediator,
         CancellationToken ct)
     {
         var result = await mediator.Send(new ReviseGradeScoreCommand(id, body.NewScore), ct);
-
+        
         return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
     }
 
@@ -201,13 +281,5 @@ public static class GradesEndpoints
         var result = await mediator.Send(new UnpublishGradeCommand(id), ct);
 
         return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
-    }
-
-    private static async Task<IResult> GetClassRankings(int courseSectionId, IGradeReportingQueries reporting,
-        CancellationToken ct)
-    {
-        var results = await reporting.GetClassRankingsAsync(courseSectionId, ct);
-
-        return Results.Ok(results);
     }
 }

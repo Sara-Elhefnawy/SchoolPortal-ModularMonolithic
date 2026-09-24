@@ -21,6 +21,9 @@ public sealed class PublishGradeCommandHandler(
         if (publishResult.IsFailure)
             return publishResult;
         
+        // grade.Publish() is what queues the GradePublished domain event that it's handler calls emailSender.SendGradePublishedEmailAsync
+        // SaveChangesAsync is what dispatches it, the same way every other domain event in this project already works.
+        // Grades doesn't call IEmailSender, doesn't know Notifications exists, and doesn't know an email gets sent at all
         await unitOfWork.SaveChangesAsync(ct);
         
         return Result.Success();

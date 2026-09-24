@@ -1,170 +1,97 @@
-﻿<!DOCTYPE html>
-
+﻿@{
+    var isAuthenticated = User.Identity?.IsAuthenticated == true;
+    var isAdmin = User.IsInRole("Admin");
+    var displayName = User.Identity?.Name ?? "User";
+}
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="utf-8"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - SchoolPortal</title>
-
-<link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css"/>
-<link rel="stylesheet" href="~/css/site.css" asp-append-version="true"/>
-<link rel="stylesheet" href="~/SchoolPortal.Web.styles.css" asp-append-version="true"/>
-
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
 </head>
-
 <body>
+@if (isAuthenticated)
+{
+    <div class="app-shell">
+        <aside class="sidebar">
+            <a class="brand" asp-controller="Dashboard" asp-action="Index">
+                <span class="brand-mark">SP</span>
+                <span>SchoolPortal</span>
+            </a>
 
-<header>
-    <nav class="navbar navbar-expand-sm border-bottom shadow-sm">
-        <div class="container">
+            <nav class="sidebar-nav">
+                <a asp-controller="Dashboard" asp-action="Index">Dashboard</a>
+                <a asp-controller="Students" asp-action="Index">Students</a>
+                <a asp-controller="Attendance" asp-action="Index">Attendance</a>
+                <a asp-controller="Grades" asp-action="Index">Grades</a>
 
-  
-        <a class="navbar-brand"
-           asp-area=""
-           asp-controller="Students"
-           asp-action="Index">
-            SchoolPortal
-        </a>
-
-        <button class="navbar-toggler"
-                type="button"
-                data-bs-toggle="collapse"
-                data-bs-target="#mainNavigation"
-                aria-controls="mainNavigation"
-                aria-expanded="false"
-                aria-label="Toggle navigation">
-
-            <span class="navbar-toggler-icon"></span>
-
-        </button>
-
-        <div id="mainNavigation"
-             class="navbar-collapse collapse">
-
-            <ul class="navbar-nav me-auto mb-2 mb-sm-0">
-
-                <li class="nav-item">
-                    <a class="nav-link"
-                       asp-controller="Students"
-                       asp-action="Index">
-                        Students
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link"
-                       asp-controller="Grades"
-                       asp-action="Index">
-                        Grades
-                    </a>
-                </li>
-
-                <li class="nav-item">
-                    <a class="nav-link"
-                       asp-controller="Attendances"
-                       asp-action="Index">
-                        Attendances
-                    </a>
-                </li>
-
-                @if (User.Identity?.IsAuthenticated == true)
+                @if (isAdmin)
                 {
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           asp-controller="Identity"
-                           asp-action="Index">
-                            Identity
-                        </a>
-                    </li>
+                    <div class="nav-section">Administration</div>
+                    <a asp-controller="Admin" asp-action="Users">Users</a>
+                    <a asp-controller="Admin" asp-action="Roles">Roles</a>
+                    <a asp-controller="Admin" asp-action="Permissions">Permissions</a>
                 }
+            </nav>
 
-            </ul>
+            <div class="sidebar-user">
+                <div class="avatar">@displayName.Substring(0, 1).ToUpperInvariant()</div>
+                <div class="user-copy">
+                    <strong>@displayName</strong>
+                    <small>@(isAdmin ? "Administrator" : "Staff")</small>
+                </div>
+                <button id="logoutButton" class="btn btn-sm btn-outline-light ms-auto" type="button">Sign out</button>
+            </div>
+        </aside>
 
-            <ul class="navbar-nav">
+        <main class="main-content">
+            <header class="topbar">
+                <div>
+                    <div class="eyebrow">School management</div>
+                    <h1>@ViewData["Title"]</h1>
+                </div>
+                <div class="topbar-user">
+                    <span class="status-dot"></span>
+                    <span>@displayName</span>
+                    <span class="role-badge">@(isAdmin ? "Admin" : "Staff")</span>
+                </div>
+            </header>
 
-                @if (User.Identity?.IsAuthenticated == true)
-                {
-                    <li class="nav-item">
-                        <span class="nav-link">
-                            @User.Identity.Name
-                        </span>
-                    </li>
-
-                    <li class="nav-item">
-                        <button id="logoutButton"
-                                type="button"
-                                class="btn btn-link nav-link">
-                            Logout
-                        </button>
-                    </li>
-                }
-                else
-                {
-                    <li class="nav-item">
-                        <a class="nav-link"
-                           asp-controller="Account"
-                           asp-action="Index">
-                            Login
-                        </a>
-                    </li>
-                }
-
-            </ul>
-
-        </div>
-
+            <section class="page-content">
+                @RenderBody()
+            </section>
+        </main>
     </div>
-</nav>
-  
-
-</header>
-
-
-<div class="container">
-    <main role="main" class="pb-4">
+}
+else
+{
+    <main class="auth-shell">
         @RenderBody()
     </main>
-</div>
-
-<footer class="footer border-top">
-    <div class="container">
-        &copy; 2026 - SchoolPortal
-        <span class="mx-2">·</span>
-        <a asp-controller="Home" asp-action="Privacy">
-            Privacy
-        </a>
-    </div>
-</footer>
-
-<script src="~/lib/jquery/dist/jquery.min.js"></script>
-
-<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
-
-<script src="~/js/site.js" asp-append-version="true"></script>
-
-@if (User.Identity?.IsAuthenticated == true)
-{ <script>
-document
-.getElementById("logoutButton")
-?.addEventListener("click", async function () {
-
-  
-            const response =
-                await fetch("/api/account/logout", {
-                    method: "POST"
-                });
-
-            if (response.ok) {
-                window.location.href = "/Account";
-            }
-        });
-</script>
-      
-
 }
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="~/js/site.js" asp-append-version="true"></script>
+@if (isAuthenticated)
+{
+    <script>
+        document.getElementById("logoutButton")?.addEventListener("click", async () => {
+            const response = await fetch("/api/account/logout", {
+                method: "POST",
+                credentials: "same-origin"
+            });
 
+            if (response.ok) {
+                window.location.href = "/Account/Login";
+            } else {
+                showToast("Could not sign out.", "danger");
+            }
+        });
+    </script>
+}
 @await RenderSectionAsync("Scripts", required: false)
-
 </body>
 </html>

@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using SchoolPortal.SharedKernel.Identity.Users;
+using SchoolPortal.SharedKernel.Identity.Contracts;
 
 namespace SchoolPortal.Web.Identity.Users;
 

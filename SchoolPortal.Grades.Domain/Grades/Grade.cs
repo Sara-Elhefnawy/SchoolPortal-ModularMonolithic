@@ -44,41 +44,74 @@ public class Grade : BaseEntity
         return Result<Grade>.Success(grade);
     }
 
-    // State-transition methods instead of a public Status setter — this stops
-    // a handler from ever jumping straight from Draft to Locked by mistake.
+    // Draft --Submit()--> Submitted --Publish()--> Published --Lock()--> Locked
+    
+    // Draft -> Submitted.
+    // Nothing else can move into Submitted directly
     public Result Submit()
     {
         if (Status != GradeStatus.Draft)
             return Result.Failure(GradeErrors.InvalidTransitionToSubmitted);
-
+        
         Status = GradeStatus.Submitted;
         
         RaiseEvent(() => new GradeSubmitted(Id, StudentId));
         
         return Result.Success();
     }
-
+ 
+    // Submitted -> Draft.
+    // The one backward move in the flow:
+    // lets a teacher pull a grade back for correction before it's published
+    public Result Draft()
+    {
+        if (Status != GradeStatus.Submitted)
+            return Result.Failure(GradeErrors.InvalidTransitionToDraft);
+ 
+        Status = GradeStatus.Draft;
+ 
+        RaiseEvent(() => new GradeDrafted(Id, StudentId));
+ 
+        return Result.Success();
+    }
+ 
+    // Submitted -> Published.
     public Result Publish()
     {
         if (Status != GradeStatus.Submitted)
             return Result.Failure(GradeErrors.InvalidTransitionToPublished);
-
+ 
         Status = GradeStatus.Published;
-        
-        RaiseEvent(() => new GradePublished(Id, StudentId, AssessmentId));
-        
+ 
+        RaiseEvent(() => new GradePublished(Id, StudentId));
+ 
         return Result.Success();
     }
-
+ 
+    // Published -> Locked.
     public Result Lock()
     {
         if (Status != GradeStatus.Published)
             return Result.Failure(GradeErrors.InvalidTransitionToLocked);
-
+ 
         Status = GradeStatus.Locked;
-        
+ 
         RaiseEvent(() => new GradeLocked(Id, StudentId));
-        
+ 
+        return Result.Success();
+    }
+    
+    // Locked -> Draft,
+    // bypassing the normal "nothing moves out of Locked" rule.
+    public Result OverrideUnlock()
+    {
+        if (Status != GradeStatus.Locked)
+            return Result.Failure(GradeErrors.InvalidTransitionToUnlock);
+ 
+        Status = GradeStatus.Draft;
+ 
+        RaiseEvent(() => new GradeUnlocked(Id, StudentId));
+ 
         return Result.Success();
     }
     

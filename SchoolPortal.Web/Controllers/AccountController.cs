@@ -7,7 +7,8 @@ namespace SchoolPortal.Web.Controllers;
 // directly via fetch, not through this controller.
 public sealed class AccountController : Controller
 {
-    public IActionResult Index() => View();
+    public IActionResult Login() => View();
 
     public IActionResult Signup() => View();
+    public IActionResult ForgotPassword() => View();
 }

@@ -1,0 +1,49 @@
+@{
+ViewData["Title"] = "Student details";
+var id = ViewContext.RouteData.Values["id"];
+var canUpdate = User.HasClaim("permission", "Students.Update");
+}
+<div class="page-toolbar">
+    <div><a href="/Students" class="back-link">← Students</a><h2 id="studentName">Student</h2></div>
+</div>
+<div id="studentContent" class="panel">Loading...</div>
+
+@section Scripts {
+<script>
+    const studentId = "@id";
+
+    async function loadStudent() {
+        const result = await callApi(`/api/students/${studentId}`, "GET");
+        const container = document.getElementById("studentContent");
+
+        if (!result.ok) {
+            container.innerHTML = `<div class="alert alert-danger">${escapeHtml(result.message)}</div>`;
+            return;
+        }
+
+        const s = result.data;
+        document.getElementById("studentName").textContent = s.name;
+        container.innerHTML = `
+        <div class="detail-grid">
+            <div><small>Name</small><strong>${escapeHtml(s.name)}</strong></div>
+            <div><small>Email</small><strong>${escapeHtml(s.email || "")}</strong></div>
+            <div><small>Phone</small><strong>${escapeHtml(s.phoneNumber || "")}</strong></div>
+            <div><small>Status</small><strong><span class="status-badge">${escapeHtml(s.status)}</span></strong></div>
+            <div><small>Date of birth</small><strong>${escapeHtml(s.dateOfBirth || "")}</strong></div>
+            <div><small>Admission date</small><strong>${escapeHtml(s.admissionDate || "")}</strong></div>
+        </div>
+        <hr />
+        <div class="action-row">
+            ${s.status === "Active" && @canUpdate.ToString().ToLowerInvariant() ? `<button class="btn btn-outline-warning" onclick="changeStatus('suspend')">Suspend</button>` : ""}
+            ${s.status === "Active" && @canUpdate.ToString().ToLowerInvariant() ? `<button class="btn btn-outline-danger" onclick="changeStatus('deactivate')">Deactivate</button>` : ""}
+            ${s.status !== "Graduated" && @canUpdate.ToString().ToLowerInvariant() ? `<button class="btn btn-outline-success" onclick="changeStatus('graduate')">Graduate</button>` : ""}
+        </div>`;
+    }
+    async function changeStatus(action) {
+        const result = await callApi(`/api/students/${studentId}/${action}`, "POST");
+        showToast(result.message || (result.ok ? "Updated." : "Update failed."), result.ok ? "success" : "danger");
+        if (result.ok) loadStudent();
+    }
+    loadStudent();
+</script>
+}

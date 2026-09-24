@@ -1,0 +1,15 @@
+@{
+    ViewData["Title"] = "Permissions";
+}
+<div class="page-toolbar"><div><h2>Permissions</h2><p class="text-muted">Available permissions that can be assigned to roles.</p></div></div>
+<div class="panel"><div id="permissionsList" class="permission-list">Loading...</div></div>
+@section Scripts {
+    <script>
+async function loadPermissions(){
+ const r=await callApi("/api/admin/permissions","GET"), box=document.getElementById("permissionsList");
+ if(!r.ok){box.textContent=r.message;return;}
+ box.innerHTML=(r.data||[]).map(p=>`<div class="permission-row"><span><strong>${escapeHtml(p.name||p)}</strong><small>${escapeHtml(p.description||"")}</small></span></div>`).join("");
+}
+loadPermissions();
+</script>
+}

@@ -1,0 +1,41 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Sign in";
+}
+<div class="auth-card">
+    <div class="brand auth-brand"><span class="brand-mark">SP</span> SchoolPortal</div>
+    <h1>Sign in</h1>
+    <p class="text-muted">Use your school account to continue.</p>
+
+    <form id="loginForm">
+        <label class="form-label">Email</label>
+        <input class="form-control mb-3" name="email" type="email" required />
+
+        <label class="form-label">Password</label>
+        <input class="form-control mb-3" name="password" type="password" required />
+
+        <button class="btn btn-primary w-100" type="submit">Sign in</button>
+    </form>
+
+    <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
+    <div class="auth-links">
+        <a asp-controller="Account" asp-action="ForgotPassword">Forgot password?</a>
+        <a asp-controller="Account" asp-action="Signup">Create account</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+document.getElementById("loginForm").addEventListener("submit", async e => {
+    e.preventDefault();
+    const result = await callApi("/api/account/login", "POST", formToObject(e.target));
+    if (result.ok) {
+        window.location.href = "/Dashboard";
+        return;
+    }
+    const error = document.getElementById("loginError");
+    error.textContent = result.message || "Invalid email or password.";
+    error.classList.remove("d-none");
+});
+</script>
+}

@@ -24,6 +24,8 @@ public static class AccountEndpoints
             .RequireAuthorization();
 
         group.MapPost("/forgot-password", ForgotPassword);
+
+        group.MapPost("/me", Me);
     }
 
     private static async Task<IResult> Signup(
@@ -93,6 +95,51 @@ public static class AccountEndpoints
         IMediator mediator,
         CancellationToken ct)
     {
+        var command = new ForgotPasswordCommand(
+            request.Email);
+
+        var result = await mediator.Send(command, ct);
+
+        // Deliberately don't reveal whether the account exists.
+        return result.IsSuccess
+            ? Results.Ok(new
+            {
+                message =
+                    "If an account exists for this email, " +
+                    "password reset instructions will be sent."
+            })
+            : Results.BadRequest(new { error = result.Error });
+    }
+    
+    private static async Task<IResult> Me(
+        ForgotPasswordRequest request,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        /*"id": 1,
+        "name": "Sara",
+        "email": "sara@example.com",
+        "roles": [
+        "Admin"
+            ],
+        "permissions": [
+        "Users.View",
+        "Users.Create",
+        "Users.Update",
+        "Users.Delete",
+        "Grades.View",
+        "Grades.Create",
+        "Grades.Update",
+        "Grades.Unlock",
+        "Attendance.View",
+        "Attendance.Mark",
+        "Attendance.Update",
+        "Students.View",
+        "Students.Create",
+        "Students.Update",
+        "Students.Delete"
+            ]*/
+        
         var command = new ForgotPasswordCommand(
             request.Email);
 

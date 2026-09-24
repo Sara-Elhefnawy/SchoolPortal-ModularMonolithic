@@ -1,0 +1,70 @@
+@{
+    ViewData["Title"] = "Gradebook";
+}
+<div class="page-toolbar">
+    <div><a href="/Grades" class="back-link">← Grades</a><h2>Gradebook</h2></div>
+</div>
+
+<div class="panel mb-4">
+    <div class="row g-3">
+        <div class="col-md-3"><label class="form-label">Academic year</label><select id="year" class="form-select"></select></div>
+        <div class="col-md-3"><label class="form-label">Term</label><select id="term" class="form-select"></select></div>
+        <div class="col-md-3"><label class="form-label">Course section</label><select id="section" class="form-select"></select></div>
+        <div class="col-md-3"><label class="form-label">Assessment</label><select id="assessment" class="form-select"></select></div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead><tr><th>Student</th><th>Score</th><th>Status</th><th></th></tr></thead>
+            <tbody id="gradesBody"><tr><td colspan="4" class="text-muted">Choose an assessment.</td></tr></tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+async function getOptions(url, selectId, textField, valueField) {
+    const result = await callApi(url, "GET");
+    const select = document.getElementById(selectId);
+    if (!result.ok) {
+        select.innerHTML = `<option value="">${escapeHtml(result.message)}</option>`;
+        return [];
+    }
+    const items = result.data || [];
+    select.innerHTML = `<option value="">Select...</option>` + items.map(x =>
+        `<option value="${x[valueField]}">${escapeHtml(x[textField])}</option>`).join("");
+    return items;
+}
+async function loadYears() {
+    await getOptions("/api/academic-years", "year", "name", "id");
+}
+document.getElementById("year").addEventListener("change", async e => {
+    if (e.target.value) await getOptions(`/api/terms?academicYearId=${e.target.value}`, "term", "name", "id");
+});
+document.getElementById("term").addEventListener("change", async e => {
+    if (e.target.value) await getOptions(`/api/course-sections?termId=${e.target.value}`, "section", "name", "id");
+});
+document.getElementById("section").addEventListener("change", async e => {
+    if (e.target.value) await getOptions(`/api/assessments?courseSectionId=${e.target.value}`, "assessment", "name", "id");
+});
+document.getElementById("assessment").addEventListener("change", async e => {
+    if (!e.target.value) return;
+    const result = await callApi(`/api/grades?assessmentId=${e.target.value}`, "GET");
+    const body = document.getElementById("gradesBody");
+    if (!result.ok) {
+        body.innerHTML = `<tr><td colspan="4">${escapeHtml(result.message)}</td></tr>`;
+        return;
+    }
+    body.innerHTML = (result.data || []).map(g => `
+        <tr>
+            <td><strong>${escapeHtml(g.studentName)}</strong></td>
+            <td>${g.score ?? "—"}</td>
+            <td><span class="status-badge">${escapeHtml(g.status)}</span></td>
+            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="/Grades/Details/${g.id}">Details</a></td>
+        </tr>`).join("");
+});
+loadYears();
+</script>
+}
