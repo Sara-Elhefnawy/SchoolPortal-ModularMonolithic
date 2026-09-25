@@ -83,7 +83,7 @@ public static class UserEndpoints
         var command = new CreateUserCommand(
             request.Email,
             request.Password,
-            request.FullName,
+            request.Name,
             request.Role);
 
         var result = await mediator.Send(command, ct);

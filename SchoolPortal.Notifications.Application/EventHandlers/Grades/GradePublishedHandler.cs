@@ -5,6 +5,7 @@ using SchoolPortal.Notifications.Application.Directories;
 using SchoolPortal.Notifications.Domain.Notifications;
 using SchoolPortal.SharedKernel.Domain.Events.Grades;
 using SchoolPortal.SharedKernel.Emails;
+using SchoolPortal.SharedKernel.Emails.Contracts;
 using SchoolPortal.SharedKernel.Emails.Options;
 using SchoolPortal.SharedKernel.Identity.Contracts;
 

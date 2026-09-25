@@ -53,4 +53,7 @@ public static class AuthErrors
 
     public static Error RoleAssignmentFailed =>
         Error.Validation("Auth.RoleAssignmentFailed", "The account role could not be assigned.");
+
+    public static Error InvalidTokenOrEmail =>
+        Error.Validation("Auth.InvalidTokenOrEmail", "This reset link is invalid or has expired.");
 }

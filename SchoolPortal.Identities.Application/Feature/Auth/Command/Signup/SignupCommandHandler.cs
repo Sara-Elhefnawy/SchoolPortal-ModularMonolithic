@@ -38,7 +38,7 @@ public sealed class SignupCommandHandler(
         {
             UserName = request.Email,
             Email = request.Email,
-            Name = request.FullName,
+            Name = request.Name,
             IsActive = true,
             EmailConfirmed = false
         };

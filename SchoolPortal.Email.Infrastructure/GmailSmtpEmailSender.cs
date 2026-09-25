@@ -4,48 +4,40 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 using SchoolPortal.Email.Domain;
-using SchoolPortal.SharedKernel.Emails;
+using SchoolPortal.SharedKernel.Emails.Contracts;
 using SchoolPortal.SharedKernel.Results;
+using SchoolPortal.SharedKernel.Emails;
 
 namespace SchoolPortal.Email.Infrastructure;
 
-public class GmailSmtpEmailSender(IOptions<EmailOptions> options, ILogger<GmailSmtpEmailSender> logger) : IEmailSender
+// Note the extra dependency: IEmailTemplateRenderer. This class no longer
+// knows or cares that the templates are .cshtml files rendered by Web -
+// it just calls the abstraction, same as it doesn't know MailKit's
+// internals belong to Gmail specifically.
+public class GmailSmtpEmailSender(
+    IOptions<EmailOptions> options,
+    ILogger<GmailSmtpEmailSender> logger,
+    IEmailTemplateRenderer templateRenderer) : IEmailSender
 {
-    public Task<Result> SendForgotPasswordEmailAsync(string toAddress, string resetLink, CancellationToken ct)
+    public async Task<Result> SendResetPasswordEmailAsync(string toAddress, string resetLink, CancellationToken ct)
     {
-        var html = LoadTemplate("ForgotPassword.html").Replace("{{Link}}", resetLink);
-
-        return SendAsync(toAddress, "Reset your SchoolPortal password", html, ct);
+        var html = await templateRenderer.RenderAsync("/Views/Shared/EmailTemplates/ResetPassword.cshtml",
+            new ResetPasswordEmailModel { ResetLink = resetLink });
+        return await SendAsync(toAddress, "Reset your SchoolPortal password", html, ct);
     }
 
-    public Task<Result> SendConfirmEmailAsync(string toAddress, string confirmLink, CancellationToken ct)
+    public async Task<Result> SendConfirmEmailAsync(string toAddress, string confirmLink, CancellationToken ct)
     {
-        var html = LoadTemplate("ConfirmEmail.html").Replace("{{Link}}", confirmLink);
-
-        return SendAsync(toAddress, "Confirm your SchoolPortal account", html, ct);
+        var html = await templateRenderer.RenderAsync("/Views/Shared/EmailTemplates/ConfirmEmail.cshtml",
+            new ConfirmEmailEmailModel { ConfirmLink = confirmLink });
+        return await SendAsync(toAddress, "Confirm your SchoolPortal account", html, ct);
     }
 
-    public Task<Result> SendGradePublishedEmailAsync(string toAddress, string link,
-        CancellationToken ct)
+    public async Task<Result> SendGradePublishedEmailAsync(string toAddress, string link, CancellationToken ct)
     {
-        var html = LoadTemplate("GradePublished.html").Replace("{{Link}}", link);
-
-        return SendAsync(toAddress, "New grade published", html, ct);
-    }
-
-    // Templates/*.html must be marked <EmbeddedResource Include="Templates\*.html" />
-    // Baked into the DLL this way so there's no separate "did the deploy copy the template files too?" failure mode to worry about.
-    private static string LoadTemplate(string fileName)
-    {
-        var assembly = typeof(GmailSmtpEmailSender).Assembly;
-        var resourceName = $"{assembly.GetName().Name}.Templates.{fileName}";
-
-        using var stream = assembly.GetManifestResourceStream(resourceName) ?? throw new InvalidOperationException(
-            $"Email template '{fileName}' not found as embedded resource '{resourceName}'. " +
-            "Check the .csproj EmbeddedResource glob and that the file name matches exactly.");
-
-        using var reader = new StreamReader(stream);
-        return reader.ReadToEnd();
+        var html = await templateRenderer.RenderAsync("/Views/Shared/EmailTemplates/GradePublished.cshtml",
+            new GradePublishedEmailModel { Link = link });
+        return await SendAsync(toAddress, "New grade published", html, ct);
     }
 
     private async Task<Result> SendAsync(string toAddress, string subject, string htmlBody, CancellationToken ct)
@@ -57,11 +49,18 @@ public class GmailSmtpEmailSender(IOptions<EmailOptions> options, ILogger<GmailS
         message.Body = new BodyBuilder { HtmlBody = htmlBody }.ToMessageBody();
 
         using var client = new SmtpClient();
+        
+        logger.LogInformation(
+            "SMTP configuration: Sender={Sender}, Host={Host}, Port={Port}, AppPasswordConfigured={Configured}",
+            options.Value.SenderAddress,
+            options.Value.Host,
+            options.Value.Port,
+            !string.IsNullOrWhiteSpace(options.Value.AppPassword));
 
         try
         {
             await client.ConnectAsync(options.Value.Host, options.Value.Port, SecureSocketOptions.StartTls, ct);
-            await client.AuthenticateAsync(options.Value.SenderAddress, options.Value.AppPassword, ct);
+            await client.AuthenticateAsync(options.Value.SmtpUsername, options.Value.AppPassword, ct);
             await client.SendAsync(message, ct);
             await client.DisconnectAsync(true, ct);
             return Result.Success();

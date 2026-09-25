@@ -1,4 +1,4 @@
-namespace SchoolPortal.SharedKernel.Emails;
+namespace SchoolPortal.SharedKernel.Emails.Contracts;
 
 // Infrastructure depends ONLY on this interface. It has no idea a Razor view
 // engine exists behind it - that's the whole point. Whoever implements this

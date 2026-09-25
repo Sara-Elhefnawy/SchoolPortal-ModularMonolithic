@@ -7,18 +7,14 @@ using SchoolPortal.Web.Endpoints.Attendances;
 using SchoolPortal.Web.Endpoints.Grades;
 using SchoolPortal.Web.Endpoints.Students;
 using System.Text.Json.Serialization;
-using SchoolPortal.Attendances.Application.Features.Attendances.Command.Cancel;
 using SchoolPortal.Email.Infrastructure;
-using SchoolPortal.Grades.Application.Features.Grades.Command.Create;
-using SchoolPortal.Identities.Application.Feature.Auth.Command.Signup;
 using SchoolPortal.Identities.Infrastructure.Persistence.Seeders;
-using SchoolPortal.Notifications.Application.EventHandlers.Attendances.SessionOccurrences;
-using SchoolPortal.Notifications.Application.EventHandlers.Grades;
-using SchoolPortal.Notifications.Application.EventHandlers.Students;
 using SchoolPortal.Notifications.Infrastructure;
+using SchoolPortal.SharedKernel.Emails.Contracts;
+using SchoolPortal.SharedKernel.Emails.Options;
 using SchoolPortal.SharedKernel.Identity.Contracts;
 using SchoolPortal.SharedKernel.Mediator;
-using SchoolPortal.Students.Application.Features.Students.Commands.UpdatePhone;
+using SchoolPortal.Web.EmailTemplates;
 using SchoolPortal.Web.Endpoints.Identity.Account;
 using SchoolPortal.Web.Endpoints.Identity.Permission;
 using SchoolPortal.Web.Endpoints.Identity.Roles;
@@ -61,6 +57,13 @@ public class Program
         
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUser, CurrentUser>();
+        
+        // It is needed to render each template name ex: "/Views/Shared/EmailTemplates/ResetPassword.cshtml"
+        // with its model ex: new ResetPasswordEmailModel { ResetLink = resetLink }
+        builder.Services.AddRazorTemplating();
+        builder.Services.AddScoped<IEmailTemplateRenderer, RazorEmailTemplateRenderer>();
+
+        builder.Services.AddOptions<AppOptions>().Bind(builder.Configuration.GetSection(AppOptions.SectionName));
         
         var app = builder.Build();
 

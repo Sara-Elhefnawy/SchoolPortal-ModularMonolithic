@@ -11,5 +11,5 @@ public class AppOptions
     public const string SectionName = "App";
  
     // e.g. https://schoolportal.example.com — no trailing slash
-    public required string PublicBaseUrl { get; init; } 
+    public string PublicBaseUrl { get; init; } = null!;
 }

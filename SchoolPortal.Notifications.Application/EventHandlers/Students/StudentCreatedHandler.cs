@@ -16,13 +16,13 @@ public sealed class StudentCreatedHandler(
         CancellationToken ct)
     {
         logger.LogInformation(
-            "Student {StudentId} ({FullName}) was created",
+            "Student {StudentId} ({Name}) was created",
             notification.StudentId,
-            notification.FullName);
+            notification.Name);
 
         var record = Notification.Create(
             notification.StudentId,
-            $"Welcome to SchoolPortal, {notification.FullName}.");
+            $"Welcome to SchoolPortal, {notification.Name}.");
 
         directory.Add(record);
 

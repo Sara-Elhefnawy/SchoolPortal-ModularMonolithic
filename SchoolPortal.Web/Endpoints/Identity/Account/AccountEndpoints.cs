@@ -3,6 +3,7 @@ using SchoolPortal.Identities.Application.Feature.Auth.Command.ChangePassword;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.ForgotPassword;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Login;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Logout;
+using SchoolPortal.Identities.Application.Feature.Auth.Command.ResetPassword;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Signup;
 using SchoolPortal.Web.Endpoints.Identity.Account.Requests;
 
@@ -25,6 +26,8 @@ public static class AccountEndpoints
 
         group.MapPost("/forgot-password", ForgotPassword);
 
+        group.MapPost("/reset-password", ResetPassword);
+
         group.MapPost("/me", Me);
     }
 
@@ -34,7 +37,7 @@ public static class AccountEndpoints
         CancellationToken ct)
     {
         var command = new SignupCommand(
-            request.FullName,
+            request.Name,
             request.Email,
             request.Password,
             request.ConfirmPassword);
@@ -110,7 +113,20 @@ public static class AccountEndpoints
             })
             : Results.BadRequest(new { error = result.Error });
     }
-    
+
+    private static async Task<IResult> ResetPassword(ResetPasswordRequest request, IMediator mediator,
+        CancellationToken ct)
+    {
+        var command = new ResetPasswordCommand(
+            request.Email, request.Token, request.NewPassword, request.ConfirmPassword);
+
+        var result = await mediator.Send(command, ct);
+
+        return result.IsSuccess
+            ? Results.Ok(new { message = "Password has been reset successfully." })
+            : Results.BadRequest(new { error = result.Error });
+    }
+
     private static async Task<IResult> Me(
         ForgotPasswordRequest request,
         IMediator mediator,

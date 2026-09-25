@@ -1,3 +1,3 @@
 namespace SchoolPortal.Web.Endpoints.Identity.Account.Requests;
 
-public record ResetPasswordRequest();
+public sealed record ResetPasswordRequest(string Email, string Token, string NewPassword, string ConfirmPassword);

@@ -20,14 +20,20 @@ public sealed class CreateUserCommandHandler(
         {
             Email = request.Email,
             UserName = request.Email,
-            Name = request.FullName,
+            Name = request.Name,
             CreatedAt = DateTime.UtcNow,
             CreatedByUserId = currentUser.UserId
         };
         
         var userResult = await userManager.CreateAsync(user, request.Password);
         if (!userResult.Succeeded)
+        {
+            foreach (var error in userResult.Errors)
+            {
+                Console.WriteLine($"Code: {error.Code}, Description: {error.Description}");
+            }
             return Result<int>.Failure(UserErrors.CreationFailed);
+        }
         
         // Assign the requested role after the user has been successfully created.
         var roleResult = await userManager.AddToRoleAsync(user, request.RoleName);

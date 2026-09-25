@@ -1,7 +1,7 @@
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolPortal.Email.Domain;
-using SchoolPortal.SharedKernel.Emails;
+using SchoolPortal.SharedKernel.Emails.Contracts;
 
 namespace SchoolPortal.Email.Infrastructure;
 

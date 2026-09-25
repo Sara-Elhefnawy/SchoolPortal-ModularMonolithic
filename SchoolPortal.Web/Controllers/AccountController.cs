@@ -13,5 +13,8 @@ public sealed class AccountController : Controller
     
     public IActionResult ForgotPassword() => View();
     
+    [HttpGet("/reset-password")]
+    public IActionResult ResetPassword() => View();
+    
     public IActionResult AccessDenied() => View();
 }

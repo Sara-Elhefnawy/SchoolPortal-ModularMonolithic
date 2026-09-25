@@ -1,10 +1,10 @@
 using SchoolPortal.SharedKernel.Results;
 
-namespace SchoolPortal.SharedKernel.Emails;
+namespace SchoolPortal.SharedKernel.Emails.Contracts;
 
 public interface IEmailSender
 {
-    Task<Result> SendForgotPasswordEmailAsync(string toAddress, string resetLink, CancellationToken ct);
+    Task<Result> SendResetPasswordEmailAsync(string toAddress, string resetLink, CancellationToken ct);
 
     Task<Result> SendConfirmEmailAsync(string toAddress, string confirmLink, CancellationToken ct);
 

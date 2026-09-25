@@ -1,4 +1,5 @@
 @{
+    Layout = "_Layout";
     ViewData["Title"] = "Create account";
 }
 <div class="auth-card">
@@ -18,6 +19,11 @@
 
         <button class="btn btn-primary w-100">Create account</button>
     </form>
+
+    <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
+    <div class="auth-links">
+        <a asp-controller="Account" asp-action="Login">Already have an account?</a>
+    </div>
 </div>
 
 @section Scripts {
