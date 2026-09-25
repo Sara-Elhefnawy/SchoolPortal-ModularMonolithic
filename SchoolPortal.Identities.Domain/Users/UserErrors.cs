@@ -21,4 +21,7 @@ public static class UserErrors
 
     public static readonly Error RoleAssignmentFailed =
         Error.Validation("Users.RoleAssignmentFailed", "The user's role could not be assigned.");
+
+    public static readonly Error EmailConfirmationFailed =
+        Error.Validation("Users.EmailConfirmationFailed", "Failed to create email confirmation.");
 }

@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
 
@@ -27,10 +27,6 @@ public sealed class AttendancesDbContextFactory : IDesignTimeDbContextFactory<At
 
     private sealed class NoOpPublisher : IPublisher
     {
-        public Task Publish(object notification, CancellationToken ct = default) => Task.CompletedTask;
-
-        public Task Publish<TNotification>(TNotification notification, CancellationToken ct = default)
-            where TNotification : INotification =>
-            Task.CompletedTask;
+        public Task Publish(INotification notification, CancellationToken ct = default) => Task.CompletedTask;
     }
 }

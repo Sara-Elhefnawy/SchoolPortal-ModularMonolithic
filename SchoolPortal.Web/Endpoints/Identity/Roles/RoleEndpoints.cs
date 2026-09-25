@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Identities.Application.Feature.Roles.Command.Create;
 using SchoolPortal.Identities.Application.Feature.Roles.Command.Delete;
 using SchoolPortal.Identities.Application.Feature.Roles.Command.Restore;

@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Grades.Application.Directories;
 using SchoolPortal.Grades.Application.Persistence;
 using SchoolPortal.Grades.Domain.Assessments;

@@ -4,11 +4,13 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolPortal.Grades.Application.Directories;
 using SchoolPortal.Grades.Application.Features.AcademicYears.Command.Create;
+using SchoolPortal.Grades.Application.Features.Grades.Command.Create;
 using SchoolPortal.Grades.Application.Persistence;
 using SchoolPortal.Grades.Application.Reporting.Queries;
 using SchoolPortal.Grades.Infrastructure.Directories;
 using SchoolPortal.Grades.Infrastructure.Persistence;
 using SchoolPortal.Grades.Infrastructure.Reporting;
+using SchoolPortal.SharedKernel.Mediator;
 
 namespace SchoolPortal.Grades.Infrastructure;
 
@@ -32,10 +34,8 @@ public static class DependencyInjection
 
         // Registers every AbstractValidator<T> found in this assembly
         services.AddValidatorsFromAssembly(typeof(CreateAcademicYearCommandValidator).Assembly);
-
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
-            typeof(DependencyInjection).Assembly,
-            typeof(IAcademicYearDirectory).Assembly));
+        
+        services.AddMediatorPattern(typeof(CreateGradeCommandHandler).Assembly);
 
         services.AddScoped<IGradeReportingQueries, GradeReportingQueries>();
 

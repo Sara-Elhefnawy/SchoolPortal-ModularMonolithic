@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Identity;
 using SchoolPortal.Identities.Domain.Users;
 using SchoolPortal.SharedKernel.Results;

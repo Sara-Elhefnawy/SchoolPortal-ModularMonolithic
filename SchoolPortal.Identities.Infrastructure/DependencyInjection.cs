@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolPortal.Identities.Application.Directories;
+using SchoolPortal.Identities.Application.Feature.Auth.Command.Signup;
 using SchoolPortal.Identities.Domain.Roles;
 using SchoolPortal.Identities.Domain.Users;
 using SchoolPortal.Identities.Infrastructure.Authorization;
@@ -11,6 +12,7 @@ using SchoolPortal.Identities.Infrastructure.Persistence;
 using SchoolPortal.Identities.Infrastructure.Persistence.Directories;
 using SchoolPortal.SharedKernel.Identity;
 using SchoolPortal.SharedKernel.Identity.Contracts;
+using SchoolPortal.SharedKernel.Mediator;
 
 namespace SchoolPortal.Identities.Infrastructure;
 
@@ -113,6 +115,8 @@ public static class DependencyInjection
         services.AddScoped<IIdentityDirectory, IdentityDirectory>();
         
         services.AddScoped<IUserContactDirectory, UserContactDirectory>();
+        
+        services.AddMediatorPattern(typeof(SignupCommandHandler).Assembly);
         
         return services;
     }

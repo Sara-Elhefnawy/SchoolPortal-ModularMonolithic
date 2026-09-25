@@ -1,5 +1,4 @@
-using MediatR;
-using SchoolPortal.Identities.Domain.Permissions;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Identities.Application.Feature.Permissions.Query.GetRolePermissions;

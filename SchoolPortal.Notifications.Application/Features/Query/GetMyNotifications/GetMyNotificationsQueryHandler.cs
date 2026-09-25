@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Notifications.Application.Directories;
 using SchoolPortal.SharedKernel.Results;
 

@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Attendances.Application.Directories;
 using SchoolPortal.Attendances.Application.Persistence;
 using SchoolPortal.Attendances.Domain.Attendances;

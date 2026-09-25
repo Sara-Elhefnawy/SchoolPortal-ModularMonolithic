@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using Microsoft.EntityFrameworkCore;
 using SchoolPortal.Grades.Domain.AcademicYears;
 using SchoolPortal.Grades.Domain.Assessments;

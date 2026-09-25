@@ -46,8 +46,9 @@ public sealed class ApplicationUserClaimsPrincipalFactory(
         // Let ASP.NET Core Identity create its normal claims first.
         var identity = await base.GenerateClaimsAsync(user);
 
-        // Find the roles assigned to this user.
-        var roles = await userManager.GetRolesAsync(user);
+        // "UserManager" (capital U) is the base class's own property. Using it instead of
+        // the lowercase constructor parameter means only ONE copy of the reference exists
+        var roles = await UserManager.GetRolesAsync(user);
         
         // Convert role names into role IDs.
         var roleIds = await dbContext.Roles

@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.ChangePassword;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.ForgotPassword;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Login;

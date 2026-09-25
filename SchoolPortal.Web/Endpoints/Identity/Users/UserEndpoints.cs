@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Identities.Application.Feature.Users.Command.Activate;
 using SchoolPortal.Identities.Application.Feature.Users.Command.AssignRole;
 using SchoolPortal.Identities.Application.Feature.Users.Command.Create;

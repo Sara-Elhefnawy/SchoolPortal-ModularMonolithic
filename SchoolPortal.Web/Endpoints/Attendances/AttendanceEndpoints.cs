@@ -1,11 +1,13 @@
-using MediatR;
 using SchoolPortal.Attendances.Application.Features.Attendances.Command.Record;
 using SchoolPortal.Attendances.Application.Features.Attendances.Command.Update;
 using SchoolPortal.Attendances.Application.Features.Attendances.Query.GetAttendanceForOccurrence;
 using SchoolPortal.Attendances.Application.Features.Attendances.Query.GetStudentAttendanceHistory;
 using SchoolPortal.Attendances.Application.Features.SessionOccurrences.Command.Create;
+using SchoolPortal.Attendances.Application.Features.SessionOccurrences.Query.GetBySession;
 using SchoolPortal.Attendances.Application.Features.Sessions.Command.Create;
+using SchoolPortal.Attendances.Application.Features.Sessions.Query.GetByCourseSection;
 using SchoolPortal.SharedKernel.Identity;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Web.Endpoints.Attendances.Requests.Attendances;
 using SchoolPortal.Web.Endpoints.Attendances.Requests.SessionOccurrences;
 
@@ -22,6 +24,11 @@ public static class AttendanceEndpoints
     private static void MapSessionEndpoints(IEndpointRouteBuilder app)
     {
         var group = app.MapGroup("/api/sessions").WithTags("Sessions");
+        
+        group.MapGet("/", GetSessions).RequireAuthorization(Permissions.Attendance.View);
+
+        group.MapGet("/{sessionId:int}/occurrences", GetSessionOccurrences)
+            .RequireAuthorization(Permissions.Attendance.View);
 
         group.MapPost("/", CreateSession).RequireAuthorization(Permissions.Attendance.Mark);
 
@@ -42,6 +49,20 @@ public static class AttendanceEndpoints
 
         group.MapGet("/by-student/{studentId:int}", GetStudentAttendanceHistory)
             .RequireAuthorization(Permissions.Attendance.View);
+    }
+    
+    private static async Task<IResult> GetSessions(int courseSectionId, IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetSessionsByCourseSectionQuery(courseSectionId), ct);
+
+        return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(new { error = result.Error });
+    }
+
+    private static async Task<IResult> GetSessionOccurrences(int sessionId, IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetOccurrencesBySessionQuery(sessionId), ct);
+
+        return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(new { error = result.Error });
     }
 
     private static async Task<IResult> CreateSession(CreateSessionCommand command, IMediator mediator,

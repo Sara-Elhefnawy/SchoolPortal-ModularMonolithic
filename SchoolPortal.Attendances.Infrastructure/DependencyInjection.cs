@@ -7,6 +7,7 @@ using SchoolPortal.Attendances.Application.Features.Sessions.Command.Create;
 using SchoolPortal.Attendances.Application.Persistence;
 using SchoolPortal.Attendances.Infrastructure.Directories;
 using SchoolPortal.Attendances.Infrastructure.Persistence;
+using SchoolPortal.SharedKernel.Mediator;
 
 namespace SchoolPortal.Attendances.Infrastructure;
 
@@ -27,11 +28,9 @@ public static class DependencyInjection
 
         // Registers every AbstractValidator<T> found in this assembly
         services.AddValidatorsFromAssembly(typeof(CreateSessionCommandValidator).Assembly);
-
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
-            typeof(DependencyInjection).Assembly,
-            typeof(IAttendanceDirectory).Assembly));
         
+        services.AddMediatorPattern(typeof(CreateSessionCommandHandler).Assembly);
+
         services.AddScoped<IAttendancesUnitOfWork, AttendancesUnitOfWork>();
         
         return services;

@@ -9,6 +9,7 @@
 
     <ItemGroup>
       <ProjectReference Include="..\SchoolPortal.Attendances.Infrastructure\SchoolPortal.Attendances.Infrastructure.csproj" />
+      <ProjectReference Include="..\SchoolPortal.Email.Infrastructure\SchoolPortal.Email.Infrastructure.csproj" />
       <ProjectReference Include="..\SchoolPortal.Grades.Infrastructure\SchoolPortal.Grades.Infrastructure.csproj" />
       <ProjectReference Include="..\SchoolPortal.Identities.Application\SchoolPortal.Identities.Application.csproj" />
       <ProjectReference Include="..\SchoolPortal.Identities.Infrastructure\SchoolPortal.Identities.Infrastructure.csproj" />

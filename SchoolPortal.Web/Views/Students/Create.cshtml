@@ -3,7 +3,7 @@
 }
 <div class="form-page">
     <div class="page-toolbar">
-        <div><h2>New student</h2><p class="text-muted">Create the student's basic profile.</p></div>
+        <div><h2>New student</h2><p class="text-muted">Create the student's profile and address.</p></div>
         <a class="btn btn-outline-secondary" asp-action="Index">Back</a>
     </div>
 
@@ -20,7 +20,21 @@
                         <option value="Male">Male</option><option value="Female">Female</option>
                     </select>
                 </div>
+                <div class="col-md-6">
+                    <label class="form-label">Admission date</label>
+                    <input id="admissionDate" name="admissionDate" type="date" class="form-control" required />
+                </div>
             </div>
+
+            <h5 class="mt-4">Address</h5>
+            <div class="row g-3">
+                <div class="col-md-6"><label class="form-label">Country</label><input name="country" class="form-control" required /></div>
+                <div class="col-md-6"><label class="form-label">State / Governorate</label><input name="state" class="form-control" required /></div>
+                <div class="col-md-6"><label class="form-label">City</label><input name="city" class="form-control" required /></div>
+                <div class="col-md-3"><label class="form-label">Zip code</label><input name="zipCode" class="form-control" required /></div>
+                <div class="col-md-3"><label class="form-label">Building number</label><input name="buildingNumber" type="number" min="1" class="form-control" required /></div>
+            </div>
+
             <button class="btn btn-primary mt-4">Create student</button>
         </form>
     </div>
@@ -28,9 +42,22 @@
 
 @section Scripts {
     <script>
+// Prefill admission date with today. It's the common case, and the field stays editable.
+// toISOString() is UTC and can be off by a day near midnight, so build the date from local parts.
+const today = new Date();
+document.getElementById("admissionDate").value =
+    `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+
 document.getElementById("studentForm").addEventListener("submit", async e => {
     e.preventDefault();
-    const result = await callApi("/api/students", "POST", formToObject(e.target));
+
+    const data = formToObject(e.target);
+
+    // The command's BuildingNumber is an int. Form values are strings, so convert
+    // explicitly instead of depending on the server's number-from-string leniency.
+    data.buildingNumber = Number(data.buildingNumber);
+
+    const result = await callApi("/api/students", "POST", data);
     if (result.ok) window.location.href = "/Students";
     else showToast(result.message || "Could not create student.", "danger");
 });

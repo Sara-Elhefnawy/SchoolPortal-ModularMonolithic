@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using Microsoft.EntityFrameworkCore;
 using SchoolPortal.Attendances.Domain.Attendances;
 using SchoolPortal.Attendances.Domain.Sessions;

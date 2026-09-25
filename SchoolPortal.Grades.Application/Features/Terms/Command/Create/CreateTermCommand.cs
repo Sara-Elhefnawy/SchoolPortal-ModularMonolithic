@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Grades.Domain.Terms;
 using SchoolPortal.SharedKernel.Results;
 

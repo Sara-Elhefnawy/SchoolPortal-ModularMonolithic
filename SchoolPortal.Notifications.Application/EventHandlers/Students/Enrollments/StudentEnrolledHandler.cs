@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using Microsoft.Extensions.Logging;
 using SchoolPortal.Notifications.Application.Directories;
 using SchoolPortal.Notifications.Domain.Notifications;

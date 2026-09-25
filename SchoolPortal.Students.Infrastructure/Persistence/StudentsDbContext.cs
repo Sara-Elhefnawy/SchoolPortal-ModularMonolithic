@@ -1,5 +1,5 @@
-using MediatR;
 using Microsoft.EntityFrameworkCore;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.SharedKernel.Persistence;
 using SchoolPortal.Students.Domain.Enrollments;
 using SchoolPortal.Students.Domain.Students;

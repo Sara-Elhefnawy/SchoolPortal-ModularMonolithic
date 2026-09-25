@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 
 namespace SchoolPortal.SharedKernel.Domain;
 

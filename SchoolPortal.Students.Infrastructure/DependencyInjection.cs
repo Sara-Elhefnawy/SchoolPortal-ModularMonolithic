@@ -2,6 +2,7 @@ using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Students.Application.Directories;
 using SchoolPortal.Students.Application.Features.Students.Commands.Create;
 using SchoolPortal.Students.Application.Persistence;
@@ -27,9 +28,7 @@ public static class DependencyInjection
         // Registers every AbstractValidator<T> found in this assembly
         services.AddValidatorsFromAssembly(typeof(CreateStudentCommandValidator).Assembly);
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
-            typeof(DependencyInjection).Assembly,
-            typeof(IStudentDirectory).Assembly));
+        services.AddMediatorPattern(typeof(CreateStudentCommandHandler).Assembly);
         
         services.AddScoped<IStudentsUnitOfWork, StudentsUnitOfWork>();
         

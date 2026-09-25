@@ -1,0 +1,21 @@
+@model SchoolPortal.SharedKernel.Emails.GradePublishedEmailModel
+
+<div class="auth-card">
+    <div class="brand auth-brand">
+        <span class="brand-mark">SP</span> SchoolPortal
+    </div>
+
+    <h1>New grade published</h1>
+
+    <p class="text-muted">
+        A new grade has been published for you in SchoolPortal.
+    </p>
+
+    <p class="text-muted">
+        Log in to SchoolPortal to view the details of your grade.
+    </p>
+
+    <a href="@Model.Link" class="btn btn-primary w-100">
+        View Grade
+    </a>
+</div>

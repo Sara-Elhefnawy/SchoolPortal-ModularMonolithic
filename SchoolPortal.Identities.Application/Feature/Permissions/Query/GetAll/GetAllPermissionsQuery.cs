@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Identities.Domain.Permissions;
 using SchoolPortal.SharedKernel.Results;
 

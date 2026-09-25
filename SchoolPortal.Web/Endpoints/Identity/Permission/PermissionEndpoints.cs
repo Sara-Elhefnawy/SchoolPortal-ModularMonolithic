@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Identities.Application.Feature.Permissions.Query.GetAll;
 using SchoolPortal.SharedKernel.Identity;
 

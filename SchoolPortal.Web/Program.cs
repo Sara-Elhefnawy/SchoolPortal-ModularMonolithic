@@ -1,8 +1,6 @@
-using MediatR;
 using Microsoft.OpenApi;
 using SchoolPortal.Attendances.Infrastructure;
 using SchoolPortal.Grades.Infrastructure;
-using SchoolPortal.SharedKernel.Behaviors;
 using SchoolPortal.Students.Infrastructure;
 using SchoolPortal.Identities.Infrastructure;
 using SchoolPortal.Web.Endpoints.Attendances;
@@ -10,6 +8,7 @@ using SchoolPortal.Web.Endpoints.Grades;
 using SchoolPortal.Web.Endpoints.Students;
 using System.Text.Json.Serialization;
 using SchoolPortal.Attendances.Application.Features.Attendances.Command.Cancel;
+using SchoolPortal.Email.Infrastructure;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Create;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Signup;
 using SchoolPortal.Identities.Infrastructure.Persistence.Seeders;
@@ -17,7 +16,8 @@ using SchoolPortal.Notifications.Application.EventHandlers.Attendances.SessionOc
 using SchoolPortal.Notifications.Application.EventHandlers.Grades;
 using SchoolPortal.Notifications.Application.EventHandlers.Students;
 using SchoolPortal.Notifications.Infrastructure;
-using SchoolPortal.SharedKernel.Identity.Users;
+using SchoolPortal.SharedKernel.Identity.Contracts;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Students.Application.Features.Students.Commands.UpdatePhone;
 using SchoolPortal.Web.Endpoints.Identity.Account;
 using SchoolPortal.Web.Endpoints.Identity.Permission;
@@ -38,10 +38,9 @@ public class Program
 
         builder.Services.AddStudentsModule(builder.Configuration).AddAttendanceModule(builder.Configuration)
             .AddGradesModule(builder.Configuration).AddIdentityModule(builder.Configuration)
-            .AddNotificationsModule(builder.Configuration);
+            .AddNotificationsModule(builder.Configuration).AddEmailModule(builder.Configuration);
         
-        // MediatR pipeline
-        builder.Services.AddScoped(typeof(IPipelineBehavior<,>), typeof(ValidationBehavior<,>));
+        builder.Services.AddMediatorPattern(typeof(Mediator).Assembly);
         
         // API / Swagger
         builder.Services.AddEndpointsApiExplorer();
@@ -60,17 +59,6 @@ public class Program
                 new JsonStringEnumConverter());
         });
         
-        // This is the ONE place in the whole solution allowed to reference every module's
-        // Application assembly at once — because it's the composition root, not a module.
-        // Each module's own DI setup only ever registers ITS OWN services (directories,
-        // unit of work) — never MediatR's cross-module scanning.
-        builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
-            typeof(UpdateStudentPhoneCommandHandler).Assembly, typeof(StudentPhoneNumberUpdatedHandler).Assembly,
-            typeof(CreateGradeCommandHandler).Assembly, typeof(GradeCreatedHandler).Assembly,
-            typeof(CancelSessionOccurrenceCommandHandler).Assembly,
-            typeof(SessionOccurrenceCancelledHandler).Assembly,
-            typeof(SignupCommandHandler).Assembly));
-        
         builder.Services.AddHttpContextAccessor();
         builder.Services.AddScoped<ICurrentUser, CurrentUser>();
         
@@ -85,7 +73,7 @@ public class Program
         }
         
         // Swagger
-        if (!app.Environment.IsDevelopment())
+        if (app.Environment.IsDevelopment())
         {
             app.UseSwagger();
             app.UseSwaggerUI();

@@ -2,7 +2,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolPortal.Notifications.Application.Directories;
+using SchoolPortal.Notifications.Application.EventHandlers.Students;
 using SchoolPortal.Notifications.Infrastructure.Persistence;
+using SchoolPortal.SharedKernel.Mediator;
 
 namespace SchoolPortal.Notifications.Infrastructure;
 
@@ -20,6 +22,8 @@ public static class DependencyInjection
                 npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", NotificationsDbContext.Schema)));
 
         services.AddScoped<INotificationDirectory, NotificationDirectory>();
+        
+        services.AddMediatorPattern(typeof(StudentCreatedHandler).Assembly);
         
         return services;
     }

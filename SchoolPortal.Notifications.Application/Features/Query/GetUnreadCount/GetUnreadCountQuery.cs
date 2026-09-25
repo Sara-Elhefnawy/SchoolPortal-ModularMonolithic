@@ -1,4 +1,4 @@
-using MediatR;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Notifications.Application.Features.Query.GetUnreadCount;

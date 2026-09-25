@@ -30,7 +30,7 @@ document.getElementById("loginForm").addEventListener("submit", async e => {
     e.preventDefault();
     const result = await callApi("/api/account/login", "POST", formToObject(e.target));
     if (result.ok) {
-        window.location.href = "/Dashboard";
+        window.location.href = "/Dashboard/Index";
         return;
     }
     const error = document.getElementById("loginError");

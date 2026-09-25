@@ -1,0 +1,25 @@
+@model SchoolPortal.SharedKernel.Emails.ConfirmEmailEmailModel
+
+<div class="auth-card">
+    <div class="brand auth-brand">
+        <span class="brand-mark">SP</span> SchoolPortal
+    </div>
+
+    <h1>Confirm your account</h1>
+
+    <p class="text-muted">
+        Welcome to SchoolPortal!
+    </p>
+
+    <p class="text-muted">
+        Please confirm your email address to activate your account.
+    </p>
+
+    <a href="@Model.ConfirmLink" class="btn btn-primary w-100">
+        Confirm Email
+    </a>
+
+    <p class="text-muted mt-3">
+        If you did not create a SchoolPortal account, you can safely ignore this email.
+    </p>
+</div>

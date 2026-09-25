@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+      <UserSecretsId>0b09c8f8-f82e-4eeb-a169-f56fa360ab2e</UserSecretsId>
+  </PropertyGroup>
+
+    <ItemGroup>
+      <PackageReference Include="MailKit" Version="4.18.0" />
+      <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="10.0.12" />
+      <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.12" />
+      <PackageReference Include="MimeKit" Version="4.18.1" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\SchoolPortal.Email.Domain\SchoolPortal.Email.Domain.csproj" />
+      <ProjectReference Include="..\SchoolPortal.SharedKernel\SchoolPortal.SharedKernel.csproj" />
+    </ItemGroup>
+
+</Project>
