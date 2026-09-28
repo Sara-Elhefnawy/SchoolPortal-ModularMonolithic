@@ -23,7 +23,7 @@ public class InfrastructureLeakTests
             Assert.True(result.IsSuccessful,
                 $"{module.ModuleName}.Infrastructure depends on Dapper, but Dapper is reserved " +
                 $"for Grades' reporting/ranking queries. Offending types: " +
-                string.Join(", ", result.FailingTypes?.Select(t => t.FullName) ?? []));
+                string.Join(", ", result.FailingTypes?.Select(t => t.Name) ?? []));
         }
     }
 }

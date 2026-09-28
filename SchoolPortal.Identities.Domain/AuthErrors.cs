@@ -56,4 +56,7 @@ public static class AuthErrors
 
     public static Error InvalidTokenOrEmail =>
         Error.Validation("Auth.InvalidTokenOrEmail", "This reset link is invalid or has expired.");
+
+    public static Error EmailNotConfirmed =>
+        Error.Validation("Auth.EmailNotConfirmed", "Please confirm your email address before logging in.");
 }

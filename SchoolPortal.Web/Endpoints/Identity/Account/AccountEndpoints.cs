@@ -1,5 +1,6 @@
 using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.ChangePassword;
+using SchoolPortal.Identities.Application.Feature.Auth.Command.ConfirmEmail;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.ForgotPassword;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Login;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Logout;
@@ -27,8 +28,22 @@ public static class AccountEndpoints
         group.MapPost("/forgot-password", ForgotPassword);
 
         group.MapPost("/reset-password", ResetPassword);
+        
+        group.MapPost("/confirm-email", ConfirmEmail);
 
         group.MapPost("/me", Me);
+    }
+
+    private static async Task<IResult> ConfirmEmail(
+        ConfirmEmailCommand request,
+        IMediator mediator,
+        CancellationToken ct)
+    {
+        var result = await mediator.Send(request, ct);
+
+        return result.IsSuccess
+            ? Results.Ok(new { message = "Email confirmed." })
+            : Results.BadRequest(new { error = "This confirmation link is invalid or has expired." });
     }
 
     private static async Task<IResult> Signup(

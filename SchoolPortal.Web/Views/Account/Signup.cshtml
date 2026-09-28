@@ -17,6 +17,9 @@
         <label class="form-label">Password</label>
         <input class="form-control mb-3" name="password" type="password" required />
 
+        <label class="form-label">Confirm Password</label>
+        <input class="form-control mb-3" name="confirmPassword" type="password" required />
+
         <button class="btn btn-primary w-100">Create account</button>
     </form>
 
@@ -32,7 +35,7 @@ document.getElementById("signupForm").addEventListener("submit", async e => {
     e.preventDefault();
     const result = await callApi("/api/account/signup", "POST", formToObject(e.target));
     if (result.ok) {
-        window.location.href = "/Account/Login";
+        window.location.href = "/Account/CheckEmail";
     } else {
         showToast(result.message || "Could not create account.", "danger");
     }

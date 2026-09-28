@@ -95,6 +95,8 @@ public class Program
         app.UseAuthentication();
         app.UseAuthorization();
 
+        app.MapControllers();
+
         // Static files
         app.MapStaticAssets();
         

@@ -1,7 +1,10 @@
 using SchoolPortal.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Options;
 using SchoolPortal.Identities.Domain;
 using SchoolPortal.Identities.Domain.Users;
+using SchoolPortal.SharedKernel.Emails.Contracts;
+using SchoolPortal.SharedKernel.Emails.Options;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Identities.Application.Feature.Auth.Command.Signup;
@@ -9,7 +12,8 @@ namespace SchoolPortal.Identities.Application.Feature.Auth.Command.Signup;
 public sealed class SignupCommandHandler(
     UserManager<ApplicationUser> userManager,
     RoleManager<Domain.Roles.ApplicationRole> roleManager,
-    SignInManager<ApplicationUser> signInManager)
+    IEmailSender emailSender,
+    IOptions<AppOptions> appOptions)
     : IRequestHandler<SignupCommand, Result>
 {
     public async Task<Result> Handle(
@@ -20,17 +24,12 @@ public sealed class SignupCommandHandler(
             return Result.Failure(AuthErrors.PasswordsDoNotMatch);
 
         var existingUser = await userManager.FindByEmailAsync(request.Email);
-
         if (existingUser is not null)
-        {
-            if (existingUser.IsDeleted)
-                return Result.Failure(AuthErrors.AccountExists);
-
-            return Result.Failure(AuthErrors.EmailAlreadyExists);
-        }
+            return existingUser.IsDeleted
+                ? Result.Failure(AuthErrors.AccountExists)
+                : Result.Failure(AuthErrors.EmailAlreadyExists);
 
         var studentRole = await roleManager.FindByNameAsync(SharedKernel.Identity.Roles.Student);
-
         if (studentRole is null || studentRole.IsDeleted)
             return Result.Failure(AuthErrors.DefaultRoleNotAvailable);
 
@@ -44,7 +43,6 @@ public sealed class SignupCommandHandler(
         };
 
         var createResult = await userManager.CreateAsync(user, request.Password);
-
         if (!createResult.Succeeded)
         {
             var error = createResult.Errors.FirstOrDefault();
@@ -56,18 +54,23 @@ public sealed class SignupCommandHandler(
         }
 
         var roleResult = await userManager.AddToRoleAsync(user, SharedKernel.Identity.Roles.Student);
-
         if (!roleResult.Succeeded)
         {
             await userManager.DeleteAsync(user);
 
-            var error = roleResult.Errors.FirstOrDefault();
-
             return Result.Failure(
                 AuthErrors.RoleAssignmentFailed);
         }
-
-        await signInManager.SignInAsync(user, isPersistent: false);
+        
+        // Generate the confirmation token and send the email.
+        var confirmToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
+        var link = $"{appOptions.Value.PublicBaseUrl}/confirm-email" +
+                   $"?userId={user.Id}&token={Uri.EscapeDataString(confirmToken)}";
+        var sendResult = await emailSender.SendConfirmEmailAsync(user.Email!, link, ct);
+        if (sendResult.IsFailure)
+            return sendResult;
+        
+        // Do not sign the user in here. The user must confirm the email first, then explicitly log in.
 
         return Result.Success();
     }

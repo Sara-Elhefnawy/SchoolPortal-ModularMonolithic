@@ -1,0 +1,115 @@
+@{
+    Layout = "_Layout";
+    ViewData["Title"] = "Confirm email";
+}
+<div class="auth-card text-center">
+    <div class="brand auth-brand"><span class="brand-mark">SP</span> SchoolPortal</div>
+    <h1>Email confirmation</h1>
+
+    @* Three states share one card: working (spinner), success, failure. *@
+    <div id="spinner" class="spinner-border text-primary my-3" role="status"></div>
+    <p id="statusText" class="text-muted">Confirming your email...</p>
+
+    @* Hidden until we know the outcome; the login link only makes sense after success. *@
+    <a id="loginLink" class="btn btn-primary w-100 d-none"
+       asp-controller="Account" asp-action="Login">Go to login</a>
+
+    @* Shown on failure so the person has somewhere to go besides a dead end. *@
+    <div class="auth-links d-none" id="failLinks">
+        <a asp-controller="Account" asp-action="Login">Back to login</a>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        (async () => {
+            const spinner    = document.getElementById("spinner");
+            const statusText = document.getElementById("statusText");
+            const loginLink  = document.getElementById("loginLink");
+            const failLinks  = document.getElementById("failLinks");
+
+            // One exit path so success and failure both stop the spinner the same way.
+            // textContent (not innerHTML) because the message can come from a response.
+            const finish = (text, success) => {
+                spinner.classList.add("d-none");
+
+                statusText.textContent = text;
+
+                statusText.className =
+                    success
+                        ? "text-success"
+                        : "text-danger";
+
+                if (success) {
+                    loginLink.classList.remove("d-none");
+                } else {
+                    failLinks.classList.remove("d-none");
+                }
+            };
+
+            const params =
+                new URLSearchParams(
+                    window.location.search
+                );
+
+            const userId =
+                Number(params.get("userId"));
+
+            const token =
+                params.get("token");
+
+            // Make sure the link contains both
+            // required values.
+            if (
+                !Number.isInteger(userId) ||
+                userId <= 0 ||
+                !token
+            ) {
+                finish(
+                    "This confirmation link is invalid.",
+                    false
+                );
+
+                return;
+            }
+
+            /*
+             * We deliberately use POST for the actual
+             * confirmation because confirming an email
+             * changes server state.
+             */
+            const result = await callApi(
+                "/api/account/confirm-email",
+                "POST",
+                {
+                    userId,
+                    token
+                }
+            );
+
+            if (result.ok) {
+                /*
+                 * Remove the token from the address bar
+                 * after the confirmation request has been
+                 * processed successfully.
+                 */
+                window.history.replaceState(
+                    null,
+                    "",
+                    window.location.pathname
+                );
+
+                finish(
+                    "Your email has been confirmed. You can now log in.",
+                    true
+                );
+            } else {
+                finish(
+                    result.message ||
+                    "This confirmation link is invalid or has expired.",
+                    false
+                );
+            }
+        })();
+    </script>
+}

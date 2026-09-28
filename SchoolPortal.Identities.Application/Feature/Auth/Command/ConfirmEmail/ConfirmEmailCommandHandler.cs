@@ -1,17 +1,12 @@
 using SchoolPortal.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.Extensions.Options;
 using SchoolPortal.Identities.Domain.Users;
-using SchoolPortal.SharedKernel.Emails;
-using SchoolPortal.SharedKernel.Emails.Options;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Identities.Application.Feature.Auth.Command.ConfirmEmail;
 
 public sealed class ConfirmEmailCommandHandler(
-    UserManager<ApplicationUser> userManager,
-    IOptions<AppOptions> appOptions,
-    IEmailSender emailSender)
+    UserManager<ApplicationUser> userManager)
     : IRequestHandler<ConfirmEmailCommand, Result>
 {
     public async Task<Result> Handle(ConfirmEmailCommand request, CancellationToken ct)
@@ -26,12 +21,6 @@ public sealed class ConfirmEmailCommandHandler(
         var result = await userManager.ConfirmEmailAsync(user, request.Token);
         if (!result.Succeeded)
             return Result.Failure(UserErrors.EmailConfirmationFailed);
-        
-        var confirmToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
-        var link = $"{appOptions.Value.PublicBaseUrl}/confirm-email" +
-                   $"?userId={user.Id}&token={Uri.EscapeDataString(confirmToken)}";
- 
-        await emailSender.SendConfirmEmailAsync(user.Email!, link, ct);
         
         return Result.Success();
     }

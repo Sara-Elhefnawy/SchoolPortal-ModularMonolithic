@@ -65,5 +65,5 @@ public class LayerDependencyTests
 
     private static string Format(TestResult result, string module, string layer) =>
         $"{module}.{layer} has a forbidden dependency. Offending types: " +
-        string.Join(", ", result.FailingTypes?.Select(t => t.FullName) ?? []);
+        string.Join(", ", result.FailingTypes?.Select(t => t.Name) ?? []);
 }

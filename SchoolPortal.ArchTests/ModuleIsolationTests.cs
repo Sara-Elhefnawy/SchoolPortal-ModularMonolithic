@@ -31,6 +31,6 @@ public class ModuleIsolationTests
 
         Assert.True(offenders.Count == 0,
             $"{module.ModuleName} depends directly on {other.ModuleName}. Offending types: " +
-            string.Join(", ", offenders.Select(t => t.FullName)));
+            string.Join(", ", offenders.Select(t => t.Name)));
     }
 }

@@ -1,25 +1,34 @@
 @model SchoolPortal.SharedKernel.Emails.ConfirmEmailEmailModel
-
-<div class="auth-card">
-    <div class="brand auth-brand">
-        <span class="brand-mark">SP</span> SchoolPortal
-    </div>
-
-    <h1>Confirm your account</h1>
-
-    <p class="text-muted">
-        Welcome to SchoolPortal!
-    </p>
-
-    <p class="text-muted">
-        Please confirm your email address to activate your account.
-    </p>
-
-    <a href="@Model.ConfirmLink" class="btn btn-primary w-100">
-        Confirm Email
-    </a>
-
-    <p class="text-muted mt-3">
-        If you did not create a SchoolPortal account, you can safely ignore this email.
-    </p>
-</div>
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" /></head>
+<body style="margin:0; padding:0; background-color:#f4f4f7; font-family:Arial, Helvetica, sans-serif;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color:#f4f4f7; padding:32px 0;">
+    <tr><td align="center">
+      <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; overflow:hidden;">
+        <tr><td style="padding:32px 40px 0 40px;">
+          <span style="display:inline-block; width:28px; height:28px; line-height:28px; text-align:center; background-color:#4f46e5; color:#ffffff; border-radius:6px; font-size:13px; font-weight:bold;">SP</span>
+          <span style="font-size:18px; font-weight:bold; color:#1a1a1a; vertical-align:middle;"> SchoolPortal</span>
+        </td></tr>
+        <tr><td style="padding:24px 40px 0 40px;">
+          <h1 style="font-size:22px; color:#1a1a1a; margin:0 0 16px 0;">Confirm your email</h1>
+          <p style="font-size:15px; color:#4b5563; line-height:1.5; margin:0 0 24px 0;">Thanks for signing up. Click below to confirm your email address and activate your account.</p>
+        </td></tr>
+        <tr><td style="padding:0 40px;">
+          <a href="@Model.ConfirmLink" style="display:inline-block; background-color:#4f46e5; color:#ffffff; text-decoration:none; font-size:15px; font-weight:bold; padding:12px 24px; border-radius:6px;">Confirm Email</a>
+        </td></tr>
+        <tr><td style="padding:24px 40px 0 40px;">
+          <p style="font-size:13px; color:#9ca3af; line-height:1.5; margin:0 0 4px 0;">If the button doesn't work, copy and paste this link into your browser:</p>
+          <p style="font-size:13px; color:#4f46e5; word-break:break-all; margin:0;">@Model.ConfirmLink</p>
+        </td></tr>
+        <tr><td style="padding:16px 40px 32px 40px;">
+          <p style="font-size:13px; color:#9ca3af; line-height:1.5; margin:0;">If you did not create an account, you can safely ignore this email.</p>
+        </td></tr>
+        <tr><td style="background-color:#f9fafb; padding:20px 40px; text-align:center;">
+          <p style="font-size:12px; color:#9ca3af; margin:0;">SchoolPortal &copy; @DateTime.UtcNow.Year</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>

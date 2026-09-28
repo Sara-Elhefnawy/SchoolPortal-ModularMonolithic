@@ -17,4 +17,9 @@ public sealed class AccountController : Controller
     public IActionResult ResetPassword() => View();
     
     public IActionResult AccessDenied() => View();
+    
+    [HttpGet("/confirm-email")]
+    public IActionResult ConfirmEmail() => View();
+    
+    public IActionResult CheckEmail() => View();
 }

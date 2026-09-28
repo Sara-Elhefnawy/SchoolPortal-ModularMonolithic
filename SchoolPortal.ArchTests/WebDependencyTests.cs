@@ -24,6 +24,6 @@ public class WebDependencyTests
         Assert.True(isSuccessful,
             "SchoolPortal.Web application code depends directly on a module's Infrastructure layer. " +
             "Only Program.cs is allowed to reference Infrastructure. " + "Offending types: " +
-            string.Join(", ", failingTypes.Select(type => type.FullName)));
+            string.Join(", ", failingTypes.Select(type => type.Name)));
     }
 }
