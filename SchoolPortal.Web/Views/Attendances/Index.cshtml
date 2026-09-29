@@ -26,13 +26,15 @@ async function loadSessions() {
     const items = result.data || [];
     container.innerHTML = items.length ? items.map(s => `
         <div class="class-card">
-            <div class="class-time">${escapeHtml(s.startTime)} – ${escapeHtml(s.endTime)}</div>
-            <h3>${escapeHtml(s.courseName)}</h3>
-            <p>${escapeHtml(s.sectionName || "")}</p>
-            <div class="class-meta">${s.studentCount ?? 0} students</div>
-            <a class="btn btn-primary mt-3" href="/Attendance/Mark/${s.occurrenceId}">Mark attendance</a>
+            <!-- slice(0,5): the API sends "09:00:00", the UI only needs "09:00" -->
+            <div class="class-time">${escapeHtml(s.startTime.slice(0, 5))} – ${escapeHtml(s.endTime.slice(0, 5))}</div>
+            <!-- Course names live in the Grades module; Attendances only knows the ID -->
+            <h3>Course section #${s.courseSectionId}</h3>
+            ${s.occurrenceId
+                ? `<a class="btn btn-primary mt-3" href="/Attendances/Mark/${s.occurrenceId}">Mark attendance</a>`
+                : `<div class="text-muted mt-3">Not started yet</div>`}
         </div>`).join("") : `<div class="empty-state">No classes scheduled today.</div>`;
 }
 loadSessions();
-</script>
+    </script>
 }

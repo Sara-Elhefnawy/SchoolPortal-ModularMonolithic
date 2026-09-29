@@ -14,6 +14,7 @@ using SchoolPortal.SharedKernel.Emails.Contracts;
 using SchoolPortal.SharedKernel.Emails.Options;
 using SchoolPortal.SharedKernel.Identity.Contracts;
 using SchoolPortal.SharedKernel.Mediator;
+using SchoolPortal.SharedKernel.Persistence.Seeders;
 using SchoolPortal.Web.EmailTemplates;
 using SchoolPortal.Web.Endpoints.Identity.Account;
 using SchoolPortal.Web.Endpoints.Identity.Permission;
@@ -85,7 +86,8 @@ public class Program
         // Identity database seed
         using (var scope = app.Services.CreateScope())
         {
-            await IdentitySeeder.SeedAsync(scope.ServiceProvider);
+            foreach (var seeder in scope.ServiceProvider.GetServices<IDataSeeder>().OrderBy(s => s.Order))
+                await seeder.SeedAsync(app.Lifetime.ApplicationStopping);
         }
 
         // HTTP pipeline

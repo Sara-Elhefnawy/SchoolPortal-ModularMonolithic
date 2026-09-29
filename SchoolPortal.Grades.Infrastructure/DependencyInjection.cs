@@ -9,8 +9,10 @@ using SchoolPortal.Grades.Application.Persistence;
 using SchoolPortal.Grades.Application.Reporting.Queries;
 using SchoolPortal.Grades.Infrastructure.Directories;
 using SchoolPortal.Grades.Infrastructure.Persistence;
+using SchoolPortal.Grades.Infrastructure.Persistence.Seeders;
 using SchoolPortal.Grades.Infrastructure.Reporting;
 using SchoolPortal.SharedKernel.Mediator;
+using SchoolPortal.SharedKernel.Persistence.Seeders;
 
 namespace SchoolPortal.Grades.Infrastructure;
 
@@ -46,6 +48,8 @@ public static class DependencyInjection
         // Both resolve to the SAME DbContext instance within a request (AddDbContext is scoped by default), so
         // there's exactly one ChangeTracker and one transaction either way.
         services.AddScoped<IGradesUnitOfWork, GradesUnitOfWork>();
+        
+        services.AddScoped<IDataSeeder, GradesSeeder>();
         
         return services;
     }

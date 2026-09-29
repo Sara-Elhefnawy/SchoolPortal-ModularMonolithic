@@ -24,47 +24,96 @@
 </div>
 
 @section Scripts {
-<script>
-async function getOptions(url, selectId, textField, valueField) {
-    const result = await callApi(url, "GET");
-    const select = document.getElementById(selectId);
-    if (!result.ok) {
-        select.innerHTML = `<option value="">${escapeHtml(result.message)}</option>`;
-        return [];
+    <script>
+// One config drives every dropdown, so each one has both a "waiting for parent" text and a
+// "loaded but nothing there" text. A select can then never be left with zero options.
+const order = ["year", "term", "section", "assessment"];
+const cascade = {
+    year:       { placeholder: "Select academic year", empty: "No academic years yet",           waiting: "Loading..." },
+    term:       { placeholder: "Select term",          empty: "No terms for this year",         waiting: "Select a year first" },
+    section:    { placeholder: "Select course section",empty: "No course sections for this term", waiting: "Select a term first" },
+    assessment: { placeholder: "Select assessment",    empty: "No assessments for this section", waiting: "Select a course section first" }
+        };
+
+function resetSelect(id, text) {
+    document.getElementById(id).innerHTML = `<option value="">${escapeHtml(text)}</option>`;
+}
+
+function resetGrades(message) {
+    document.getElementById("gradesBody").innerHTML =
+        `<tr><td colspan="4" class="text-muted">${escapeHtml(message)}</td></tr>`;
+}
+
+// When a parent changes, everything below it is stale, so put those selects back to "waiting".
+function resetBelow(id) {
+    for (const child of order.slice(order.indexOf(id) + 1)) resetSelect(child, cascade[child].waiting);
+    resetGrades("Choose an assessment.");
+}
+
+async function loadOptions(url, id, textField, valueField) {
+    const select = document.getElementById(id);
+    select.innerHTML = `<option value="">Loading...</option>`;
+    try {
+        const result = await callApi(url, "GET");
+        if (!result.ok) {
+            select.innerHTML = `<option value="">${escapeHtml(result.message || "Could not load options")}</option>`;
+            return;
+        }
+        const items = result.data || [];
+        // Empty list is a normal state, not an error: the select still opens and explains why it's empty.
+        const first = items.length ? cascade[id].placeholder : cascade[id].empty;
+        select.innerHTML = `<option value="">${escapeHtml(first)}</option>` + items.map(x =>
+            `<option value="${x[valueField]}">${escapeHtml(x[textField])}</option>`).join("");
+    } catch (err) {
+        // A network failure or a non-JSON error response lands here instead of leaving an empty select.
+        select.innerHTML = `<option value="">Could not load options</option>`;
     }
-    const items = result.data || [];
-    select.innerHTML = `<option value="">Select...</option>` + items.map(x =>
-        `<option value="${x[valueField]}">${escapeHtml(x[textField])}</option>`).join("");
-    return items;
-}
-async function loadYears() {
-    await getOptions("/api/academic-years", "year", "name", "id");
-}
+        }
+
 document.getElementById("year").addEventListener("change", async e => {
-    if (e.target.value) await getOptions(`/api/terms?academicYearId=${e.target.value}`, "term", "name", "id");
+    resetBelow("year");
+    if (e.target.value) await loadOptions(`/api/terms?academicYearId=${e.target.value}`, "term", "name", "id");
 });
+
 document.getElementById("term").addEventListener("change", async e => {
-    if (e.target.value) await getOptions(`/api/course-sections?termId=${e.target.value}`, "section", "name", "id");
+    resetBelow("term");
+    if (e.target.value) await loadOptions(`/api/course-sections?termId=${e.target.value}`, "section", "name", "id");
 });
+
 document.getElementById("section").addEventListener("change", async e => {
-    if (e.target.value) await getOptions(`/api/assessments?courseSectionId=${e.target.value}`, "assessment", "name", "id");
+    resetBelow("section");
+    if (e.target.value) await loadOptions(`/api/assessments?courseSectionId=${e.target.value}`, "assessment", "name", "id");
 });
+
 document.getElementById("assessment").addEventListener("change", async e => {
-    if (!e.target.value) return;
-    const result = await callApi(`/api/grades?assessmentId=${e.target.value}`, "GET");
+    if (!e.target.value) { resetGrades("Choose an assessment."); return; }
+
     const body = document.getElementById("gradesBody");
-    if (!result.ok) {
-        body.innerHTML = `<tr><td colspan="4">${escapeHtml(result.message)}</td></tr>`;
-        return;
+    body.innerHTML = `<tr><td colspan="4" class="text-muted">Loading...</td></tr>`;
+    try {
+        const result = await callApi(`/api/grades?assessmentId=${e.target.value}`, "GET");
+        if (!result.ok) {
+            body.innerHTML = `<tr><td colspan="4">${escapeHtml(result.message)}</td></tr>`;
+            return;
+        }
+        const grades = result.data || [];
+        body.innerHTML = grades.length
+            ? grades.map(g => `
+                <tr>
+                    <td><strong>${escapeHtml(g.studentName || "Unknown student")}</strong></td>
+                    <td>${g.score ?? "—"}</td>
+                    <td><span class="status-badge">${escapeHtml(g.status)}</span></td>
+                    <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="/Grades/Details/${g.id}">Details</a></td>
+                </tr>`).join("")
+            : `<tr><td colspan="4" class="text-muted text-center py-4">No grades recorded for this assessment yet.</td></tr>`;
+    } catch (err) {
+        body.innerHTML = `<tr><td colspan="4">Could not load grades.</td></tr>`;
     }
-    body.innerHTML = (result.data || []).map(g => `
-        <tr>
-            <td><strong>${escapeHtml(g.studentName)}</strong></td>
-            <td>${g.score ?? "—"}</td>
-            <td><span class="status-badge">${escapeHtml(g.status)}</span></td>
-            <td class="text-end"><a class="btn btn-sm btn-outline-primary" href="/Grades/Details/${g.id}">Details</a></td>
-        </tr>`).join("");
-});
-loadYears();
+        });
+
+// Initial state: every select has a placeholder, then the first one loads.
+for (const id of order.slice(1)) resetSelect(id, cascade[id].waiting);
+resetSelect("year", cascade.year.waiting);
+loadOptions("/api/academic-years", "year", "name", "id");
 </script>
 }

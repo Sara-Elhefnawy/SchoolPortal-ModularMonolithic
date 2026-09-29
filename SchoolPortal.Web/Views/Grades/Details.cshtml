@@ -1,47 +1,96 @@
+@using SchoolPortal.SharedKernel.Identity
 @{
-    ViewData["Title"] = "Grade details";
-    var id = ViewContext.RouteData.Values["id"];
-    var isAdmin = User.IsInRole("Admin");
+ViewData["Title"] = "Grade details";
+var id = ViewContext.RouteData.Values["id"];
+
+// These flags must mirror the endpoint policies in GradesEndpoints.MapGradeEndpoints.
+// If you change a policy there, change it here too (or, better, funnel both through
+// a shared capability object — but for a small page this is fine).
+var canSubmit  = User.HasClaim("permission", Permissions.Grades.Update);
+var canRevise  = User.HasClaim("permission", Permissions.Grades.Update);
+var canPublish = User.IsInRole(Roles.Admin);
+var canUnpub   = User.IsInRole(Roles.Admin);
+var canLock    = User.IsInRole(Roles.Admin);
+var canUnlock  = User.IsInRole(Roles.Admin);
+var canDraft   = User.IsInRole(Roles.Admin);
 }
+
 <div class="page-toolbar">
-    <div><a href="/Grades/Gradebook" class="back-link">← Gradebook</a><h2>Grade details</h2></div>
+    <div>
+        @if (User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Teacher))
+        {
+        <a href="/Grades/Gradebook" class="back-link">← Gradebook</a>
+        }
+        else
+        {
+        <a href="/Grades/MyGrades" class="back-link">← My grades</a>
+        }
+        <h2>Grade details</h2>
+    </div>
 </div>
 
 <div id="gradeDetails" class="panel">Loading...</div>
 
 @section Scripts {
 <script>
-const gradeId = "@id";
-const isAdmin = @isAdmin.ToString().ToLowerInvariant();
+    const gradeId = "@id";
 
-async function loadGrade() {
-    const result = await callApi(`/api/grades/${gradeId}`, "GET");
-    const container = document.getElementById("gradeDetails");
+    // Capabilities come from the server-rendered view, which reads claims from the
+    // authenticated cookie. The values match the endpoint policies exactly, so
+    // the UI never renders a button whose endpoint will 403.
+    const capabilities = {
+        submit:  @canSubmit.ToString().ToLowerInvariant(),
+        revise:  @canRevise.ToString().ToLowerInvariant(),
+        publish: @canPublish.ToString().ToLowerInvariant(),
+        unpublish: @canUnpub.ToString().ToLowerInvariant(),
+        lock:    @canLock.ToString().ToLowerInvariant(),
+        unlock:  @canUnlock.ToString().ToLowerInvariant(),
+        draft:   @canDraft.ToString().ToLowerInvariant()
+    };
 
-    if (!result.ok) {
-        container.innerHTML = `<div class="alert alert-danger">${escapeHtml(result.message)}</div>`;
-        return;
-    }
+    async function loadGrade() {
+        const result = await callApi(`/api/grades/${gradeId}`, "GET");
+        const container = document.getElementById("gradeDetails");
 
-    const g = result.data;
-    let actions = "";
+        if (!result.ok) {
+            container.innerHTML =
+                `<div class="alert alert-danger">${escapeHtml(result.message)}</div>`;
+            return;
+        }
 
-    if (g.status === "Draft") {
-        actions += `<button class="btn btn-outline-primary" onclick="transition('submit')">Submit</button>`;
-    }
-    if (g.status === "Submitted") {
-        actions += `<button class="btn btn-outline-secondary" onclick="transition('draft')">Return to draft</button>`;
-        actions += `<button class="btn btn-primary" onclick="transition('publish')">Publish</button>`;
-    }
-    if (g.status === "Published") {
-        actions += `<button class="btn btn-outline-secondary" onclick="transition('unpublish')">Unpublish</button>`;
-        actions += `<button class="btn btn-primary" onclick="transition('lock')">Lock</button>`;
-    }
-    if (g.status === "Locked" && isAdmin) {
-        actions += `<button class="btn btn-danger" onclick="transition('unlock')">Unlock</button>`;
-    }
+        const g = result.data;
+        let actions = "";
 
-    container.innerHTML = `
+        if (g.status === "Draft" && capabilities.submit) {
+            actions += `<button class="btn btn-outline-primary"
+                    onclick="transition('submit')">Submit</button>`;
+        }
+        if (g.status === "Submitted") {
+            if (capabilities.draft) {
+                actions += `<button class="btn btn-outline-secondary"
+                        onclick="transition('draft')">Return to draft</button>`;
+            }
+            if (capabilities.publish) {
+                actions += `<button class="btn btn-primary"
+                        onclick="transition('publish')">Publish</button>`;
+            }
+        }
+        if (g.status === "Published") {
+            if (capabilities.unpublish) {
+                actions += `<button class="btn btn-outline-secondary"
+                        onclick="transition('unpublish')">Unpublish</button>`;
+            }
+            if (capabilities.lock) {
+                actions += `<button class="btn btn-primary"
+                        onclick="transition('lock')">Lock</button>`;
+            }
+        }
+        if (g.status === "Locked" && capabilities.unlock) {
+            actions += `<button class="btn btn-danger"
+                    onclick="transition('unlock')">Unlock</button>`;
+        }
+
+        container.innerHTML = `
         <div class="detail-grid">
             <div><small>Student</small><strong>${escapeHtml(g.studentName || "")}</strong></div>
             <div><small>Assessment</small><strong>${escapeHtml(g.assessmentName || "")}</strong></div>
@@ -49,14 +98,18 @@ async function loadGrade() {
             <div><small>Status</small><strong><span class="status-badge">${escapeHtml(g.status)}</span></strong></div>
         </div>
         <hr />
-        <div class="action-row">${actions || `<span class="text-muted">No workflow actions are available for this grade.</span>`}</div>`;
-}
+        <div class="action-row">
+            ${actions || `<span class="text-muted">No workflow actions are available for you on this grade.</span>`}
+        </div>`;
+    }
 
-async function transition(action) {
-    const result = await callApi(`/api/grades/${gradeId}/${action}`, "POST");
-    showToast(result.message || (result.ok ? "Grade updated." : "Operation failed."), result.ok ? "success" : "danger");
-    if (result.ok) loadGrade();
-}
-loadGrade();
+    async function transition(action) {
+        const result = await callApi(`/api/grades/${gradeId}/${action}`, "POST");
+        showToast(result.message || (result.ok ? "Grade updated." : "Operation failed."),
+            result.ok ? "success" : "danger");
+        if (result.ok) loadGrade();
+    }
+
+    loadGrade();
 </script>
 }

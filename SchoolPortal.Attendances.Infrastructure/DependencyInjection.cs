@@ -7,7 +7,9 @@ using SchoolPortal.Attendances.Application.Features.Sessions.Command.Create;
 using SchoolPortal.Attendances.Application.Persistence;
 using SchoolPortal.Attendances.Infrastructure.Directories;
 using SchoolPortal.Attendances.Infrastructure.Persistence;
+using SchoolPortal.Attendances.Infrastructure.Persistence.Seeders;
 using SchoolPortal.SharedKernel.Mediator;
+using SchoolPortal.SharedKernel.Persistence.Seeders;
 
 namespace SchoolPortal.Attendances.Infrastructure;
 
@@ -32,6 +34,8 @@ public static class DependencyInjection
         services.AddMediatorPattern(typeof(CreateSessionCommandHandler).Assembly);
 
         services.AddScoped<IAttendancesUnitOfWork, AttendancesUnitOfWork>();
+        
+        services.AddScoped<IDataSeeder, AttendancesSeeder>();
         
         return services;
     }

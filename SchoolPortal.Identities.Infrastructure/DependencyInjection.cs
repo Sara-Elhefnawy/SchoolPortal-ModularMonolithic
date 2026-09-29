@@ -10,9 +10,11 @@ using SchoolPortal.Identities.Domain.Users;
 using SchoolPortal.Identities.Infrastructure.Authorization;
 using SchoolPortal.Identities.Infrastructure.Persistence;
 using SchoolPortal.Identities.Infrastructure.Persistence.Directories;
+using SchoolPortal.Identities.Infrastructure.Persistence.Seeders;
 using SchoolPortal.SharedKernel.Identity;
 using SchoolPortal.SharedKernel.Identity.Contracts;
 using SchoolPortal.SharedKernel.Mediator;
+using SchoolPortal.SharedKernel.Persistence.Seeders;
 
 namespace SchoolPortal.Identities.Infrastructure;
 
@@ -117,6 +119,8 @@ public static class DependencyInjection
         services.AddScoped<IUserContactDirectory, UserContactDirectory>();
         
         services.AddMediatorPattern(typeof(SignupCommandHandler).Assembly);
+        
+        services.AddScoped<IDataSeeder, IdentitySeeder>();
         
         return services;
     }

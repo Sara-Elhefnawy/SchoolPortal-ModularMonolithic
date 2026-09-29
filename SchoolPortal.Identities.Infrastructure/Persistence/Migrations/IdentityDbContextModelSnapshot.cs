@@ -294,6 +294,9 @@ namespace SchoolPortal.Identities.Infrastructure.Persistence.Migrations
                     b.Property<string>("SecurityStamp")
                         .HasColumnType("text");
 
+                    b.Property<int?>("StudentId")
+                        .HasColumnType("integer");
+
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("boolean");
 
@@ -315,6 +318,9 @@ namespace SchoolPortal.Identities.Infrastructure.Persistence.Migrations
                     b.HasIndex("NormalizedUserName")
                         .IsUnique()
                         .HasDatabaseName("UserNameIndex");
+
+                    b.HasIndex("StudentId")
+                        .IsUnique();
 
                     b.ToTable("AspNetUsers", "identity");
                 });

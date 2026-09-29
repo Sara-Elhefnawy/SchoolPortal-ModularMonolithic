@@ -76,9 +76,10 @@ public static class StudentEndpoints
         });
     }
     
-    private static async Task<IResult> GetStudents(IMediator mediator, CancellationToken ct)
+    private static async Task<IResult> GetStudents(string? search, string? status, IMediator mediator,
+        CancellationToken ct)
     {
-        var result = await mediator.Send(new GetAllStudentsQuery(), ct);
+        var result = await mediator.Send(new GetAllStudentsQuery(search, status), ct);
 
         return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(new { error = result.Error });
     }

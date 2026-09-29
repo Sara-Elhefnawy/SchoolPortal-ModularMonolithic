@@ -1,32 +1,57 @@
+@using SchoolPortal.SharedKernel.Identity
 @{
     ViewData["Title"] = "Grades";
+    var isStaff  = User.IsInRole(Roles.Admin) || User.IsInRole(Roles.Teacher);
+    var isStudent = User.IsInRole(Roles.Student);
 }
+
 <div class="page-toolbar">
     <div>
-        <h2>Grade management</h2>
-        <p class="text-muted">Manage academic structure, gradebooks and rankings.</p>
+        <h2>@(isStaff ? "Grade management" : "Grades")</h2>
+        <p class="text-muted">
+            @(isStaff
+                ? "Manage academic structure, gradebooks and rankings."
+                : "View your scores and grades.")
+        </p>
     </div>
 </div>
 
 <div class="dashboard-grid">
-    <a class="feature-card" href="/Grades/Gradebook">
-        <div class="feature-icon">GB</div>
-        <h3>Gradebook</h3>
-        <p>Select a course and assessment to enter or review student scores.</p>
-        <span>Open gradebook →</span>
-    </a>
-    <a class="feature-card" href="/Grades/Rankings">
-        <div class="feature-icon">RK</div>
-        <h3>Rankings</h3>
-        <p>View student rankings for a course section.</p>
-        <span>View rankings →</span>
-    </a>
-    @if (User.HasClaim("permission", "Grades.Create"))
+
+    @if (isStaff)
     {
-        <div class="feature-card">
-            <div class="feature-icon">AC</div>
-            <h3>Academic setup</h3>
-            <p>Academic years, terms, courses, sections and assessments are managed from the gradebook workflow.</p>
-        </div>
+        <a class="feature-card" href="/Grades/Gradebook">
+            <div class="feature-icon">GB</div>
+            <h3>Gradebook</h3>
+            <p>Select a course and assessment to enter or review student scores.</p>
+            <span>Open gradebook →</span>
+        </a>
+
+        <a class="feature-card" href="/Grades/Rankings">
+            <div class="feature-icon">RK</div>
+            <h3>Rankings</h3>
+            <p>View student rankings for a course section.</p>
+            <span>View rankings →</span>
+        </a>
+
+        @if (User.HasClaim("permission", Permissions.Grades.Create))
+        {
+            <div class="feature-card">
+                <div class="feature-icon">AC</div>
+                <h3>Academic setup</h3>
+                <p>Academic years, terms, courses, sections and assessments are managed from the gradebook workflow.</p>
+            </div>
+        }
     }
+
+    @if (isStudent)
+    {
+        <a class="feature-card" href="/Grades/MyGrades">
+            <div class="feature-icon">MG</div>
+            <h3>My grades</h3>
+            <p>Your scores and their current status.</p>
+            <span>Open →</span>
+        </a>
+    }
+
 </div>

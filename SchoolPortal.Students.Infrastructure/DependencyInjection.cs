@@ -3,11 +3,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolPortal.SharedKernel.Mediator;
+using SchoolPortal.SharedKernel.Persistence.Seeders;
 using SchoolPortal.Students.Application.Directories;
 using SchoolPortal.Students.Application.Features.Students.Commands.Create;
 using SchoolPortal.Students.Application.Persistence;
 using SchoolPortal.Students.Infrastructure.Directories;
 using SchoolPortal.Students.Infrastructure.Persistence;
+using SchoolPortal.Students.Infrastructure.Persistence.Seeders;
 
 namespace SchoolPortal.Students.Infrastructure;
 
@@ -31,6 +33,8 @@ public static class DependencyInjection
         services.AddMediatorPattern(typeof(CreateStudentCommandHandler).Assembly);
         
         services.AddScoped<IStudentsUnitOfWork, StudentsUnitOfWork>();
+        
+        services.AddScoped<IDataSeeder, StudentsSeeder>();
         
         return services;
     }

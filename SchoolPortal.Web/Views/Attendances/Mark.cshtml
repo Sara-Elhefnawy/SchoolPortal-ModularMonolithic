@@ -1,9 +1,9 @@
 @{
-    ViewData["Title"] = "Mark attendance";
-    var occurrenceId = ViewContext.RouteData.Values["id"];
+ViewData["Title"] = "Mark attendance";
+var occurrenceId = ViewContext.RouteData.Values["id"];
 }
 <div class="page-toolbar">
-    <div><a href="/Attendance" class="back-link">← Attendance</a><h2>Mark attendance</h2></div>
+    <div><a href="/Attendances/Index" class="back-link">← Attendance</a><h2>Mark attendance</h2></div>
     <button id="saveAttendance" class="btn btn-primary">Save attendance</button>
 </div>
 
@@ -18,46 +18,68 @@
 </div>
 
 @section Scripts {
-<script>
-const occurrenceId = "@occurrenceId";
+    <script>
+    const occurrenceId = "@occurrenceId";
+    const statuses = ["Present", "Absent", "Late", "Excused", "EarlyLeave"];
 
-async function loadAttendance() {
-    const result = await callApi(`/api/attendances/by-occurrence/${occurrenceId}`, "GET");
-    const body = document.getElementById("attendanceBody");
+    async function loadAttendance() {
+        const result = await callApi(`/api/attendances/by-occurrence/${occurrenceId}`, "GET");
+        const body = document.getElementById("attendanceBody");
+        const meta = document.getElementById("attendanceMeta");
 
-    if (!result.ok) {
-        body.innerHTML = `<tr><td colspan="3"><div class="alert alert-danger">${escapeHtml(result.message)}</div></td></tr>`;
-        return;
-    }
+        if (!result.ok) {
+            meta.textContent = "";
+            body.innerHTML = `<tr><td colspan="3"><div class="alert alert-danger">${escapeHtml(result.message)}</div></td></tr>`;
+            return;
+        }
 
-    const rows = result.data || [];
-    body.innerHTML = rows.map(a => `
+        const rows = result.data || [];
+
+        // WHY: the DTO doesn't carry the class date or course (those live in other modules),
+        // so the student count is the only honest thing to show here.
+        meta.textContent = rows.length
+            ? `${rows.length} students`
+            : "No attendance records exist for this class yet.";
+
+        // WHY this must stay inside loadAttendance: it's the part that draws the table.
+        // Without it the page loads, reports a count, and shows nothing.
+        body.innerHTML = rows.map(a => `
         <tr data-id="${a.id}" data-student="${a.studentId}">
-            <td><strong>${escapeHtml(a.studentName || `Student #${a.studentId}`)}</strong></td>
+            <td>
+                <!-- WHY a link here: it's the way into a student's history page -->
+                <a href="/Attendances/StudentHistory/${a.studentId}">
+                    <strong>${escapeHtml(a.studentName || `Student #${a.studentId}`)}</strong>
+                </a>
+            </td>
             <td>
                 <select class="form-select attendance-status">
-                    ${["Present","Absent","Late","Excused","EarlyLeave"].map(x => `<option ${a.status === x ? "selected" : ""}>${x}</option>`).join("")}
+                    ${statuses.map(x => `<option ${a.status === x ? "selected" : ""}>${x}</option>`).join("")}
                 </select>
             </td>
             <td><input class="form-control attendance-note" value="${escapeHtml(a.note || "")}" /></td>
         </tr>`).join("");
-}
-document.getElementById("saveAttendance").addEventListener("click", async () => {
-    const rows = [...document.querySelectorAll("#attendanceBody tr")];
-    for (const row of rows) {
-        const id = row.dataset.id;
-        const payload = {
-            status: row.querySelector(".attendance-status").value,
-            note: row.querySelector(".attendance-note").value
-        };
-        const result = await callApi(`/api/attendances/${id}`, "PUT", payload);
-        if (!result.ok) {
-            showToast(result.message || "Some attendance records could not be saved.", "danger");
-            return;
-        }
     }
-    showToast("Attendance saved.", "success");
-});
-loadAttendance();
+
+    document.getElementById("saveAttendance").addEventListener("click", async () => {
+        const rows = [...document.querySelectorAll("#attendanceBody tr[data-id]")];
+
+        // WHY the [data-id] filter: the "no records" and error states are also <tr>s,
+        // and they have no id to PUT to.
+        for (const row of rows) {
+            const id = row.dataset.id;
+            const payload = {
+                status: row.querySelector(".attendance-status").value,
+                note: row.querySelector(".attendance-note").value
+            };
+            const result = await callApi(`/api/attendances/${id}`, "PUT", payload);
+            if (!result.ok) {
+                showToast(result.message || "Some attendance records could not be saved.", "danger");
+                return;
+            }
+        }
+        showToast("Attendance saved.", "success");
+    });
+
+    loadAttendance();
 </script>
 }
