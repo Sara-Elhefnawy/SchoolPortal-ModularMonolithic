@@ -1,7 +1,7 @@
 using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.SharedKernel.Results;
 using SchoolPortal.Students.Application.Directories;
-using SchoolPortal.Students.Application.Dtos;
+using SchoolPortal.Students.Application.Features.Students.Commands.Dtos;
 using SchoolPortal.Students.Application.Persistence;
 using SchoolPortal.Students.Domain.Students;
 

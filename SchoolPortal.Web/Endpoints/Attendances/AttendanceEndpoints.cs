@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using SchoolPortal.Attendances.Application.Features.Attendances.Command.Record;
 using SchoolPortal.Attendances.Application.Features.Attendances.Command.Update;
 using SchoolPortal.Attendances.Application.Features.Attendances.Query.GetAttendanceForOccurrence;
@@ -6,6 +7,7 @@ using SchoolPortal.Attendances.Application.Features.SessionOccurrences.Command.C
 using SchoolPortal.Attendances.Application.Features.SessionOccurrences.Query.GetBySession;
 using SchoolPortal.Attendances.Application.Features.Sessions.Command.Create;
 using SchoolPortal.Attendances.Application.Features.Sessions.Query.GetByCourseSection;
+using SchoolPortal.Attendances.Application.Features.Sessions.Query.GetToday;
 using SchoolPortal.SharedKernel.Identity;
 using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Web.Endpoints.Attendances.Requests.Attendances;
@@ -25,6 +27,8 @@ public static class AttendanceEndpoints
     {
         var group = app.MapGroup("/api/sessions").WithTags("Sessions");
         
+        group.MapGet("/today", GetTodaysSessions).RequireAuthorization(Permissions.Attendance.View);
+        
         group.MapGet("/", GetSessions).RequireAuthorization(Permissions.Attendance.View);
 
         group.MapGet("/{sessionId:int}/occurrences", GetSessionOccurrences)
@@ -40,15 +44,24 @@ public static class AttendanceEndpoints
     {
         var group = app.MapGroup("/api/attendances").WithTags("Attendances");
 
-        group.MapPost("/", RecordAttendance).RequireAuthorization(Permissions.Attendance.Mark);
+        group.MapPost("/", RecordAttendance).RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Teacher));
 
-        group.MapPut("/{id:int}", UpdateAttendanceStatus).RequireAuthorization(Permissions.Attendance.Update);
+        group.MapPut("/{id:int}", UpdateAttendanceStatus).RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Teacher));
 
         group.MapGet("/by-occurrence/{sessionOccurrenceId:int}", GetAttendanceForOccurrence)
-            .RequireAuthorization(Permissions.Attendance.View);
+            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Teacher));
 
         group.MapGet("/by-student/{studentId:int}", GetStudentAttendanceHistory)
-            .RequireAuthorization(Permissions.Attendance.View);
+            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Teacher));
+
+        group.MapGet("/me", GetMyAttendanceHistory).RequireAuthorization(policy => policy.RequireRole(Roles.Student));
+    }
+
+    private static async Task<IResult> GetTodaysSessions(IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new GetTodaysSessionsQuery(), ct);
+
+        return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
     }
     
     private static async Task<IResult> GetSessions(int courseSectionId, IMediator mediator, CancellationToken ct)
@@ -83,6 +96,27 @@ public static class AttendanceEndpoints
         return result.IsSuccess
             ? Results.Created($"/api/session-occurrences/{result.Value}", result.Value)
             : Results.BadRequest(result.Error);
+    }
+
+    private static async Task<IResult> GetMyAttendanceHistory(ClaimsPrincipal user, IMediator mediator,
+        CancellationToken ct)
+    {
+        // TEMP: dump claims so you can see what's on the principal
+        var claims = user.Claims.Select(c => $"{c.Type} = {c.Value}").ToArray();
+        // If you're running with a JWT, also check user.Identity?.IsAuthenticated
+
+        var studentIdClaim = user.FindFirst("student_id")?.Value;
+        if (!int.TryParse(studentIdClaim, out var studentId))
+        {
+            return Results.Problem(
+                title: "Not linked to a student record",
+                detail: "Claims: " + string.Join(" | ", claims),
+                statusCode: StatusCodes.Status404NotFound);
+        }
+
+        var result = await mediator.Send(new GetStudentAttendanceHistoryQuery(studentId), ct);
+
+        return result.IsSuccess ? Results.Ok(result.Value) : Results.BadRequest(result.Error);
     }
 
     private static async Task<IResult> RecordAttendance(RecordAttendanceCommand command, IMediator mediator,

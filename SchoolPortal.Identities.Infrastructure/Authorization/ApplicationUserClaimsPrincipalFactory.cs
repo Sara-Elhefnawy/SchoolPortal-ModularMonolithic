@@ -9,7 +9,7 @@ using SchoolPortal.Identities.Infrastructure.Persistence;
 namespace SchoolPortal.Identities.Infrastructure.Authorization;
 
 /// <summary>
-/// Builds the authenticated ClaimsPrincipal used by ASP.NET Core.
+/// Identity calls this every time it builds the cookie principal at sign-in, so it's the right place to add claims.
 ///
 /// Identity already adds standard claims such as
 ///
@@ -45,7 +45,13 @@ public sealed class ApplicationUserClaimsPrincipalFactory(
     {
         // Let ASP.NET Core Identity create its normal claims first.
         var identity = await base.GenerateClaimsAsync(user);
-
+        
+        // If this account is linked to a student, put the student ID into the authentication cookie.
+        // The Students module does not need to know about the logged-in Identity user.
+        // The ID is simply carried by the authenticated user.
+        if (user.StudentId is { } studentId)
+            identity.AddClaim(new Claim("student_id", studentId.ToString()));
+        
         // "UserManager" (capital U) is the base class's own property. Using it instead of
         // the lowercase constructor parameter means only ONE copy of the reference exists
         var roles = await UserManager.GetRolesAsync(user);

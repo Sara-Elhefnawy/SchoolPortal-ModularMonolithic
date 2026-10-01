@@ -11,6 +11,9 @@ public interface IIdentityDirectory
 
     Task<IReadOnlyList<ApplicationUser>> GetAllUsersAsync(CancellationToken ct);
 
+    Task<IReadOnlyDictionary<int, IReadOnlyList<string>>> GetRoleNamesByUserAsync(CancellationToken ct);
+    Task<IReadOnlyList<string>> GetRoleNamesForUserAsync(int userId, CancellationToken ct);
+    
     // Roles
     Task<ApplicationRole?> GetRoleByIdAsync(int roleId, CancellationToken ct);
     Task<IReadOnlyList<ApplicationRole>> GetAllRoleAsync(CancellationToken ct);
@@ -19,6 +22,8 @@ public interface IIdentityDirectory
 
     Task<bool> RoleExistsAsync(int roleId, CancellationToken ct);
 
+    void AddRole(ApplicationRole role);
+    
     // Permissions
     Task<IReadOnlyList<Permission>> GetAllPermissionsAsync(CancellationToken ct);
 

@@ -1,0 +1,80 @@
+@{
+    ViewData["Title"] = "Academic setup";
+}
+<div class="page-toolbar"><div><a href="/Grades" class="back-link">← Grades</a><h2>Academic setup</h2></div></div>
+
+<div class="row g-3">
+    <div class="col-md-6">
+        <div class="panel">
+            <h5>Academic years</h5>
+            <form id="yearForm" class="mb-3">
+                <input class="form-control mb-2" name="name" placeholder="2026/2027" required />
+                <input class="form-control mb-2" name="startDate" type="date" required />
+                <input class="form-control mb-2" name="endDate" type="date" required />
+                <button class="btn btn-primary w-100">Add academic year</button>
+            </form>
+            <div id="yearsList">Loading...</div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="panel">
+            <h5>Courses</h5>
+            <form id="courseForm" class="mb-3">
+                <input class="form-control mb-2" name="name" placeholder="Course name" required />
+                <input class="form-control mb-2" name="code" placeholder="Code, e.g. CS101" required />
+                <input class="form-control mb-2" name="creditHours" type="number" step="0.5" placeholder="Credit hours" required />
+                <button class="btn btn-primary w-100">Add course</button>
+            </form>
+            <div id="coursesList">Loading...</div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // WHY one loader per list: after a create succeeds we only refresh that list.
+        async function loadYears() {
+            const r = await callApi("/api/academic-years", "GET");
+            const box = document.getElementById("yearsList");
+            if (!r.ok) { box.textContent = r.message; return; }
+            box.innerHTML = (r.data || []).map(y => `
+                <div class="permission-row">
+                    <span><strong>${escapeHtml(y.name)}</strong>
+                    <small>${y.isCurrent ? "Current" : ""}</small></span>
+                    ${y.isCurrent ? "" : `<button class="btn btn-sm btn-outline-primary" onclick="markCurrent(${y.id})">Make current</button>`}
+                </div>`).join("") || "No academic years yet.";
+        }
+
+        async function loadCourses() {
+            const r = await callApi("/api/courses", "GET");
+            const box = document.getElementById("coursesList");
+            if (!r.ok) { box.textContent = r.message; return; }
+            box.innerHTML = (r.data || []).map(c => `
+                <div class="permission-row"><span><strong>${escapeHtml(c.code)}</strong>
+                <small>${escapeHtml(c.name)}</small></span></div>`).join("") || "No courses yet.";
+        }
+
+        async function markCurrent(id) {
+            const r = await callApi(`/api/academic-years/${id}/mark-current`, "POST");
+            showToast(r.message || (r.ok ? "Updated." : "Failed."), r.ok ? "success" : "danger");
+            if (r.ok) loadYears();
+        }
+
+        document.getElementById("yearForm").addEventListener("submit", async e => {
+            e.preventDefault();
+            const r = await callApi("/api/academic-years", "POST", formToObject(e.target));
+            showToast(r.ok ? "Academic year added." : (r.message || "Could not add."), r.ok ? "success" : "danger");
+            if (r.ok) { e.target.reset(); loadYears(); }
+        });
+
+        document.getElementById("courseForm").addEventListener("submit", async e => {
+            e.preventDefault();
+            const r = await callApi("/api/courses", "POST", formToObject(e.target));
+            showToast(r.ok ? "Course added." : (r.message || "Could not add."), r.ok ? "success" : "danger");
+            if (r.ok) { e.target.reset(); loadCourses(); }
+        });
+
+        loadYears();
+        loadCourses();
+    </script>
+}

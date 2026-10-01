@@ -1,10 +1,12 @@
 using SchoolPortal.Attendances.Application.Features.Sessions.Query.GetByCourseSection;
+using SchoolPortal.Attendances.Application.Features.Sessions.Query.GetToday;
 using SchoolPortal.Attendances.Domain.Sessions;
 
 namespace SchoolPortal.Attendances.Application.Directories;
 
 public interface ISessionDirectory
 {
+    Task<IReadOnlyList<GetTodaysSessionsQueryDto>> GetForDateAsync(DateOnly date, CancellationToken ct);
     Task<IReadOnlyList<GetSessionsByCourseSectionQueryDto>> GetByCourseSectionAsync(int courseSectionId, CancellationToken ct);
     Task<bool> ExistsAsync(int sessionId, CancellationToken ct);
     Task<bool> ConflictExistsAsync(int courseSectionId, DayOfWeek dayOfWeek, TimeOnly startTime, CancellationToken ct);

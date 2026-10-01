@@ -70,7 +70,7 @@ public sealed class Student : BaseEntity
             gender,
             admissionDate);
         
-        student.RaiseEvent(() => new StudentCreated(student.Id, student.Name));
+        student.RaiseEvent(() => new StudentCreated(student.Id, student.Name, student.Email));
 
         return Result<Student>.Success(student);
     }

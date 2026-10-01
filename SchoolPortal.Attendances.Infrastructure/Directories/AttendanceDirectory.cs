@@ -19,12 +19,8 @@ internal sealed class AttendanceDirectory(AttendancesDbContext dbContext) : IAtt
 
     public void Add(Attendance attendance) => dbContext.Attendances.Add(attendance);
     
+    public Task<bool> AnyAsync(CancellationToken ct) => dbContext.Attendances.AnyAsync(ct);
     
-    
-    
-    
-    
-
     public async Task<IReadOnlyList<Attendance>>
         GetForSessionAsync(int sessionOccurrenceId, CancellationToken ct) =>
         await dbContext.Attendances.Where(a => a.SessionOccurrenceId == sessionOccurrenceId).ToListAsync(ct);

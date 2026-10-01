@@ -5,6 +5,7 @@ using SchoolPortal.Identities.Domain;
 using SchoolPortal.Identities.Domain.Users;
 using SchoolPortal.SharedKernel.Emails.Contracts;
 using SchoolPortal.SharedKernel.Emails.Options;
+using SchoolPortal.SharedKernel.Events.Identity.Auth;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Identities.Application.Feature.Auth.Command.Signup;
@@ -13,12 +14,10 @@ public sealed class SignupCommandHandler(
     UserManager<ApplicationUser> userManager,
     RoleManager<Domain.Roles.ApplicationRole> roleManager,
     IEmailSender emailSender,
-    IOptions<AppOptions> appOptions)
-    : IRequestHandler<SignupCommand, Result>
+    IPublisher publisher,
+    IOptions<AppOptions> appOptions) : IRequestHandler<SignupCommand, Result>
 {
-    public async Task<Result> Handle(
-        SignupCommand request,
-        CancellationToken ct)
+    public async Task<Result> Handle(SignupCommand request, CancellationToken ct)
     {
         if (request.Password != request.ConfirmPassword)
             return Result.Failure(AuthErrors.PasswordsDoNotMatch);
@@ -47,10 +46,7 @@ public sealed class SignupCommandHandler(
         {
             var error = createResult.Errors.FirstOrDefault();
 
-            return Result.Failure(
-                error is null
-                    ? AuthErrors.SignupFailed
-                    : IdentityErrorMapper.Map(error));
+            return Result.Failure(error is null ? AuthErrors.SignupFailed : IdentityErrorMapper.Map(error));
         }
 
         var roleResult = await userManager.AddToRoleAsync(user, SharedKernel.Identity.Roles.Student);
@@ -58,9 +54,15 @@ public sealed class SignupCommandHandler(
         {
             await userManager.DeleteAsync(user);
 
-            return Result.Failure(
-                AuthErrors.RoleAssignmentFailed);
+            return Result.Failure(AuthErrors.RoleAssignmentFailed);
         }
+
+        // Notify other modules that a new Student-role user
+        // has successfully registered.
+        await publisher.Publish(
+            new UserSignedUp(user.Id, user.Name, user.Email!, request.PhoneNumber, request.DateOfBirth, request.Gender,
+                request.AdmissionDate, request.City, request.State, request.ZipCode, request.Country,
+                request.BuildingNumber), ct);
         
         // Generate the confirmation token and send the email.
         var confirmToken = await userManager.GenerateEmailConfirmationTokenAsync(user);
@@ -69,7 +71,7 @@ public sealed class SignupCommandHandler(
         var sendResult = await emailSender.SendConfirmEmailAsync(user.Email!, link, ct);
         if (sendResult.IsFailure)
             return sendResult;
-        
+
         // Do not sign the user in here. The user must confirm the email first, then explicitly log in.
 
         return Result.Success();

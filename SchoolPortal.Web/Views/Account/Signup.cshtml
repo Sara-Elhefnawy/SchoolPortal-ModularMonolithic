@@ -2,43 +2,134 @@
     Layout = "_Layout";
     ViewData["Title"] = "Create account";
 }
+
 <div class="auth-card">
-    <div class="brand auth-brand"><span class="brand-mark">SP</span> SchoolPortal</div>
+    <div class="brand auth-brand">
+        <span class="brand-mark">SP</span> SchoolPortal
+    </div>
+
     <h1>Create account</h1>
-    <p class="text-muted">Create a SchoolPortal account.</p>
+    <p class="text-muted">Create a SchoolPortal student account.</p>
 
     <form id="signupForm">
+
         <label class="form-label">Full name</label>
-        <input class="form-control mb-3" name="name" required />
+        <input class="form-control mb-3"
+               name="name"
+               type="text"
+               required />
 
         <label class="form-label">Email</label>
-        <input class="form-control mb-3" name="email" type="email" required />
+        <input class="form-control mb-3"
+               name="email"
+               type="email"
+               required />
+
+        <label class="form-label">Phone number</label>
+        <input class="form-control mb-3"
+               name="phoneNumber"
+               type="tel"
+               required />
+
+        <label class="form-label">Date of birth</label>
+        <input class="form-control mb-3"
+               name="dateOfBirth"
+               type="date"
+               required />
+
+        <label class="form-label">Gender</label>
+        <select class="form-select mb-3"
+                name="gender"
+                required>
+            <option value="" selected disabled>Select gender</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+        </select>
+
+        <label class="form-label">Admission date</label>
+        <input class="form-control mb-3"
+               name="admissionDate"
+               type="date"
+               required />
+
+        <label class="form-label">City</label>
+        <input class="form-control mb-3"
+               name="city"
+               type="text"
+               required />
+
+        <label class="form-label">State</label>
+        <input class="form-control mb-3"
+               name="state"
+               type="text"
+               required />
+
+        <label class="form-label">ZIP / Postal code</label>
+        <input class="form-control mb-3"
+               name="zipCode"
+               type="text"
+               required />
+
+        <label class="form-label">Country</label>
+        <input class="form-control mb-3"
+               name="country"
+               type="text"
+               required />
+
+        <label class="form-label">Building number</label>
+        <input class="form-control mb-3"
+               name="buildingNumber"
+               type="number"
+               min="1"
+               required />
 
         <label class="form-label">Password</label>
-        <input class="form-control mb-3" name="password" type="password" required />
+        <input class="form-control mb-3"
+               name="password"
+               type="password"
+               required />
 
         <label class="form-label">Confirm Password</label>
-        <input class="form-control mb-3" name="confirmPassword" type="password" required />
+        <input class="form-control mb-3"
+               name="confirmPassword"
+               type="password"
+               required />
 
-        <button class="btn btn-primary w-100">Create account</button>
+        <button type="submit" class="btn btn-primary w-100">
+            Create account
+        </button>
     </form>
 
     <div id="loginError" class="alert alert-danger mt-3 d-none"></div>
+
     <div class="auth-links">
-        <a asp-controller="Account" asp-action="Login">Already have an account?</a>
+        <a asp-controller="Account" asp-action="Login">
+            Already have an account?
+        </a>
     </div>
 </div>
 
 @section Scripts {
     <script>
-document.getElementById("signupForm").addEventListener("submit", async e => {
-    e.preventDefault();
-    const result = await callApi("/api/account/signup", "POST", formToObject(e.target));
-    if (result.ok) {
-        window.location.href = "/Account/CheckEmail";
-    } else {
-        showToast(result.message || "Could not create account.", "danger");
-    }
+        document.getElementById("signupForm").addEventListener("submit", async e => {
+            e.preventDefault();
+
+            const form = e.target;
+
+            const result = await callApi(
+                "/api/account/signup",
+                "POST",
+                formToObject(form)
+            );
+
+            if (result.ok) {
+                window.location.href = "/Account/CheckEmail";
+            } else {
+                showToast(
+                    result.message || "Could not create account.",
+                    "danger"
+                );
+            }
         });
-</script>
+    </script>
 }

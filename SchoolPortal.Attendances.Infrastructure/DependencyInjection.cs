@@ -8,6 +8,7 @@ using SchoolPortal.Attendances.Application.Persistence;
 using SchoolPortal.Attendances.Infrastructure.Directories;
 using SchoolPortal.Attendances.Infrastructure.Persistence;
 using SchoolPortal.Attendances.Infrastructure.Persistence.Seeders;
+using SchoolPortal.SharedKernel.Interceptors;
 using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.SharedKernel.Persistence.Seeders;
 
@@ -20,10 +21,13 @@ public static class DependencyInjection
         var connectionString = config.GetConnectionString("SchoolPortalDb") ??
                                throw new InvalidOperationException("Connection string 'SchoolPortalDb' was not found.");
 
-        services.AddDbContext<AttendancesDbContext>(opt => opt.UseNpgsql(connectionString,
-            // tells EF to only ever touch the "attendance" schema 
-            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", AttendancesDbContext.Schema)));
-
+        services.AddDbContext<AttendancesDbContext>((sp, options) =>
+        {
+            options.UseNpgsql(connectionString, npgsql =>
+                npgsql.MigrationsHistoryTable("__EFMigrationsHistory", AttendancesDbContext.Schema));
+            options.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
+        });
+        
         services.AddScoped<IAttendanceDirectory, AttendanceDirectory>();
         services.AddScoped<ISessionDirectory, SessionDirectory>();
         services.AddScoped<ISessionOccurrenceDirectory, SessionOccurrenceDirectory>();

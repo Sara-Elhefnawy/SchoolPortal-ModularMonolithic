@@ -36,11 +36,11 @@
 
         @if (User.HasClaim("permission", Permissions.Grades.Create))
         {
-            <div class="feature-card">
+            <a class="feature-card" href="/Grades/Setup">
                 <div class="feature-icon">AC</div>
                 <h3>Academic setup</h3>
-                <p>Academic years, terms, courses, sections and assessments are managed from the gradebook workflow.</p>
-            </div>
+                <p>Manage academic years, terms, courses, sections and assessments.</p>
+            </a>
         }
     }
 

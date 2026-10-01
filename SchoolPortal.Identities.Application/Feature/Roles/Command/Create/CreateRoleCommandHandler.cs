@@ -1,34 +1,28 @@
 using SchoolPortal.SharedKernel.Mediator;
-using Microsoft.AspNetCore.Identity;
+using SchoolPortal.Identities.Application.Directories;
 using SchoolPortal.Identities.Domain.Roles;
-using SchoolPortal.SharedKernel.Identity.Contracts;
+using SchoolPortal.Identities.Domain.Users;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Identities.Application.Feature.Roles.Command.Create;
 
-public sealed class CreateRoleCommandHandler(
-    RoleManager<ApplicationRole> roleManager,
-    ICurrentUser currentUser)
-    : IRequestHandler<CreateRoleCommand, Result>
+public sealed class CreateRoleCommandHandler(IIdentityDirectory directory)
+    : IRequestHandler<CreateRoleCommand, Result<int>>
 {
-    public async Task<Result> Handle(CreateRoleCommand request, CancellationToken ct)
+    public async Task<Result<int>> Handle(CreateRoleCommand request, CancellationToken ct)
     {
-        var existingRole =
-            await roleManager.FindByNameAsync(request.Name);
-        if (existingRole is not null)
-            return Result.Failure(RoleErrors.AlreadyExists);
-        
-        var role = new ApplicationRole
-        {
-            Name = request.Name,
-            CreatedAt =  DateTime.UtcNow,
-            CreatedByUserId =  currentUser.UserId
-        };
+        var name = request.Name.Trim();
+        if (name.Length == 0)
+            return Result<int>.Failure(UserErrors.NameRequired);
 
-        var result = await roleManager.CreateAsync(role);
-        if (!result.Succeeded)
-            return Result.Failure(RoleErrors.CreationFailed);
+        if (await directory.GetRoleByNameAsync(name, ct) is not null)
+            return Result<int>.Failure(RoleErrors.AlreadyExists);
 
-        return Result.Success();
+        // ADJUST: use ApplicationRole's factory/constructor if it has one.
+        var role = new ApplicationRole { Name = name };
+        directory.AddRole(role);
+        await directory.SaveChangesAsync(ct);
+
+        return Result<int>.Success(role.Id);
     }
 }

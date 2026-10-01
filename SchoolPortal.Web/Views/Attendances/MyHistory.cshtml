@@ -1,0 +1,111 @@
+@{
+    ViewData["Title"] = "My Attendance";
+}
+
+<div class="page-toolbar">
+
+    <div>
+        <h2>My Attendance</h2>
+        <p class="text-muted">
+            View your attendance history.
+        </p>
+    </div>
+
+</div>
+
+<div class="panel">
+
+    <div class="table-responsive">
+
+        <table class="table">
+
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Note</th>
+                </tr>
+            </thead>
+
+            <tbody id="historyBody">
+
+                <tr>
+                    <td colspan="3">
+                        Loading...
+                    </td>
+                </tr>
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>
+
+@section Scripts
+{
+    <script>
+
+        async function loadMyAttendance() {
+
+            const result =
+                await callApi("/api/attendances/me", "GET");
+
+            const body =
+                document.getElementById("historyBody");
+
+            if (!result.ok) {
+
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="3">
+                            <div class="alert alert-danger">
+                                ${escapeHtml(result.message)}
+                            </div>
+                        </td>
+                    </tr>`;
+
+                return;
+            }
+
+            const items = result.data || [];
+
+            if (!items.length) {
+
+                body.innerHTML = `
+                    <tr>
+                        <td colspan="3"
+                            class="text-muted text-center py-4">
+                            No attendance records found.
+                        </td>
+                    </tr>`;
+
+                return;
+            }
+
+            body.innerHTML = items.map(x => `
+                <tr>
+
+                    <td>
+                        ${escapeHtml(x.date)}
+                    </td>
+
+                    <td>
+                        <span class="status-badge">
+                            ${escapeHtml(x.status)}
+                        </span>
+                    </td>
+
+                    <td>
+                        ${escapeHtml(x.note || "")}
+                    </td>
+
+                </tr>
+            `).join("");
+        }
+
+        loadMyAttendance();
+
+    </script>
+}

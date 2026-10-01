@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Configuration;
 using SchoolPortal.SharedKernel.Persistence.Seeders;
 using SchoolPortal.Students.Application.Directories;
 using SchoolPortal.Students.Application.Persistence;
@@ -12,9 +13,10 @@ internal sealed class StudentsSeeder(
     IStudentDirectory students,
     IEnrollmentDirectory enrollments,
     IStudentsUnitOfWork unitOfWork,
-    TimeProvider clock) : IDataSeeder
+    TimeProvider clock,
+    IConfiguration configuration) : IDataSeeder
 {
-    public int Order => 30;
+    public int Order => 20;
 
     public async Task SeedAsync(CancellationToken ct)
     {
@@ -22,11 +24,15 @@ internal sealed class StudentsSeeder(
         if ((await students.GetAllAsync(ct: ct)).Count > 0)
             return;
 
+        var seededStudentEmail = configuration["Seed:Users:Student:Email"] ?? "student@schoolportal.test";
+
+        var seededStudentName = configuration["Seed:Users:Student:Name"] ?? "Sara Ahmed";
+
         // WHY one list, not five copies: SeedConstants.StudentIds is [1..5], so this
         // list MUST have exactly five entries or the other modules' data points at nobody.
         var people = new (string Name, Gender Gender, DateOnly Birth, string City)[]
         {
-            ("Sara Ahmed", Gender.Female, new DateOnly(2009, 3, 14), "Cairo"),
+            (seededStudentName, Gender.Female, new DateOnly(2009, 3, 14), "Cairo"),
             ("Omar Hassan", Gender.Male, new DateOnly(2008, 11, 2), "Alexandria"),
             ("Laila Mahmoud", Gender.Female, new DateOnly(2009, 7, 21), "Giza"),
             ("Youssef Ali", Gender.Male, new DateOnly(2008, 1, 30), "Mansoura"),
@@ -39,10 +45,12 @@ internal sealed class StudentsSeeder(
                     buildingNumber: 10 + i, city: p.City, state: "Egypt", zipCode: $"1{i}000", country: "Egypt")
                 .Unwrap($"address for {p.Name}");
 
-            return Student.Create(p.Name,
-                // WHY .test: a reserved TLD, so seeded emails can never reach a real inbox
-                // if the email sender is ever wired to a real provider.
-                $"student{i + 1}@schoolportal.test", $"0100000000{i + 1}", address, p.Birth, p.Gender, new DateOnly(2024, 9, 1)).Unwrap(p.Name);
+            // The FIRST seeded Student uses the same email as
+            // the development Student Identity account.
+            var email = i == 0 ? seededStudentEmail : $"student{i + 1}@schoolportal.test";
+
+            return Student.Create(p.Name, email, $"0100000000{i + 1}", address, p.Birth, p.Gender,
+                new DateOnly(2024, 9, 1)).Unwrap(p.Name);
         }).ToList();
 
         foreach (var student in studentList)
@@ -50,10 +58,6 @@ internal sealed class StudentsSeeder(
 
         await unitOfWork.SaveChangesAsync(ct);
 
-        // ---- Enrollments ----
-        // Sections 1 and 2: the whole class. Section 3: only the first three students,
-        // so a "partially enrolled" case exists. Section IDs come from the Grades seeder
-        // (same convention as SeedConstants).
         var enrolledOn = DateOnly.FromDateTime(clock.GetLocalNow().DateTime).AddDays(-28);
 
         foreach (var student in studentList)

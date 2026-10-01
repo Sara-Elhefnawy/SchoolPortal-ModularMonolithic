@@ -11,6 +11,7 @@ using SchoolPortal.Grades.Infrastructure.Directories;
 using SchoolPortal.Grades.Infrastructure.Persistence;
 using SchoolPortal.Grades.Infrastructure.Persistence.Seeders;
 using SchoolPortal.Grades.Infrastructure.Reporting;
+using SchoolPortal.SharedKernel.Interceptors;
 using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.SharedKernel.Persistence.Seeders;
 
@@ -23,9 +24,12 @@ public static class DependencyInjection
         var connectionString = config.GetConnectionString("SchoolPortalDb") ??
                                throw new InvalidOperationException("Connection string 'SchoolPortalDb' was not found.");
 
-        services.AddDbContext<GradesDbContext>(opt => opt.UseNpgsql(connectionString,
-            // tells EF to only ever touch the "grades" schema 
-            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", GradesDbContext.Schema)));
+        services.AddDbContext<GradesDbContext>((sp, options) =>
+        {
+            options.UseNpgsql(connectionString,
+                npgsql => npgsql.MigrationsHistoryTable("__EFMigrationsHistory", GradesDbContext.Schema));
+            options.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
+        });
         
         services.AddScoped<IAcademicYearDirectory, AcademicYearDirectory>();
         services.AddScoped<ITermDirectory, TermDirectory>();

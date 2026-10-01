@@ -11,12 +11,12 @@ public abstract class ModuleDbContext(DbContextOptions options, IPublisher publi
         // 1. Capture entities that currently have domain events.
         var entitiesWithEvents = ChangeTracker.Entries<IHasDomainEvents>().Select(e => e.Entity)
             .Where(e => e.HasDomainEvents).ToList();
+        
+        // 3. Persist the actual database changes first.
+        var result = await base.SaveChangesAsync(ct);
 
         // 2. Capture the events BEFORE SaveChangesAsync.
         var domainEvents = entitiesWithEvents.SelectMany(e => e.DomainEvents).ToList();
-
-        // 3. Persist the actual database changes first.
-        var result = await base.SaveChangesAsync(ct);
 
         // 4. The database write succeeded, so the events can now be published.
         //    Cleared BEFORE publishing so a handler that saves on this same context

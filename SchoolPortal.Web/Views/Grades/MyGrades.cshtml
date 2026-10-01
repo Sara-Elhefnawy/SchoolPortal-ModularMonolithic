@@ -1,0 +1,66 @@
+@{
+    ViewData["Title"] = "My grades";
+}
+
+<div class="page-toolbar">
+    <div>
+        <a href="/Grades/Index" class="back-link">← Grades</a>
+        <h2>My grades</h2>
+        <p class="text-muted">Your scores and their current status.</p>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="table-responsive">
+        <table class="table align-middle">
+            <thead>
+            <tr>
+                <th>Assessment</th>
+                <th>Score</th>
+                <th>Status</th>
+                <th>Last updated</th>
+            </tr>
+            </thead>
+            <tbody id="myGradesBody">
+            <tr><td colspan="4" class="text-muted">Loading...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+async function loadMyGrades() {
+    const result = await callApi("/api/grades/me", "GET");
+    const body = document.getElementById("myGradesBody");
+
+    if (!result.ok) {
+        body.innerHTML = `
+            <tr><td colspan="4">
+                <div class="alert alert-danger">${escapeHtml(result.message)}</div>
+            </td></tr>`;
+        return;
+    }
+
+    const items = result.data || [];
+    if (!items.length) {
+        body.innerHTML = `
+            <tr><td colspan="4" class="text-muted text-center py-4">
+                No grades have been recorded for you yet.
+            </td></tr>`;
+        return;
+    }
+
+    body.innerHTML = items.map(g => `
+    <tr>
+        <td>${escapeHtml(g.assessmentName || "")}</td>
+        <td>${g.score ?? "—"}</td>
+        <td><span class="status-badge">${escapeHtml(g.status)}</span></td>
+        <td>${escapeHtml(g.updatedAt || "")}</td>
+    </tr>
+`).join("");
+}
+
+loadMyGrades();
+</script>
+}

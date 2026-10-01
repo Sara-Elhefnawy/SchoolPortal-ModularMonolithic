@@ -1,29 +1,25 @@
 using SchoolPortal.SharedKernel.Mediator;
-using Microsoft.AspNetCore.Identity;
+using SchoolPortal.Identities.Application.Directories;
 using SchoolPortal.Identities.Domain.Users;
-using SchoolPortal.SharedKernel.Identity.Contracts;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Identities.Application.Feature.Users.Command.Activate;
 
-public sealed class ActivateUserCommandHandler (
-    UserManager<ApplicationUser>  userManager,
-    ICurrentUser currentUser)
+public sealed class ActivateUserCommandHandler(
+    IIdentityDirectory directory)
     : IRequestHandler<ActivateUserCommand, Result>
 {
-    public async Task<Result> Handle(ActivateUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(ActivateUserCommand request, CancellationToken ct)
     {
-        var user = await userManager.FindByIdAsync(request.Id.ToString());
+        var user = await directory.GetUserByIdAsync(request.Id, ct);
         if (user is null || user.IsDeleted)
             return Result.Failure(UserErrors.NotFound);
-        
-        user.IsActive = true;
-        user.UpdatedAt = DateTime.UtcNow;
-        user.UpdatedByUserId = currentUser.UserId;
 
-        var result = await userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-            return Result.Failure(UserErrors.UpdateFailed);
+        // ADJUST: if ApplicationUser exposes Activate()/Deactivate() methods
+        // instead of a public setter, call those. Rules belong on the entity.
+        user.IsActive = true;
+
+        await directory.SaveChangesAsync(ct);
         
         return Result.Success();
     }

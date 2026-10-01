@@ -1,5 +1,7 @@
 using SchoolPortal.SharedKernel.Mediator;
 using Microsoft.AspNetCore.Identity;
+using SchoolPortal.Identities.Application.Directories;
+using SchoolPortal.Identities.Domain.Roles;
 using SchoolPortal.Identities.Domain.Users;
 using SchoolPortal.SharedKernel.Domain.Events.Identity.Users;
 using SchoolPortal.SharedKernel.Identity.Contracts;
@@ -8,6 +10,7 @@ using SchoolPortal.SharedKernel.Results;
 namespace SchoolPortal.Identities.Application.Feature.Users.Command.Create;
 
 public sealed class CreateUserCommandHandler(
+    IIdentityDirectory directory,
     UserManager<ApplicationUser> userManager, 
     IPublisher publisher,
     ICurrentUser currentUser) 
@@ -15,6 +18,9 @@ public sealed class CreateUserCommandHandler(
 {
     public async Task<Result<int>> Handle(CreateUserCommand request, CancellationToken ct)
     {
+        if (await directory.GetRoleByNameAsync(request.RoleName, ct) is null)
+            return Result<int>.Failure(RoleErrors.NotFound);
+        
         // Creates the user and hashes the password through ASP.NET Core Identity.
         var user = new ApplicationUser
         {

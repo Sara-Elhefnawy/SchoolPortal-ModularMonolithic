@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Identity;
+using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Identities.Domain.Users;
 
@@ -20,4 +21,17 @@ public class ApplicationUser : IdentityUser<int>
 
     public DateTime? RestoredAt { get; set; }
     public int? RestoredByUserId { get; set; }
+    
+    public int? StudentId { get; set; }
+
+    public Result LinkStudent(int studentId)
+    {
+        if (studentId <= 0) return Result.Failure(UserErrors.InvalidStudentId);
+        if (StudentId is not null) 
+            return Result.Failure(UserErrors.StudentAlreadyLinked);
+
+        StudentId = studentId;
+        
+        return Result.Success();
+    }
 }

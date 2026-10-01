@@ -7,6 +7,7 @@ public sealed record GetAllStudentsQueryDto(
     string Name,
     string Email,
     string PhoneNumber,
+    string Status,
     DateOnly DateOfBirth,
     Gender Gender,
     DateOnly AdmissionDate);

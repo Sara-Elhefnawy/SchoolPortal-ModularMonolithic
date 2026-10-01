@@ -10,6 +10,9 @@ public sealed class CurrentUser(IHttpContextAccessor httpContextAccessor) : ICur
 
     public int? UserId => int.TryParse(User?.FindFirstValue(ClaimTypes.NameIdentifier), out var id) ? id : null;
 
+    public int? StudentId =>
+        int.TryParse(User?.FindFirstValue("student_id"), out var studentId) ? studentId : null;
+    
     public string? Name => User?.Identity?.Name;
 
     // Empty lists rather than null, so callers never need a null check.

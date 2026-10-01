@@ -18,11 +18,14 @@ using SchoolPortal.Grades.Application.Features.Grades.Command.Unlock;
 using SchoolPortal.Grades.Application.Features.Grades.Command.Unpublish;
 using SchoolPortal.Grades.Application.Features.Grades.Query.GetByAssessment;
 using SchoolPortal.Grades.Application.Features.Grades.Query.GetById;
+using SchoolPortal.Grades.Application.Features.Grades.Query.GetForStudent;
 using SchoolPortal.Grades.Application.Features.Terms.Command.Create;
 using SchoolPortal.Grades.Application.Features.Terms.Command.End;
 using SchoolPortal.Grades.Application.Features.Terms.Query.GetByAcademicYear;
 using SchoolPortal.SharedKernel.Identity;
+using SchoolPortal.SharedKernel.Identity.Contracts;
 using SchoolPortal.SharedKernel.Mediator;
+using SchoolPortal.Students.Application.Features.Students.Query.GetNamesByIds;
 using SchoolPortal.Web.Endpoints.Grades.Requests;
 
 namespace SchoolPortal.Web.Endpoints.Grades;
@@ -85,17 +88,31 @@ public static class GradesEndpoints
     {
         var group = app.MapGroup("/api/grades").WithTags("Grades");
 
-        group.MapGet("/", GetGrades).RequireAuthorization(Permissions.Grades.View);
-        group.MapGet("/{id:int}", GetGradeById).RequireAuthorization(Permissions.Grades.View);
+        // Reads: any authenticated user. Scoping is enforced in the handlers below.
+        group.MapGet("/", GetGrades).RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Teacher));
+        group.MapGet("/{id:int}", GetGradeById).RequireAuthorization();
+
+        // Student self-service: only their own rows. Available to anyone authenticated,
+        // the handler forces the student scope.
+        group.MapGet("/me", GetMyGrades).RequireAuthorization();
+
         group.MapPost("/", CreateGrade).RequireAuthorization(Permissions.Grades.Create);
 
-        group.MapPost("/{id:int}/publish", PublishGrade).RequireAuthorization(Permissions.Grades.Update);
-        group.MapPost("/{id:int}/unpublish", UnpublishGrade).RequireAuthorization(policy => policy.RequireRole("Admin"));
-        group.MapPost("/{id:int}/lock", LockGrade).RequireAuthorization(Permissions.Grades.Update);
-        group.MapPost("/{id:int}/unlock", UnlockGrade).RequireAuthorization(policy => policy.RequireRole("Admin"));
-        group.MapPost("/{id:int}/draft", DraftGrade).RequireAuthorization(policy => policy.RequireRole("Admin"));
-        group.MapPut("/{id:int}/score", ReviseGradeScore).RequireAuthorization(policy => policy.RequireRole("Admin"));
         group.MapPost("/{id:int}/submit", SubmitGrade).RequireAuthorization(Permissions.Grades.Update);
+
+        group.MapPut("/{id:int}/score", ReviseGradeScore).RequireAuthorization(Permissions.Grades.Update);
+
+        group.MapPost("/{id:int}/publish", PublishGrade)
+            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin));
+
+        group.MapPost("/{id:int}/unpublish", UnpublishGrade)
+            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin));
+
+        group.MapPost("/{id:int}/lock", LockGrade).RequireAuthorization(policy => policy.RequireRole(Roles.Admin));
+
+        group.MapPost("/{id:int}/unlock", UnlockGrade).RequireAuthorization(policy => policy.RequireRole(Roles.Admin));
+
+        group.MapPost("/{id:int}/draft", DraftGrade).RequireAuthorization(policy => policy.RequireRole(Roles.Admin));
     }
 
     private static void MapRankingEndpoints(IEndpointRouteBuilder app)
@@ -140,18 +157,50 @@ public static class GradesEndpoints
         return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
     }
 
-    private static async Task<IResult> GetGrades(int assessmentId, IMediator m, CancellationToken ct)
+    private static async Task<IResult> GetGrades(int assessmentId, ICurrentUser currentUser, IMediator m,
+        CancellationToken ct)
     {
         var r = await m.Send(new GetGradesByAssessmentQuery(assessmentId), ct);
+        if (r.IsFailure) return Results.BadRequest(r.Error);
 
-        return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
+        var names = await m.Send(new GetStudentNamesByIdsQuery(r.Value.Select(g => g.StudentId).Distinct().ToArray()),
+            ct);
+        var lookup = names.IsSuccess ? names.Value : new Dictionary<int, string>();
+
+        return Results.Ok(r.Value.Select(g =>
+            g with { StudentName = lookup.GetValueOrDefault(g.StudentId, "Unknown student") }));
     }
 
-    private static async Task<IResult> GetGradeById(int id, IMediator mediator, CancellationToken ct)
+    private static async Task<IResult> GetGradeById(int id, ICurrentUser currentUser, HttpContext http,
+        IMediator mediator, CancellationToken ct)
     {
         var result = await mediator.Send(new GetGradeByIdQuery(id), ct);
+        if (result.IsFailure) return Results.NotFound(result.Error);
 
-        return result.IsSuccess ? Results.Ok(result.Value) : Results.NotFound(result.Error);
+        var grade = result.Value;
+
+        var isStudent = http.User.IsInRole(Roles.Admin) || http.User.IsInRole(Roles.Teacher);
+        if (!isStudent && grade.StudentId != currentUser.StudentId)
+            return Results.NotFound();
+
+        var names = await mediator.Send(new GetStudentNamesByIdsQuery([grade.StudentId]), ct);
+        var studentName = names.IsSuccess
+            ? names.Value.GetValueOrDefault(grade.StudentId, "Unknown student")
+            : "Unknown student";
+
+        return Results.Ok(grade with { StudentName = studentName });
+    }
+
+    private static async Task<IResult> GetMyGrades(ICurrentUser currentUser, IMediator m, CancellationToken ct, HttpContext httpContext)
+    {
+        Console.WriteLine($"Claims = {currentUser.StudentId}, All Claims: {string.Join(", ", httpContext.User.Claims.Select(c => $"{c.Type}={c.Value}"))}");
+        
+        if (currentUser.StudentId is not int studentId)
+            return Results.Forbid();
+
+        var r = await m.Send(new GetGradesForStudentQuery(studentId), ct);
+
+        return r.IsSuccess ? Results.Ok(r.Value) : Results.BadRequest(r.Error);
     }
 
     private static async Task<IResult> GetClassRankings(int courseSectionId, IMediator m, CancellationToken ct)

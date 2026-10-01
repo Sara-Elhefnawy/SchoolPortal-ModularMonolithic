@@ -6,7 +6,4 @@ namespace SchoolPortal.SharedKernel.Persistence;
 public interface IUnitOfWork
 {
     Task<int> SaveChangesAsync(CancellationToken ct = default);
-    /*
-    Task SaveChangesAsync(CancellationToken ct);
-*/
 }

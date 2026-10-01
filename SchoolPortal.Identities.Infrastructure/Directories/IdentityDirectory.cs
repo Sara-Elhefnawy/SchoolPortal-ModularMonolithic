@@ -3,8 +3,9 @@ using SchoolPortal.Identities.Application.Directories;
 using SchoolPortal.Identities.Domain.Permissions;
 using SchoolPortal.Identities.Domain.Roles;
 using SchoolPortal.Identities.Domain.Users;
+using SchoolPortal.Identities.Infrastructure.Persistence;
 
-namespace SchoolPortal.Identities.Infrastructure.Persistence.Directories;
+namespace SchoolPortal.Identities.Infrastructure.Directories;
 
 internal sealed class IdentityDirectory(IdentityDbContext dbContext) : IIdentityDirectory
 {
@@ -13,6 +14,22 @@ internal sealed class IdentityDirectory(IdentityDbContext dbContext) : IIdentity
 
     public async Task<IReadOnlyList<ApplicationUser>> GetAllUsersAsync(CancellationToken ct) =>
         await dbContext.Users.Where(x => !x.IsDeleted).OrderBy(x => x.Name).ToListAsync(ct);
+
+    public async Task<IReadOnlyDictionary<int, IReadOnlyList<string>>> GetRoleNamesByUserAsync(CancellationToken ct)
+    {
+        var rows = await (from ur in dbContext.UserRoles
+            join r in dbContext.Roles on ur.RoleId equals r.Id
+            select new { ur.UserId, r.Name }).ToListAsync(ct);
+
+        return rows.GroupBy(x => x.UserId)
+            .ToDictionary(g => g.Key, g => (IReadOnlyList<string>)g.Select(x => x.Name!).ToList());
+    }
+
+    public async Task<IReadOnlyList<string>> GetRoleNamesForUserAsync(int userId, CancellationToken ct)
+        => await (from ur in dbContext.UserRoles
+            join r in dbContext.Roles on ur.RoleId equals r.Id
+            where ur.UserId == userId
+            select r.Name!).ToListAsync(ct);
 
     public async Task<ApplicationRole?> GetRoleByIdAsync(int roleId, CancellationToken ct) =>
         await dbContext.Roles.FirstOrDefaultAsync(x => x.Id == roleId && !x.IsDeleted, ct);
@@ -25,6 +42,8 @@ internal sealed class IdentityDirectory(IdentityDbContext dbContext) : IIdentity
 
     public async Task<bool> RoleExistsAsync(int roleId, CancellationToken ct) =>
         await dbContext.Roles.AnyAsync(x => x.Id == roleId && !x.IsDeleted, ct);
+
+    public void AddRole(ApplicationRole role) => dbContext.Roles.Add(role);
 
     public async Task<IReadOnlyList<Permission>> GetAllPermissionsAsync(CancellationToken ct) =>
         await dbContext.Permissions.OrderBy(x => x.Name).ToListAsync(ct);

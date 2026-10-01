@@ -28,11 +28,17 @@
     <script>
 document.getElementById("loginForm").addEventListener("submit", async e => {
     e.preventDefault();
-    const result = await callApi("/api/account/login", "POST", formToObject(e.target));
+    const result = await callApi(
+        "/api/account/login",
+        "POST",
+        formToObject(e.target)
+    );
+
     if (result.ok) {
         window.location.href = "/Dashboard/Index";
         return;
     }
+
     const error = document.getElementById("loginError");
     error.textContent = result.message || "Invalid email or password.";
     error.classList.remove("d-none");

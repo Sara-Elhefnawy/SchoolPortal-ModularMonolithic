@@ -24,4 +24,19 @@ public static class UserErrors
 
     public static readonly Error EmailConfirmationFailed =
         Error.Validation("Users.EmailConfirmationFailed", "Failed to create email confirmation.");
+
+    public static readonly Error InvalidStudentId =
+        Error.Validation("Users.InvalidStudentId", "The student could not be found.");
+
+    public static readonly Error StudentAlreadyLinked =
+        Error.Validation("Users.StudentAlreadyLinked", "The student is already linked in DB.");
+
+    public static readonly Error LinkFailed =
+        Error.Validation("Users.LinkFailed", "The user could not be linked to a student record.");
+
+    public static readonly Error InvalidEmail =
+        Error.Validation("Users.InvalidEmail", "Email is required.");
+    
+    public static readonly Error NameRequired =
+        Error.Validation("Users.NameRequired", "Name is required.");
 }

@@ -1,18 +1,20 @@
 using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Identities.Application.Directories;
-using SchoolPortal.Identities.Domain.Roles;
+using SchoolPortal.Identities.Application.Directories.Dtos;
 using SchoolPortal.SharedKernel.Results;
 
 namespace SchoolPortal.Identities.Application.Feature.Roles.Query.GetAll;
 
 public sealed class GetAllRolesQueryHandler(
     IIdentityDirectory directory) 
-    : IRequestHandler<GetAllRolesQuery, Result<IReadOnlyList<ApplicationRole>>>
+    : IRequestHandler<GetAllRolesQuery, Result<IReadOnlyList<RoleDto>>>
 {
-    public async Task<Result<IReadOnlyList<ApplicationRole>>> Handle(GetAllRolesQuery request, CancellationToken ct)
+    public async Task<Result<IReadOnlyList<RoleDto>>> Handle(GetAllRolesQuery request, CancellationToken ct)
     {
         var roles = await directory.GetAllRoleAsync(ct);
 
-        return Result<IReadOnlyList<ApplicationRole>>.Success(roles);
+        IReadOnlyList<RoleDto> list = roles.Select(r => new RoleDto(r.Id, r.Name!, r.IsDeleted)).ToList();
+        
+        return Result<IReadOnlyList<RoleDto>>.Success(list);
     }
 }

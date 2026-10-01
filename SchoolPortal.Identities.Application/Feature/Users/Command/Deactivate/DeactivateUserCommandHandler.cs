@@ -1,5 +1,5 @@
 using SchoolPortal.SharedKernel.Mediator;
-using Microsoft.AspNetCore.Identity;
+using SchoolPortal.Identities.Application.Directories;
 using SchoolPortal.Identities.Domain.Users;
 using SchoolPortal.SharedKernel.Identity.Contracts;
 using SchoolPortal.SharedKernel.Results;
@@ -7,23 +7,21 @@ using SchoolPortal.SharedKernel.Results;
 namespace SchoolPortal.Identities.Application.Feature.Users.Command.Deactivate;
 
 public sealed class DeactivateUserCommandHandler(
-    UserManager<ApplicationUser>  userManager,
+    IIdentityDirectory directory,
     ICurrentUser currentUser) 
     : IRequestHandler<DeactivateUserCommand, Result>
 {
-    public async Task<Result> Handle(DeactivateUserCommand request, CancellationToken cancellationToken)
+    public async Task<Result> Handle(DeactivateUserCommand request, CancellationToken ct)
     {
-        var user = await userManager.FindByIdAsync(request.Id.ToString());
+        var user = await directory.GetUserByIdAsync(request.Id, ct);
         if (user is null || user.IsDeleted)
             return Result.Failure(UserErrors.NotFound);
         
         user.IsActive = false;
         user.UpdatedAt = DateTime.UtcNow;
         user.UpdatedByUserId = currentUser.UserId;
-
-        var result = await userManager.UpdateAsync(user);
-        if (!result.Succeeded)
-            return Result.Failure(UserErrors.UpdateFailed);
+        
+        await directory.SaveChangesAsync(ct);
         
         return Result.Success();
     }

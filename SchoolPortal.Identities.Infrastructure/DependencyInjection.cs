@@ -5,14 +5,17 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using SchoolPortal.Identities.Application.Directories;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Signup;
+using SchoolPortal.Identities.Application.Services;
 using SchoolPortal.Identities.Domain.Roles;
 using SchoolPortal.Identities.Domain.Users;
 using SchoolPortal.Identities.Infrastructure.Authorization;
+using SchoolPortal.Identities.Infrastructure.Directories;
 using SchoolPortal.Identities.Infrastructure.Persistence;
-using SchoolPortal.Identities.Infrastructure.Persistence.Directories;
 using SchoolPortal.Identities.Infrastructure.Persistence.Seeders;
+using SchoolPortal.Identities.Infrastructure.Services;
 using SchoolPortal.SharedKernel.Identity;
 using SchoolPortal.SharedKernel.Identity.Contracts;
+using SchoolPortal.SharedKernel.Interceptors;
 using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.SharedKernel.Persistence.Seeders;
 
@@ -25,10 +28,13 @@ public static class DependencyInjection
         var connectionString = config.GetConnectionString("SchoolPortalDb") 
                                ?? throw new InvalidOperationException( "Connection string 'SchoolPortalDb' was not found.");
 
-        services.AddDbContext<IdentityDbContext>(opt => opt.UseNpgsql(connectionString,
-            // tells EF to only ever touch the "identity" schema 
-            npgsqlOptions => npgsqlOptions.MigrationsHistoryTable("__EFMigrationsHistory", IdentityDbContext.Schema)));
-
+        services.AddDbContext<IdentityDbContext>((sp, options) =>
+        {
+            options.UseNpgsql(connectionString, npgsql =>
+                npgsql.MigrationsHistoryTable("__EFMigrationsHistory", IdentityDbContext.Schema));
+            options.AddInterceptors(sp.GetRequiredService<AuditInterceptor>());
+        });
+        
         // Register ASP.NET Core Identity.
         //
         // This gives us:
@@ -121,6 +127,10 @@ public static class DependencyInjection
         services.AddMediatorPattern(typeof(SignupCommandHandler).Assembly);
         
         services.AddScoped<IDataSeeder, IdentitySeeder>();
+        
+        services.AddScoped<IUserLinkService, UserLinkService>();
+        
+        services.AddMediatorPattern(typeof(SignupCommandHandler).Assembly);
         
         return services;
     }

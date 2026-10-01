@@ -1,5 +1,4 @@
 using SchoolPortal.SharedKernel.Results;
-using SchoolPortal.Students.Domain.Students;
 
 namespace SchoolPortal.Students.Domain.Addresses;
 

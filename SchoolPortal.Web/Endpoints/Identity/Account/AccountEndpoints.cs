@@ -55,7 +55,16 @@ public static class AccountEndpoints
             request.Name,
             request.Email,
             request.Password,
-            request.ConfirmPassword);
+            request.ConfirmPassword,
+            request.PhoneNumber,
+            request.DateOfBirth,
+            request.Gender,
+            request.AdmissionDate,
+            request.City,
+            request.State,
+            request.ZipCode,
+            request.Country,
+            request.BuildingNumber);
 
         var result = await mediator.Send(command, ct);
 
@@ -75,7 +84,7 @@ public static class AccountEndpoints
 
         return result.IsSuccess
             ? Results.Ok(new { message = "Login successful." })
-            : Results.Unauthorized();
+            : Results.BadRequest(new { error = result.Error });
     }
 
     private static async Task<IResult> Logout(

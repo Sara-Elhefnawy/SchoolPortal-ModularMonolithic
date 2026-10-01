@@ -6,15 +6,19 @@ namespace SchoolPortal.Identities.Application.Feature.Permissions.Query.GetRoleP
 
 public sealed class GetRolePermissionsQueryHandler (
     IIdentityDirectory directory)
-    : IRequestHandler<GetRolePermissionsQuery, Result<IReadOnlyList<GetRolePermissionsQueryDto>>>
+    : IRequestHandler<GetRolePermissionsQuery, Result<IReadOnlyList<string>>>
 {
-    public async Task<Result<IReadOnlyList<GetRolePermissionsQueryDto>>> Handle(GetRolePermissionsQuery request, CancellationToken ct)
+    public async Task<Result<IReadOnlyList<string>>> Handle(GetRolePermissionsQuery request, CancellationToken ct)
     {
-        var rolePermissions = await directory.GetRolePermissionsAsync(request.RoleId, ct);
+        var granted = await directory.GetRolePermissionsAsync(request.RoleId, ct);
+        var all = await directory.GetAllPermissionsAsync(ct);
 
-        var result = rolePermissions.Select(x =>
-            new GetRolePermissionsQueryDto(x.RoleId, x.Role.Name!, x.PermissionId, x.Permission.Name)).ToList();
+        // WHY the join is here: RolePermission only holds ids, but the page works
+        // with permission NAMES (the checkboxes' values).
+        var grantedIds = granted.Select(g => g.PermissionId).ToHashSet();
+
+        IReadOnlyList<string> names = all.Where(p => grantedIds.Contains(p.Id)).Select(p => p.Name).ToList();
         
-        return Result<IReadOnlyList<GetRolePermissionsQueryDto>>.Success(result);
+        return Result<IReadOnlyList<string>>.Success(names);
     }
 }

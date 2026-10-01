@@ -15,7 +15,9 @@ public sealed class GetGradeByIdQueryHandler(
         if (grade is null)
             return Result<GetGradeByIdQueryDto>.Failure(GradeErrors.NotFound);
  
+        var assessmentName = await directory.GetAssessmentNameAsync(grade.AssessmentId, ct) ?? "";
+        
         return Result<GetGradeByIdQueryDto>.Success(
-            new GetGradeByIdQueryDto(grade.Id, grade.StudentId, grade.AssessmentId, grade.Score, grade.Status.ToString()));
+            new GetGradeByIdQueryDto(grade.Id, grade.StudentId, grade.AssessmentId, grade.Score, grade.Status.ToString(), AssessmentName: assessmentName));
     }
 }
