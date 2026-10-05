@@ -127,10 +127,13 @@ public static class DependencyInjection
         services.AddMediatorPattern(typeof(SignupCommandHandler).Assembly);
         
         services.AddScoped<IDataSeeder, IdentitySeeder>();
+        services.AddScoped<IDataSeeder, IdentityStudentLinkSeeder>();
         
         services.AddScoped<IUserLinkService, UserLinkService>();
         
         services.AddMediatorPattern(typeof(SignupCommandHandler).Assembly);
+
+        services.AddHealthChecks().AddDbContextCheck<IdentityDbContext>("identity-db", tags: ["ready"]);
         
         return services;
     }

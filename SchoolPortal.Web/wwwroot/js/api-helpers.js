@@ -1,36 +1,34 @@
-// Shared by Students/Grades/Attendances Index views. Kept separate from the
-// default site.js the scaffold generated, so this doesn't collide with
-// whatever that file is already doing.
-const API_BASE = '';
+// ============================================================
+// API CALL INTO AN ELEMENT
+// ============================================================
+//
+// Usage:
+//     await callApiInto(resultEl, 'POST', '/api/students', student);
+//
+// Why this just delegates: CSRF and fetch logic live in ONE place (site.js).
+// Copies of that logic in each module are what made this hard to debug.
+// ============================================================
 
-async function callApi(resultEl, method, path, body) {
-    resultEl.textContent = 'Sending...';
+async function callApiInto(resultEl, method, path, body) {
+    resultEl.textContent = 'Loading...';
     resultEl.className = 'alert alert-secondary mt-2';
-    try {
-        const response = await fetch(API_BASE + path, {
-            method,
-            headers: { 'Content-Type': 'application/json' },
-            body: body !== undefined ? JSON.stringify(body) : undefined
-        });
-        const text = await response.text();
-        const data = text ? JSON.parse(text) : null;
-        if (response.ok) {
-            resultEl.className = 'alert alert-success mt-2';
-            resultEl.textContent = `Success (${response.status})\n` + JSON.stringify(data, null, 2);
-        } else {
-            resultEl.className = 'alert alert-danger mt-2';
-            resultEl.textContent = `Failed (${response.status})\n` + JSON.stringify(data, null, 2);
-        }
-    } catch (err) {
-        resultEl.className = 'alert alert-danger mt-2';
-        resultEl.textContent = 'Network/parse error: ' + err.message;
-    }
-}
 
-function formToObject(form, numericFields = []) {
-    const data = Object.fromEntries(new FormData(form).entries());
-    for (const field of numericFields) {
-        if (field in data) data[field] = Number(data[field]);
-    }
-    return data;
+    const result = await callApi(path, method, body);
+
+    resultEl.className = result.ok
+        ? 'alert alert-success mt-2'
+        : 'alert alert-danger mt-2';
+
+    // Why the fallback to message: network errors have no response body.
+    const detail =
+        result.data === null || result.data === undefined
+            ? result.message
+            : (typeof result.data === 'string'
+                ? result.data
+                : JSON.stringify(result.data, null, 2));
+
+    resultEl.textContent =
+        `${result.ok ? 'Success' : 'Failed'} (${result.status})\n` + detail;
+
+    return result;
 }

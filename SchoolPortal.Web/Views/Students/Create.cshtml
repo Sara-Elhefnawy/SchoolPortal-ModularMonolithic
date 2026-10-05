@@ -58,7 +58,7 @@ document.getElementById("studentForm").addEventListener("submit", async e => {
     data.buildingNumber = Number(data.buildingNumber);
 
     const result = await callApi("/api/students", "POST", data);
-    if (result.ok) window.location.href = "/Students";
+    if (result.ok) window.location.href = "/Students/Index";
     else showToast(result.message || "Could not create student.", "danger");
 });
 </script>

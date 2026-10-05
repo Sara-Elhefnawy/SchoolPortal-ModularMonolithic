@@ -20,7 +20,7 @@ internal sealed class GradesSeeder(
     IGradesUnitOfWork unitOfWork,
     TimeProvider clock) : IDataSeeder
 {
-    public int Order => 30;
+    public int Order => 40;
 
     public async Task SeedAsync(CancellationToken ct)
     {

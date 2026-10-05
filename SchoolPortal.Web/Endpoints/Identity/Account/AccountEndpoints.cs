@@ -6,6 +6,7 @@ using SchoolPortal.Identities.Application.Feature.Auth.Command.Login;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Logout;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.ResetPassword;
 using SchoolPortal.Identities.Application.Feature.Auth.Command.Signup;
+using SchoolPortal.SharedKernel.Identity.Contracts;
 using SchoolPortal.Web.Endpoints.Identity.Account.Requests;
 
 namespace SchoolPortal.Web.Endpoints.Identity.Account;
@@ -31,7 +32,7 @@ public static class AccountEndpoints
         
         group.MapPost("/confirm-email", ConfirmEmail);
 
-        group.MapPost("/me", Me);
+        group.MapPost("/me", Me).RequireAuthorization();
     }
 
     private static async Task<IResult> ConfirmEmail(
@@ -150,49 +151,18 @@ public static class AccountEndpoints
             ? Results.Ok(new { message = "Password has been reset successfully." })
             : Results.BadRequest(new { error = result.Error });
     }
-
-    private static async Task<IResult> Me(
-        ForgotPasswordRequest request,
-        IMediator mediator,
-        CancellationToken ct)
+    
+    // Why ICurrentUser and not IMediator: this is a plain read of who is logged in
+    // right now, and ICurrentUser already holds that. A query handler would add
+    // a layer without adding any logic.
+    private static IResult Me(ICurrentUser currentUser)
     {
-        /*"id": 1,
-        "name": "Sara",
-        "email": "sara@example.com",
-        "roles": [
-        "Admin"
-            ],
-        "permissions": [
-        "Users.View",
-        "Users.Create",
-        "Users.Update",
-        "Users.Delete",
-        "Grades.View",
-        "Grades.Create",
-        "Grades.Update",
-        "Grades.Unlock",
-        "Attendance.View",
-        "Attendance.Mark",
-        "Attendance.Update",
-        "Students.View",
-        "Students.Create",
-        "Students.Update",
-        "Students.Delete"
-            ]*/
-        
-        var command = new ForgotPasswordCommand(
-            request.Email);
-
-        var result = await mediator.Send(command, ct);
-
-        // Deliberately don't reveal whether the account exists.
-        return result.IsSuccess
-            ? Results.Ok(new
-            {
-                message =
-                    "If an account exists for this email, " +
-                    "password reset instructions will be sent."
-            })
-            : Results.BadRequest(new { error = result.Error });
+        return Results.Ok(new
+        {
+            id = currentUser.UserId,
+            name = currentUser.Name,
+            roles = currentUser.Roles,
+            permissions = currentUser.Permissions
+        });
     }
 }

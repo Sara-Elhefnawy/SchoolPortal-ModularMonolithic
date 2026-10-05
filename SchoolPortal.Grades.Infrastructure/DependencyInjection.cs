@@ -54,6 +54,8 @@ public static class DependencyInjection
         services.AddScoped<IGradesUnitOfWork, GradesUnitOfWork>();
         
         services.AddScoped<IDataSeeder, GradesSeeder>();
+
+        services.AddHealthChecks().AddDbContextCheck<GradesDbContext>("grades-db", tags: ["ready"]);
         
         return services;
     }

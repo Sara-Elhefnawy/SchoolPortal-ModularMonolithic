@@ -21,4 +21,7 @@ public sealed class AttendancesController : Controller
 
     [Authorize(Roles = Roles.Student)]
     public IActionResult MyHistory() => View();
+    
+    [Authorize(Roles = Roles.Admin + "," + Roles.Teacher)]
+    public IActionResult Sessions() => View();
 }

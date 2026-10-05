@@ -1,34 +1,79 @@
 @{
-ViewData["Title"] = "Student details";
-var id = ViewContext.RouteData.Values["id"];
-var canUpdate = User.HasClaim("permission", "Students.Update");
+    ViewData["Title"] = "Student details";
+    var id = ViewContext.RouteData.Values["id"];
+    var canUpdate = User.HasClaim("permission", "Students.Update");
 }
 <div class="page-toolbar">
     <div><a href="/Students/Index" class="back-link">← Students</a><h2 id="studentName">Student</h2></div>
 </div>
-<div id="studentContent" class="panel">Loading...</div>
+
+<div id="studentContent" class="panel mb-3">Loading...</div>
+
+@if (canUpdate)
+{
+    <div class="row g-3" id="editPanels" hidden>
+        <div class="col-md-5">
+            <div class="panel">
+                <h5>Contact</h5>
+                <form id="contactForm">
+                    <label class="form-label">Email</label>
+                    <input name="email" type="email" class="form-control mb-2" required />
+                    <label class="form-label">Phone</label>
+                    <input name="phoneNumber" class="form-control mb-3" />
+                    <button class="btn btn-primary">Save contact</button>
+                </form>
+            </div>
+        </div>
+        <div class="col-md-7">
+            <div class="panel">
+                <h5>Address</h5>
+                <form id="addressForm">
+                    <div class="row g-2">
+                        <div class="col-md-6"><label class="form-label">Country</label><input name="country" class="form-control" required /></div>
+                        <div class="col-md-6"><label class="form-label">State / Governorate</label><input name="state" class="form-control" required /></div>
+                        <div class="col-md-6"><label class="form-label">City</label><input name="city" class="form-control" required /></div>
+                        <div class="col-md-3"><label class="form-label">Zip code</label><input name="zipCode" class="form-control" required /></div>
+                        <div class="col-md-3"><label class="form-label">Building</label><input name="buildingNumber" type="number" min="1" class="form-control" required /></div>
+                    </div>
+                    <button class="btn btn-primary mt-3">Save address</button>
+                </form>
+            </div>
+        </div>
+    </div>
+}
 
 @section Scripts {
 <script>
-    const studentId = "@id";
+const studentId = "@id";
+const canUpdate = @(canUpdate ? "true" : "false");
+const el = id => document.getElementById(id);
 
-    async function loadStudent() {
-        const result = await callApi(`/api/students/${studentId}`, "GET");
-        const container = document.getElementById("studentContent");
+// Why remember the loaded values: contact has two separate endpoints (email, phone),
+// so we only call the one whose field actually changed.
+let original = { email: "", phoneNumber: "" };
 
-        if (!result.ok) {
-            container.innerHTML = `<div class="alert alert-danger">${escapeHtml(result.message)}</div>`;
-            return;
-        }
+function setValues(form, values) {
+    for (const field of form.elements) {
+        if (field.name) field.value = values[field.name] ?? "";
+    }
+}
 
-        const s = result.data;
-        // Build the address from whichever parts exist, so a partly-filled address still renders cleanly.
-        const a = s.address || {};
-        const addressText = [a.buildingNumber, a.city, a.state, a.zipCode, a.country]
-            .filter(Boolean).map(escapeHtml).join(", ");
+async function loadStudent() {
+    const result = await callApi(`/api/students/${studentId}`, "GET");
+    const container = el("studentContent");
 
-        document.getElementById("studentName").textContent = s.name;
-        container.innerHTML = `
+    if (!result.ok) {
+        container.innerHTML = `<div class="alert alert-danger">${escapeHtml(result.message)}</div>`;
+        return;
+    }
+
+    const s = result.data;
+    const a = s.address || {};
+    const addressText = [a.buildingNumber, a.city, a.state, a.zipCode, a.country]
+        .filter(Boolean).map(escapeHtml).join(", ");
+
+    el("studentName").textContent = s.name;
+    container.innerHTML = `
     <div class="detail-grid">
         <div><small>Name</small><strong>${escapeHtml(s.name)}</strong></div>
         <div><small>Email</small><strong>${escapeHtml(s.email || "")}</strong></div>
@@ -41,17 +86,69 @@ var canUpdate = User.HasClaim("permission", "Students.Update");
     </div>
     <hr />
     <div class="action-row">
-        ${s.status === "Active" && @canUpdate.ToString().ToLowerInvariant() ? `<button class="btn btn-outline-warning" onclick="changeStatus('suspend')">Suspend</button>` : ""}
-        ${s.status === "Active" && @canUpdate.ToString().ToLowerInvariant() ? `<button class="btn btn-outline-danger" onclick="changeStatus('deactivate')">Deactivate</button>` : ""}
-        ${s.status !== "Graduated" && @canUpdate.ToString().ToLowerInvariant() ? `<button class="btn btn-outline-success" onclick="changeStatus('graduate')">Graduate</button>` : ""}
+        ${s.status === "Active" && canUpdate ? `<button class="btn btn-outline-warning" onclick="changeStatus('suspend')">Suspend</button>` : ""}
+        ${s.status === "Active" && canUpdate ? `<button class="btn btn-outline-danger" onclick="changeStatus('deactivate')">Deactivate</button>` : ""}
+        ${s.status !== "Graduated" && canUpdate ? `<button class="btn btn-outline-success" onclick="changeStatus('graduate')">Graduate</button>` : ""}
     </div>`;
+
+    if (canUpdate) {
+        original = { email: s.email || "", phoneNumber: s.phoneNumber || "" };
+        setValues(el("contactForm"), s);
+        setValues(el("addressForm"), a);
+        el("editPanels").hidden = false;
     }
-    
-    async function changeStatus(action) {
-        const result = await callApi(`/api/students/${studentId}/${action}`, "POST");
-        showToast(result.message || (result.ok ? "Updated." : "Update failed."), result.ok ? "success" : "danger");
-        if (result.ok) loadStudent();
+}
+
+async function changeStatus(action) {
+    // Why a per-action body: suspend and graduate declare a body on the server, deactivate doesn't.
+    let body = null;
+
+    if (action === "suspend") {
+        const reason = prompt("Reason for suspension:");
+        if (!reason) return;
+        body = { reason };
     }
-    loadStudent();
+    else if (action === "graduate") {
+        body = { graduationDate: todayLocal() };
+    }
+
+    const result = await callApi(`/api/students/${studentId}/${action}`, "POST", body);
+    showToast(result.message || (result.ok ? "Updated." : "Update failed."), result.ok ? "success" : "danger");
+    if (result.ok) loadStudent();
+}
+
+if (canUpdate) {
+    el("contactForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const data = formToObject(e.target);
+        const calls = [];
+
+        if (data.email !== original.email)
+            calls.push([`/api/students/${studentId}/email`, { email: data.email }]);
+        if (data.phoneNumber !== original.phoneNumber)
+            calls.push([`/api/students/${studentId}/phone`, { phoneNumber: data.phoneNumber }]);
+
+        if (!calls.length) { showToast("Nothing changed.", "secondary"); return; }
+
+        // Why sequential and not Promise.all: each call fetches its own CSRF token,
+        // and one-at-a-time keeps the antiforgery cookie/token pairs from racing.
+        for (const [url, body] of calls) {
+            const r = await callApi(url, "PUT", body);
+            if (!r.ok) { showToast(r.message || "Could not save.", "danger"); return; }
+        }
+
+        showToast("Contact updated.", "success");
+        loadStudent();
+    });
+
+    el("addressForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const r = await callApi(`/api/students/${studentId}/address`, "PUT", formToObject(e.target, ["buildingNumber"]));
+        showToast(r.ok ? "Address updated." : (r.message || "Could not save."), r.ok ? "success" : "danger");
+        if (r.ok) loadStudent();
+    });
+}
+
+loadStudent();
 </script>
 }

@@ -3,6 +3,7 @@ using SchoolPortal.Attendances.Application.Features.Attendances.Command.Record;
 using SchoolPortal.Attendances.Application.Features.Attendances.Command.Update;
 using SchoolPortal.Attendances.Application.Features.Attendances.Query.GetAttendanceForOccurrence;
 using SchoolPortal.Attendances.Application.Features.Attendances.Query.GetStudentAttendanceHistory;
+using SchoolPortal.Attendances.Application.Features.SessionOccurrences.Cancel;
 using SchoolPortal.Attendances.Application.Features.SessionOccurrences.Command.Create;
 using SchoolPortal.Attendances.Application.Features.SessionOccurrences.Query.GetBySession;
 using SchoolPortal.Attendances.Application.Features.Sessions.Command.Create;
@@ -38,6 +39,9 @@ public static class AttendanceEndpoints
 
         group.MapPost("/{sessionId:int}/occurrences", CreateSessionOccurrence)
             .RequireAuthorization(Permissions.Attendance.Mark);
+        
+        group.MapPost("/{id:int}/cancel", CancelSessionOccurrence)
+            .RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Teacher));
     }
 
     private static void MapAttendanceOperations(IEndpointRouteBuilder app)
@@ -55,6 +59,13 @@ public static class AttendanceEndpoints
             .RequireAuthorization(policy => policy.RequireRole(Roles.Admin, Roles.Teacher));
 
         group.MapGet("/me", GetMyAttendanceHistory).RequireAuthorization(policy => policy.RequireRole(Roles.Student));
+    }
+
+    private static async Task<IResult> CancelSessionOccurrence(int id, IMediator mediator, CancellationToken ct)
+    {
+        var result = await mediator.Send(new CancelSessionOccurrenceCommand(id), ct);
+
+        return result.IsSuccess ? Results.NoContent() : Results.BadRequest(result.Error);
     }
 
     private static async Task<IResult> GetTodaysSessions(IMediator mediator, CancellationToken ct)

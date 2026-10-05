@@ -42,7 +42,9 @@ public static class DependencyInjection
         
         services.AddScoped<IDataSeeder, StudentsSeeder>();
         
-        services.AddScoped<IStudentNameLookup, StudentNameLookup>();
+        services.AddScoped<IStudentLookup, StudentLookup>();
+
+        services.AddHealthChecks().AddDbContextCheck<StudentsDbContext>("students-db", tags: ["ready"]);
         
         return services;
     }

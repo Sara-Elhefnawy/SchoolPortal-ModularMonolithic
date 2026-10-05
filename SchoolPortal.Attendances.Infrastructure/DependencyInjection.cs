@@ -40,6 +40,8 @@ public static class DependencyInjection
         services.AddScoped<IAttendancesUnitOfWork, AttendancesUnitOfWork>();
         
         services.AddScoped<IDataSeeder, AttendancesSeeder>();
+
+        services.AddHealthChecks().AddDbContextCheck<AttendancesDbContext>("attendance-db", tags: ["ready"]);
         
         return services;
     }

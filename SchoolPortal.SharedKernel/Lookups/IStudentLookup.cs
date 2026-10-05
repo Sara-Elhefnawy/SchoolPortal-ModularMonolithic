@@ -1,7 +1,9 @@
 namespace SchoolPortal.SharedKernel.Lookups;
 
-public interface IStudentNameLookup
+public interface IStudentLookup
 {
+    Task<int?> FindStudentIdByEmailAsync(string email, CancellationToken ct);
+    
     Task<IReadOnlyDictionary<int, string>> GetNamesAsync(
         IReadOnlyCollection<int> studentIds, CancellationToken ct);
 }

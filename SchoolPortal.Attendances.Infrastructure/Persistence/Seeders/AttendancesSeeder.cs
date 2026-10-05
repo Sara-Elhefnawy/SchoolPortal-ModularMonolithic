@@ -14,7 +14,7 @@ internal sealed class AttendancesSeeder(
     IAttendancesUnitOfWork unitOfWork,
     TimeProvider clock) : IDataSeeder
 {
-    public int Order => 40;
+    public int Order => 50;
 
     // WHY relative to today: fixed dates would go stale; recent weeks always give
     // the history view something to show.
@@ -32,8 +32,10 @@ internal sealed class AttendancesSeeder(
 
         var templates = new (int SectionId, DayOfWeek Day, TimeOnly Start, TimeOnly End)[]
         {
+            (sectionA, DayOfWeek.Sunday, new TimeOnly(9, 0), new TimeOnly(10, 30)),
             (sectionA, DayOfWeek.Monday, new TimeOnly(9, 0), new TimeOnly(10, 30)),
             (sectionA, DayOfWeek.Wednesday, new TimeOnly(9, 0), new TimeOnly(10, 30)),
+            (sectionB, DayOfWeek.Sunday, new TimeOnly(11, 0), new TimeOnly(12, 30)),
             (sectionB, DayOfWeek.Tuesday, new TimeOnly(11, 0), new TimeOnly(12, 30)),
             (sectionB, DayOfWeek.Thursday, new TimeOnly(11, 0), new TimeOnly(12, 30))
         };

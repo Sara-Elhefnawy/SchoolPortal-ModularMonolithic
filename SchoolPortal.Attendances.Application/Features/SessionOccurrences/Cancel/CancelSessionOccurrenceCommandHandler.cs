@@ -1,10 +1,10 @@
-using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.Attendances.Application.Directories;
 using SchoolPortal.Attendances.Application.Persistence;
 using SchoolPortal.Attendances.Domain.SessionOccurrences;
+using SchoolPortal.SharedKernel.Mediator;
 using SchoolPortal.SharedKernel.Results;
 
-namespace SchoolPortal.Attendances.Application.Features.Attendances.Command.Cancel;
+namespace SchoolPortal.Attendances.Application.Features.SessionOccurrences.Cancel;
 
 public sealed class CancelSessionOccurrenceCommandHandler(
     ISessionOccurrenceDirectory directory,

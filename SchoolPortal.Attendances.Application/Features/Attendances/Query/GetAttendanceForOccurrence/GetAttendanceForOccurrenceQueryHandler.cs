@@ -7,7 +7,7 @@ namespace SchoolPortal.Attendances.Application.Features.Attendances.Query.GetAtt
 
 public sealed class GetAttendanceForOccurrenceQueryHandler(
     IAttendanceDirectory attendances,
-    IStudentNameLookup studentNames)
+    IStudentLookup studentNames)
     : IRequestHandler<GetAttendanceForOccurrenceQuery, Result<IReadOnlyList<GetAttendanceForOccurrenceQueryDto>>>
 {
     public async Task<Result<IReadOnlyList<GetAttendanceForOccurrenceQueryDto>>> Handle(

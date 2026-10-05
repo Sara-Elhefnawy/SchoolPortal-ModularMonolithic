@@ -1,0 +1,150 @@
+@{
+    ViewData["Title"] = "Sessions";
+    var canMark = User.HasClaim("permission", "Attendance.Mark");
+}
+<div class="page-toolbar">
+    <div>
+        <a href="/Attendances/Index" class="back-link">← Attendance</a>
+        <h2>Sessions</h2>
+        <p class="text-muted mb-0">A session is a weekly class slot. An occurrence is one actual date it happens.</p>
+    </div>
+</div>
+
+<div class="panel mb-3">
+    <div class="filter-row">
+        <select id="yearSelect" class="form-select"></select>
+        <select id="termSelect" class="form-select"></select>
+        <select id="sectionSelect" class="form-select"></select>
+    </div>
+</div>
+
+@if (canMark)
+{
+    <div class="panel mb-3">
+        <h5>New weekly session</h5>
+        <form id="sessionForm" class="row g-2 align-items-end">
+            <div class="col-md-3">
+                <label class="form-label">Day</label>
+                <select name="dayOfWeek" class="form-select">
+                    <option>Sunday</option><option>Monday</option><option>Tuesday</option>
+                    <option>Wednesday</option><option>Thursday</option><option>Friday</option><option>Saturday</option>
+                </select>
+            </div>
+            <div class="col-md-3"><label class="form-label">Start</label><input name="startTime" type="time" class="form-control" required /></div>
+            <div class="col-md-3"><label class="form-label">End</label><input name="endTime" type="time" class="form-control" required /></div>
+            <div class="col-md-3"><button class="btn btn-primary w-100">Add session</button></div>
+        </form>
+    </div>
+}
+
+<div id="sessionsList">Select a course section.</div>
+
+@section Scripts {
+<script>
+const canMark = @(canMark ? "true" : "false");
+const el = id => document.getElementById(id);
+const shortTime = t => String(t ?? "").slice(0, 5);
+// Why add seconds: <input type="time"> gives "09:00", while the server's TimeOnly JSON reader expects "09:00:00".
+const withSeconds = t => (t.length === 5 ? t + ":00" : t);
+
+// Fills a dropdown from an API list. A null url means "parent not chosen yet".
+async function fillFrom(select, url, labelOf, emptyText) {
+    let items = [];
+    if (url) {
+        const r = await callApi(url, "GET");
+        if (r.ok) items = r.data || [];
+        else showToast(r.message || "Could not load list.", "danger");
+    }
+    select.innerHTML = items.length
+        ? items.map(i => `<option value="${i.id}">${escapeHtml(labelOf(i))}</option>`).join("")
+        : `<option value="">${escapeHtml(emptyText)}</option>`;
+    return items;
+}
+
+const sectionLabel = s =>
+    [s.courseCode ?? s.courseName ?? "", s.name ?? ""].filter(Boolean).join(" · ") || `Section #${s.id}`;
+
+// Cascade: changing a dropdown reloads the next one, then fires its change event.
+el("yearSelect").addEventListener("change", async () => {
+    const id = el("yearSelect").value;
+    await fillFrom(el("termSelect"), id ? `/api/terms?academicYearId=${id}` : null, t => t.name, "No terms");
+    el("termSelect").dispatchEvent(new Event("change"));
+});
+el("termSelect").addEventListener("change", async () => {
+    const id = el("termSelect").value;
+    await fillFrom(el("sectionSelect"), id ? `/api/course-sections?termId=${id}` : null, sectionLabel, "No sections");
+    el("sectionSelect").dispatchEvent(new Event("change"));
+});
+el("sectionSelect").addEventListener("change", loadSessions);
+
+async function loadSessions() {
+    const sectionId = el("sectionSelect").value;
+    const box = el("sessionsList");
+
+    if (!sectionId) { box.textContent = "Select a course section."; return; }
+
+    const r = await callApi(`/api/sessions?courseSectionId=${sectionId}`, "GET");
+    if (!r.ok) { box.innerHTML = `<div class="alert alert-danger">${escapeHtml(r.message)}</div>`; return; }
+
+    const sessions = r.data || [];
+    box.innerHTML = sessions.map(s => `
+        <div class="panel mb-3">
+            <h5>${escapeHtml(s.dayOfWeek)} ${escapeHtml(shortTime(s.startTime))} – ${escapeHtml(shortTime(s.endTime))}</h5>
+            <div id="occ-${s.id}" class="mb-2">Loading...</div>
+            ${canMark ? `
+            <form class="d-flex gap-2" onsubmit="addOccurrence(event, ${s.id})">
+                <input type="date" name="date" class="form-control" value="${todayLocal()}" required />
+                <button class="btn btn-outline-primary">Add occurrence</button>
+            </form>` : ""}
+        </div>`).join("") || `<div class="text-muted">No sessions for this section yet.</div>`;
+
+    sessions.forEach(s => loadOccurrences(s.id));
+}
+
+async function loadOccurrences(sessionId) {
+    const box = el(`occ-${sessionId}`);
+    const r = await callApi(`/api/sessions/${sessionId}/occurrences`, "GET");
+    if (!r.ok) { box.textContent = r.message; return; }
+
+    // Newest first; each date links to the Mark attendance page for that occurrence.
+    const list = (r.data || []).slice().sort((a, b) => String(b.date).localeCompare(String(a.date)));
+    box.innerHTML = list.map(o => `
+        <a class="btn btn-sm btn-outline-secondary me-1 mb-1" href="/Attendances/Mark/${o.id}">${escapeHtml(o.date)}</a>`
+    ).join("") || `<span class="text-muted">No occurrences yet.</span>`;
+}
+
+async function addOccurrence(e, sessionId) {
+    e.preventDefault();
+    const date = new FormData(e.target).get("date");
+    const r = await callApi(`/api/sessions/${sessionId}/occurrences`, "POST", { date });
+    showToast(r.ok ? "Occurrence added." : (r.message || "Could not add."), r.ok ? "success" : "danger");
+    if (r.ok) loadOccurrences(sessionId);
+}
+
+if (canMark) {
+    el("sessionForm").addEventListener("submit", async e => {
+        e.preventDefault();
+        const sectionId = Number(el("sectionSelect").value);
+        if (!sectionId) { showToast("Pick a course section first.", "danger"); return; }
+
+        const data = formToObject(e.target);
+        const r = await callApi("/api/sessions", "POST", {
+            courseSectionId: sectionId,
+            dayOfWeek: data.dayOfWeek,
+            startTime: withSeconds(data.startTime),
+            endTime: withSeconds(data.endTime)
+        });
+        showToast(r.ok ? "Session added." : (r.message || "Could not add."), r.ok ? "success" : "danger");
+        if (r.ok) loadSessions();
+    });
+}
+
+// Start from the academic year list, preselecting the current one.
+(async () => {
+    const years = await fillFrom(el("yearSelect"), "/api/academic-years", y => y.name, "No academic years");
+    const current = years.find(y => y.isCurrent) || years[0];
+    if (current) el("yearSelect").value = current.id;
+    el("yearSelect").dispatchEvent(new Event("change"));
+})();
+</script>
+}
