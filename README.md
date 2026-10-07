@@ -21,6 +21,10 @@ SchoolPortal started as two separate apps (Students and Grades) talking over HTT
 
 Planned, not part of v1:
 
+- **Bulk grade import** (Grades):
+  - One assessment per file: pick the assessment, then upload its file.
+  - Partial import: valid rows are saved, invalid rows are skipped and reported with their row number and reason.
+  - Students who already have a grade for that assessment are not overwritten. They are returned as a warning.
 - Notifications module (event-driven emails, such as a term-end grade report)
 - Nightly GPA and ranking recalculation job
 - Caching for class rankings and course rosters
@@ -43,10 +47,28 @@ SchoolPortal.sln
 
 - **One PostgreSQL schema per module**, so modules cannot join across each other's tables by accident.
 - **CQRS with a hand-built mediator**. Cross-module communication uses published events, never direct calls into another module.
-- **EF Core for writes, Dapper only for Grades reporting** (GPA and ranking queries are aggregation-heavy).
+- **EF Core for writes in every module, plus Dapper for read queries in Grades**.
 - **Minimal APIs** grouped per module.
 - **Domain entities** use private constructors and `Result`-returning factory methods, so invalid state cannot be created.
 - **Admin overrides** are explicit domain methods (for example `OverrideScore`), never boolean bypass flags. Nothing is hard-deleted; every soft delete has a `Restore()`.
+
+### Data access in the Grades module
+
+Grades uses both EF Core and Dapper, split by what the code is doing:
+
+| Job | Tool | Why |
+|---|---|---|
+| Load an entity, change it, save it (`GetByIdAsync`, `Add`, `Update`, existence checks) | **EF Core** | The change tracker, the audit interceptor (`CreatedAt`, `UpdatedAt`, user ids) and domain-event publishing all happen on `SaveChanges`. |
+| Read data for display (lists, per-student grades, class rankings, GPA reports) | **Dapper** | Read-only, often joins several tables or aggregates across students. Hand-written SQL is clearer than translated LINQ, and nothing needs tracking. |
+
+Each directory class (for example `GradeDirectory`) takes both the `GradesDbContext` and an `NpgsqlDataSource`, so the interfaces and command handlers do not change.
+
+Things to remember when writing Dapper queries here:
+
+- **Soft delete is not automatic.** EF's global query filter (`!IsDeleted`) does not apply to Dapper. Every raw query must include `"IsDeleted" = FALSE` for each table it touches, or deleted rows will appear.
+- **`DateOnly` needs a type handler.** `DateOnlyTypeHandler` is registered once in `AddGradesModule`. Without it, Dapper cannot read Postgres `date` columns into `DateOnly`.
+- **Dapper reads use their own connection**, so they only see data that has already been saved. Unsaved changes sitting in the EF change tracker are invisible to them.
+- **Enums are stored as text** (`HasConversion<string>()`), so a column such as `"Status"` can be selected directly and already matches the enum's `ToString()`.
 
 ### Boundaries enforced by architecture tests
 
@@ -58,7 +80,7 @@ SchoolPortal.sln
 
 ## Tech stack
 
-ASP.NET Core · EF Core 10 · Dapper · PostgreSQL · ASP.NET Core Identity · Brevo (email) · xUnit · NetArchTest
+ASP.NET Core · EF Core 10 (writes and migrations) · Dapper (Grades reads) · PostgreSQL · ASP.NET Core Identity · Brevo (email) · xUnit · NetArchTest
 
 ## Getting started
 
@@ -73,7 +95,7 @@ ASP.NET Core · EF Core 10 · Dapper · PostgreSQL · ASP.NET Core Identity · B
 git clone <your-repo-url>
 cd SchoolPortal
 
-dotnet user-secrets set "ConnectionStrings:DefaultConnection" "Host=localhost;Database=schoolportal;Username=postgres;Password=<password>" --project SchoolPortal.Web
+dotnet user-secrets set "ConnectionStrings:SchoolPortalDb" "Host=localhost;Database=schoolportal;Username=postgres;Password=<password>" --project SchoolPortal.Web
 
 dotnet run --project SchoolPortal.Web
 ```
@@ -84,6 +106,15 @@ Check that it is running:
 
 ```bash
 curl http://localhost:<port>/health
+```
+
+### Migrations
+
+`dotnet ef` cannot use your user secrets, because the design-time factory is created without dependency injection. The Grades factory reads the connection string from an environment variable instead, so no password is committed:
+
+```bash
+# PowerShell
+$env:ConnectionStrings__SchoolPortalDb = "Host=localhost;Database=schoolportal;Username=postgres;Password=<password>"
 ```
 
 ### Test
