@@ -1,3 +1,4 @@
+using Dapper;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -23,6 +24,10 @@ public static class DependencyInjection
     {
         var connectionString = config.GetConnectionString("SchoolPortalDb") ??
                                throw new InvalidOperationException("Connection string 'SchoolPortalDb' was not found.");
+
+        // WHY here: Dapper's type handlers are global, registered once for the whole process.
+        // Doing it at module start-up guarantees it happens before any directory runs a query.
+        SqlMapper.AddTypeHandler(new DateOnlyTypeHandler());
 
         services.AddDbContext<GradesDbContext>((sp, options) =>
         {

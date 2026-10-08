@@ -1,4 +1,4 @@
-namespace SchoolPortal.Web.EmailTemplates;
+namespace SchoolPortal.SharedKernel.Emails;
 
 public sealed class GradePublishedEmailModel
 {
