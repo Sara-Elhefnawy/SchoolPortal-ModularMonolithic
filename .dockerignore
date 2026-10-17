@@ -1,0 +1,21 @@
+# "**/" makes each pattern match in every folder, not just the repo root.
+# Without it, src/*/bin and src/*/obj would still be sent to the build.
+
+# Why: host build output must never enter the image. Your Windows
+# obj/project.assets.json would overwrite the Linux restore result.
+**/bin
+**/obj
+
+# Why: .git is large and useless inside the image
+.git
+**/.vs
+
+# Why: dev settings and secrets must not be baked into an image
+**/appsettings.Development.json
+**/.env
+
+# Why: docs aren't needed to build or run
+**/*.md
+
+# Why: smaller context. Safe because we restore only the Web project, not the .sln
+SchoolPortal.ArchTests/
