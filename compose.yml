@@ -1,0 +1,96 @@
+services: 
+  postgresql:
+    image: postgres:15-alpine
+    container_name: schoolportal-postgresql
+    environment:
+      POSTGRES_DB: schoolportal
+      POSTGRES_USER: postgres
+      # Why ${DB_PASSWORD}: one source of truth, read from .env file.
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      # Why here: the DATABASE files must survive 'down'. Without a named volume,
+      # Docker makes a throwaway anonymous one and your data is orphaned.
+      - pgdata:/var/lib/postgresql/data
+    networks: 
+      - school-network
+    healthcheck:
+      # Why -d: checks the app's database is accepting connections, not just the server.
+      test: ["CMD-SHELL", "pg_isready -U postgres -d schoolportal"]
+      interval: 10s
+      retries: 10
+      start_period: 30s
+      timeout: 5s
+      
+  schoolportal:
+    # built by the migration service above
+    image: schoolportal:latest
+    container_name: schoolportal
+    ports:
+      - "5229:8080"
+    # The schoolportal service has image: but no build:, so Compose first tried to 
+    # download schoolportal:latest from Docker Hub. It doesn’t exist there, so you 
+    # got the error, and then Compose built the image through the migration service. 
+    # pull_policy: never tells Compose that this image is only ever built locally.
+    pull_policy: never
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Docker"
+      ASPNETCORE_URLS: "http://+:8080"
+      DatabaseProvider: "postgresql"
+      ConnectionStrings__SchoolPortalDb: "Host=postgresql;Port=5432;Database=schoolportal;Username=postgres;Password=${DB_PASSWORD}"
+      Email__SmtpUsername: ${Email__SmtpUsername}
+      Email__AppPassword: ${Email__AppPassword}
+      Email__SenderAddress: ${Email__SenderAddress}
+      Email__SenderDisplayName: ${Email__SenderDisplayName}
+      Email__Host: ${Email__Host}
+      Email__Port: ${Email__Port}
+    # Load environment variables from an external file (.env)
+    env_file:
+      - .env
+    volumes:
+      # Why here: the Data Protection keys are written by the WEB container.
+      - dataprotection-keys:/keys
+    depends_on:
+      migration:
+        condition: service_completed_successfully
+    networks:
+      - school-network
+    restart: unless-stopped
+    
+  migration:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    # Why: web reuses this image, so it is built once, not twice
+    image: schoolportal:latest
+    container_name: schoolportal_migration
+    # Why entrypoint, not just command: the image ENTRYPOINT is 'dotnet SchoolPortal.Web.dll'.
+    # 'command' would be passed to dotnet as arguments instead of running a shell.
+    entrypoint: [ "/bin/sh", "-c" ]
+    # Why $$: a single $ is Compose interpolation; $$ passes a literal $ to the shell.
+    # Why set -e: stop on the first failed migration so the service exits non-zero
+    # and 'web' (which waits for service_completed_successfully) never starts.
+    command:
+      - |
+        set -e
+        for m in students notifications grades identities attendances; do
+          echo "Migrating $$m"
+          # Why --connection: the bundle was built with a placeholder, so the real
+          # database is supplied here at run time.
+          ./bundles/migrate-$$m --connection "$$ConnectionStrings__SchoolPortalDb"
+        done
+    environment:
+      ConnectionStrings__SchoolPortalDb: "Host=postgresql;Port=5432;Database=schoolportal;Username=postgres;Password=${DB_PASSWORD}"
+    depends_on:
+      postgresql:
+        condition: service_healthy
+    networks:
+      - school-network
+
+# Named volume definition  
+volumes:
+  pgdata:
+  dataprotection-keys:
+
+networks:
+  school-network:
+    driver: bridge
