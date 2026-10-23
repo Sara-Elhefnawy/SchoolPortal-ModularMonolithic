@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.HttpOverrides;
 using Microsoft.OpenApi;
 using SchoolPortal.Attendances.Infrastructure;
@@ -30,6 +31,14 @@ public class Program
     public static async Task Main(string[] args)
     {
         var builder = WebApplication.CreateBuilder(args);
+        
+        // Configure Data Protection to persist keys to a specific folder
+        builder.Services.AddDataProtection()
+            // Why SetApplicationName: keys are isolated per app name. Pinning it means a
+            // changed path or assembly name can't silently orphan your existing keys.
+            .SetApplicationName("SchoolPortal")
+            // Why /keys: it is the volume mount, and it is owned by the non-root app user.
+            .PersistKeysToFileSystem(new DirectoryInfo("/keys"));
 
         builder.Services.AddControllersWithViews();
 

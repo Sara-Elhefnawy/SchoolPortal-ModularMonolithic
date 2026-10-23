@@ -13,6 +13,8 @@
 # Why: dev settings and secrets must not be baked into an image
 **/appsettings.Development.json
 **/.env
+**/.env.*
+!.env.example
 
 # Why: docs aren't needed to build or run
 **/*.md

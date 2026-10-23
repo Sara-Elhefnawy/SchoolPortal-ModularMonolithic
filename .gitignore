@@ -47,6 +47,7 @@ secrets.json
 # Environment files
 .env
 .env.*
+!.env.example
 
 # OS files
 .DS_Store
@@ -57,9 +58,3 @@ Thumbs.db
 *.temp
 *.swp
 *~
-
-# DbContextFactories
-**/StudentsDbContextFactory.cs
-**/NotificationsDbContextFactory.cs
-**/GradesDbContextFactory.cs
-**/AttendancesDbContextFactory.cs

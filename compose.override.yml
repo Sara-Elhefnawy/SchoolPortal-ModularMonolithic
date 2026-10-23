@@ -1,0 +1,10 @@
+services:
+  postgresql:
+    ports:
+      # Why dev only: lets you connect pgAdmin or DBeaver from your machine.
+      # Production keeps the database reachable only inside school-network.
+      - "5432:5432"
+
+  schoolportal:
+    environment:
+      ASPNETCORE_ENVIRONMENT: "Development"

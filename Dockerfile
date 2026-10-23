@@ -48,6 +48,42 @@ RUN dotnet restore SchoolPortal.Web/SchoolPortal.Web.csproj
 # but the slow restore layer above stays cached.
 COPY . .
 
+# --- NEW: Install EF Core Tool and build self-contained migration bundles ---
+# Why install dotnet-ef here: The EF Core CLI is an external tool. We install it 
+# globally inside the heavy SDK image so we can compile migration bundles.
+RUN dotnet tool install --global dotnet-ef
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Why ARG and not ENV: it is visible to RUN steps only during the build and is not
+# baked into the image's environment. It does not reach the final stage either way.
+# Why a fake value: bundle creation only needs the DbContext to CONSTRUCT.
+# It never opens a connection. The real value is passed at run time with --connection.
+ARG ConnectionStrings__SchoolPortalDb="Host=build-time-placeholder;Database=placeholder;Username=placeholder;Password=placeholder"
+
+# Why a loop with a restore inside it: each 'bundle' call re-restores the shared
+# startup project with a linux-x64 runtime and overwrites obj/project.assets.json.
+# Without resetting it, the next bundle starts from a modified file and fails (NETSDK1047).
+# Why 'set -e': stop at the first failure instead of silently continuing to a broken image.
+# Why explicit "Module:Context" pairs: the context names do not all follow one pattern
+# (Identities did not), so each pair states its context name directly.
+# -o: Specifies the destination path inside the '/app/bundles' directory.
+RUN set -e; \
+    for pair in \
+      Students:StudentsDbContext \
+      Notifications:NotificationsDbContext \
+      Grades:GradesDbContext \
+      Identities:IdentityDbContext \
+      Attendances:AttendancesDbContext; do \
+      m="${pair%%:*}"; ctx="${pair##*:}"; \
+      lower=$(echo "$m" | tr '[:upper:]' '[:lower:]'); \
+      echo "=== Bundling $m ($ctx) ==="; \
+      dotnet restore SchoolPortal.Web/SchoolPortal.Web.csproj; \
+      dotnet ef migrations bundle --context "$ctx" \
+        --project "SchoolPortal.${m}.Infrastructure/SchoolPortal.${m}.Infrastructure.csproj" \
+        --startup-project SchoolPortal.Web/SchoolPortal.Web.csproj \
+        -o "/app/bundles/migrate-${lower}" --self-contained -r linux-x64; \
+    done
+
 # Why: -c Release turns the compiler optimizer on and removes debug-only code
 # (#if DEBUG, Debug.Assert). Default is Debug, which runs slower and is meant
 # for stepping through code in an IDE.
@@ -61,9 +97,13 @@ RUN dotnet publish SchoolPortal.Web/SchoolPortal.Web.csproj -c Release -o /app -
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 
-# Why copy before USER: files stay owned by root, so the app can read but not
-# modify its own binaries. A compromised app can't rewrite itself.
+# Why copy before USER: files stay owned by root, so the app can read but not modify its own binaries.
 COPY --from=build /app .
+
+# Why create /keys here, as root, then chown it: Docker copies a folder's ownership
+# into an EMPTY named volume the first time it is mounted. Without this, the volume
+# is root-owned and the non-root app can't write its keys, so you'd get a permission error.
+RUN mkdir /keys && chown $APP_UID /keys
 
 # Why http://+:8080: "+" means all interfaces. Default localhost binding would
 # be unreachable from outside the container, so -p 8080:8080 would do nothing.
