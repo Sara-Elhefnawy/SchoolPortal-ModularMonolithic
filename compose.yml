@@ -36,9 +36,9 @@ services:
       ASPNETCORE_ENVIRONMENT: "Docker"
       ASPNETCORE_URLS: "http://+:8080"
       DatabaseProvider: "postgresql"
-      # WHY ":?": compose refuses to start and prints this message if the variable is
-      # missing from your real .env, instead of starting an app that can't seed.
-      SEED_Users_PASSWORD: ${SEED_ADMIN_PASSWORD:?Set SEED_ADMIN_PASSWORD in .env}
+      # WHY ":-" (empty default): if the variable is missing, compose does not fail. The seeder
+      # logs its warning and skips creating dev users, which is the behaviour we designed.
+      Seed__Users__Password: ${Seed__Users__Password:-}
       ConnectionStrings__SchoolPortalDb: "Host=postgresql;Port=5432;Database=schoolportal;Username=postgres;Password=${DB_PASSWORD}"
       Email__SmtpUsername: ${Email__SmtpUsername}
       Email__AppPassword: ${Email__AppPassword}
