@@ -32,6 +32,40 @@ public class Program
     {
         var builder = WebApplication.CreateBuilder(args);
         
+        builder.Services.ConfigureApplicationCookie(options =>
+        {
+            // WHY HttpOnly: JavaScript can't read the auth cookie.
+            options.Cookie.HttpOnly = true;
+
+            // WHY Always: the cookie is only ever sent over HTTPS. This works behind Nginx only because
+            // ForwardedHeaders makes the app see the request as https.
+            // SameAsRequest in Development keeps http://localhost working.
+            options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+                ? CookieSecurePolicy.SameAsRequest
+                : CookieSecurePolicy.Always;
+
+            // WHY Lax and not Strict: your confirm-email and reset-password links are cross-site top-level
+            // navigations from the user's mail client. Strict cookies aren't sent on those, so users would
+            // look logged out on arrival. Lax blocks cross-site POSTs (the CSRF vector) and still allows link clicks.
+            options.Cookie.SameSite = SameSiteMode.Lax;
+        });
+
+        builder.Services.AddAntiforgery(options =>
+        {
+            options.HeaderName = "X-CSRF-TOKEN";
+            options.Cookie.HttpOnly = true;
+            // WHY same Always rule: the antiforgery cookie must obey the same HTTPS-only policy.
+            options.Cookie.SecurePolicy = builder.Environment.IsDevelopment()
+                ? CookieSecurePolicy.SameAsRequest
+                : CookieSecurePolicy.Always;
+        });
+        
+        // WHY a mounted volume: keys must outlive the container. The non-root "app" user needs write
+        // access to /keys, so create it in the Dockerfile and chown it to app.
+        builder.Services.AddDataProtection()
+            .PersistKeysToFileSystem(new DirectoryInfo("/keys"))
+            .SetApplicationName("SchoolPortal");
+        
         // Configure Data Protection to persist keys to a specific folder
         builder.Services.AddDataProtection()
             // Why SetApplicationName: keys are isolated per app name. Pinning it means a
@@ -75,6 +109,23 @@ public class Program
 
         var app = builder.Build();
 
+        // Why first: everything after this (HSTS, auth, antiforgery) reads the real scheme and client IP.
+        var forwardedOptions = new ForwardedHeadersOptions
+        {
+            // XForwardedProto = "the visitor used https" (needed for Secure cookies).
+            // XForwardedFor   = the visitor's real IP (needed for login rate limiting later).
+            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
+        };
+
+        // Why Clear: by default only localhost is trusted, so headers from the Nginx container
+        // would be ignored. Clearing the lists makes the app trust the proxy in front of it.
+        // This is safe ONLY because port 8080 is not published to the internet in production,
+        // so only Nginx can reach the app.
+        forwardedOptions.KnownIPNetworks.Clear();   // use KnownNetworks if this name doesn't compile
+        forwardedOptions.KnownProxies.Clear();
+
+        app.UseForwardedHeaders(forwardedOptions);
+
         if (!app.Environment.IsDevelopment())
         {
             app.UseExceptionHandler("/Home/Error");
@@ -88,13 +139,6 @@ public class Program
 
         await app.SeedDatabaseAsync();
 
-        // Why: behind a reverse proxy the app sees HTTP even though the user used HTTPS.
-        app.UseForwardedHeaders(new ForwardedHeadersOptions
-        {
-            ForwardedHeaders = ForwardedHeaders.XForwardedFor | ForwardedHeaders.XForwardedProto
-        });
-
-        app.UseHttpsRedirection();
         app.UseRouting();
 
         app.UseAuthentication();
