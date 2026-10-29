@@ -116,6 +116,12 @@ ENV ASPNETCORE_URLS=http://+:8080
 # The -p flag at docker run does that.
 EXPOSE 8080
 
+# WHY before USER: apt-get needs root. We install only curl and delete the apt cache
+# so the layer stays small.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/*
+
 # Why non-root: if the app is exploited, the attacker isn't root in the container.
 # APP_UID is defined by the aspnet image for its built-in "app" user.
 USER $APP_UID
