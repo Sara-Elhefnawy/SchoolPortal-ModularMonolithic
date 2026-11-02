@@ -48,12 +48,23 @@ public class AuthAndStudentsTests(WebApplicationFactory<Program> factory)
 
         var response = await PostJsonAsync(client, StudentsUrl, new
         {
-            // CHANGE: match these names to your CreateStudent request body,
-            // and add any required fields (address, etc.).
-            firstName   = "Test",
-            lastName    = $"Student{unique}",
-            email       = $"student.{unique}@example.com",
-            dateOfBirth = "2010-01-15"
+            // WHY these names: they match the properties of CreateStudentCommand.
+            // ASP.NET Core reads JSON property names case-insensitively, so
+            // "name" matches "Name", "zipCode" matches "ZipCode", and so on.
+            name          = $"Test Student {unique}",
+            email         = $"student.{unique}@example.com",
+            phoneNumber   = "01000000000",
+            dateOfBirth   = "2010-01-15",     // DateOnly is written as yyyy-MM-dd
+            gender        = "Male",           // CHANGE if your Gender enum uses other names
+            admissionDate = "2024-09-01",
+
+            // WHY all five address fields: the handler passes them straight into
+            // Address.Create. Missing ones become null, and that crashed the request.
+            city           = "Cairo",
+            state          = "Cairo",
+            zipCode        = "11511",
+            country        = "Egypt",
+            buildingNumber = 12
         });
 
         // WHY print the body: "expected 201, got 400" is useless. The body
@@ -75,8 +86,8 @@ public class AuthAndStudentsTests(WebApplicationFactory<Program> factory)
     private HttpClient CreateClient() =>
         factory.CreateClient(new WebApplicationFactoryClientOptions
         {
-            // WHY https: if you later set the auth cookie to SecurePolicy.Always,
-            // a cookie set over http would never be sent back. The in-memory
+            // WHY https: outside Development your cookies are "Secure", and a
+            // Secure cookie is never sent back over plain http. The in-memory
             // server ignores the scheme, so https costs nothing.
             BaseAddress = new Uri("https://localhost"),
 
@@ -98,7 +109,6 @@ public class AuthAndStudentsTests(WebApplicationFactory<Program> factory)
             throw new InvalidOperationException(
                 "Set TEST_ADMIN_EMAIL and TEST_ADMIN_PASSWORD (the same admin your seeder creates).");
 
-        // CHANGE if your login body uses different field names.
         return await PostJsonAsync(client, LoginUrl, new { email, password });
     }
 
@@ -118,6 +128,8 @@ public class AuthAndStudentsTests(WebApplicationFactory<Program> factory)
         return await client.SendAsync(request);
     }
 
+    // Asks your token endpoint for a CSRF token. This is the ONLY place
+    // CsrfTokenUrl is used, and this method sends no student data.
     private static async Task<string> GetCsrfTokenAsync(HttpClient client)
     {
         var response = await client.GetAsync(CsrfTokenUrl);
@@ -133,7 +145,7 @@ public class AuthAndStudentsTests(WebApplicationFactory<Program> factory)
                 doc.RootElement.TryGetProperty("token", out var t))
                 return t.GetString()!;
         }
-        catch (JsonException) {  }
+        catch (JsonException) { /* not JSON, so treat it as a bare token below */ }
 
         return raw.Trim('"');
     }
