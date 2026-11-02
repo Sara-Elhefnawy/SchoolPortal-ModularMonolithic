@@ -1,0 +1,8 @@
+{
+  "sdk": {
+    "version": "10.0.300",
+    /*if that exact version isn’t available, a newer patch/feature update of the same major.minor is fine*/
+    /*why? Without it, CI would fail every time a tiny SDK update comes out*/
+    "rollForward": "latestFeature"
+  }
+}

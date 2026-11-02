@@ -1,0 +1,104 @@
+name: CI
+
+# WHEN it runs: on every PR, and on every push to master (after a merge).
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    # Settings shared by every step in this job.
+    env:
+      ConnectionStrings__SchoolPortalDb: Host=localhost;Port=5432;Database=schoolportal_test;Username=postgres;Password=postgres
+      # Overrides Seed:Users:*:Email and :Password from appsettings / user-secrets.
+      # WHY override: CI shouldn't depend on your real emails, and the tests
+      # must know exactly which admin exists. These values are CI-only and die
+      # with the throwaway DB. Passwords must satisfy your Identity rules.
+      Seed__Users__Password: Ci-Passw0rd!2026
+      Seed__Users__Admin__Email: ci-admin@example.com
+      Seed__Users__Teacher__Email: ci-teacher@example.com
+      Seed__Users__Student__Email: ci-student@example.com
+      # Dummy value. The email module reads Email:AppPassword, and it may
+      # refuse to start without something there. CI never sends real emails.
+      Email__AppPassword: ci-not-a-real-password
+      # Read by the integration tests to log in. These MUST equal the Admin
+      # email and password above, because the tests log in as the seeded admin.
+      TEST_ADMIN_EMAIL: ci-admin@example.com
+      TEST_ADMIN_PASSWORD: Ci-Passw0rd!2026
+
+    # GitHub starts this container beside the job, so tests have a real DB.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: schoolportal_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    
+    steps:
+      # STEP 1: get the code.
+      # WHY first: the machine starts EMPTY. Every later step needs your files, so nothing else can run before this.
+      - name: Checkout
+        uses: actions/checkout@v4
+          
+      # STEP 2: install the .NET SDK.
+      # It must come AFTER checkout because it reads global.json from your repo.
+      # WHY global-json-file: global.json is the single source of truth for the SDK version,
+      # so CI uses the same SDK as your laptop. You change the version in ONE place.
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          global-json-file: global.json
+
+      # STEP 3: Restore downloads the NuGet packages your projects reference.
+      - name: Restore
+        run: dotnet restore
+      
+      # STEP 4: compiles your code into DLLs, which needs the SDK (step 2), the code (step 1) and the packages
+      # -c Release: build the Release configuration, which is what you ship
+      # --no-restore: step 3 already restored, so don't download again.
+      - name: Build
+        run: dotnet build --no-restore -c Release
+        
+      # STEP 5: create the tables
+      # "dotnet ef" is not part of the SDK, so install it (match your EF Core major version, 10).
+      - name: Install dotnet-ef
+        run: dotnet tool install --global dotnet-ef --version 10.*
+
+      # The CI database is empty. This is the same command you run by handlocally, once per module. 
+      # --no-build + --configuration Release reuse the build from the step above.
+      - name: Apply migrations (one per module)
+        run: |
+          dotnet ef database update --no-build --configuration Release --project SchoolPortal.Identities.Infrastructure/SchoolPortal.Identities.Infrastructure.csproj --startup-project SchoolPortal.Web/SchoolPortal.Web.csproj --context IdentityDbContext
+          dotnet ef database update --no-build --configuration Release --project SchoolPortal.Students.Infrastructure/SchoolPortal.Students.Infrastructure.csproj --startup-project SchoolPortal.Web/SchoolPortal.Web.csproj --context StudentsDbContext
+          dotnet ef database update --no-build --configuration Release --project SchoolPortal.Grades.Infrastructure/SchoolPortal.Grades.Infrastructure.csproj --startup-project SchoolPortal.Web/SchoolPortal.Web.csproj --context GradesDbContext
+          dotnet ef database update --no-build --configuration Release --project SchoolPortal.Attendances.Infrastructure/SchoolPortal.Attendances.Infrastructure.csproj --startup-project SchoolPortal.Web/SchoolPortal.Web.csproj --context AttendancesDbContext
+          dotnet ef database update --no-build --configuration Release --project SchoolPortal.Notifications.Infrastructure/SchoolPortal.Notifications.Infrastructure.csproj --startup-project SchoolPortal.Web/SchoolPortal.Web.csproj --context NotificationsDbContext
+  
+      # STEP 6:
+      # WHY: Program.cs stores Data Protection keys in /keys (a Docker volume in production).
+      # On the CI runner that folder doesn't exist, and the runner user can't create folders in the filesystem root.
+      # Data Protection is needed to issue the login cookie and CSRF tokens, so without this the
+      # tests fail at the first cookie. Create the folder and give the runner user ownership of it.
+      - name: Create Data Protection keys folder
+        run: |
+          sudo mkdir -p /keys
+          sudo chown "$USER" /keys
+      
+      # STEP 7: run the tests (this includes SchoolPortal.ArchTests).
+      # --no-build: step 4 already compiled, so don't compile again.
+      # -c Release: REQUIRED here too. --no-build only skips compiling, it still has to FIND the output, 
+      # and without -c Release it looks in bin/Debug, finds nothing, and errors: can’t find the test DLL.
+      # WHY it covers ArchTests: "dotnet test" runs every test project in the solution
+      - name: Test
+        run: dotnet test --no-build -c Release
