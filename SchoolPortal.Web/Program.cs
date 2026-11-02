@@ -60,12 +60,6 @@ public class Program
                 : CookieSecurePolicy.Always;
         });
         
-        // WHY a mounted volume: keys must outlive the container. The non-root "app" user needs write
-        // access to /keys, so create it in the Dockerfile and chown it to app.
-        builder.Services.AddDataProtection()
-            .PersistKeysToFileSystem(new DirectoryInfo("/keys"))
-            .SetApplicationName("SchoolPortal");
-        
         // Configure Data Protection to persist keys to a specific folder
         builder.Services.AddDataProtection()
             // Why SetApplicationName: keys are isolated per app name. Pinning it means a
