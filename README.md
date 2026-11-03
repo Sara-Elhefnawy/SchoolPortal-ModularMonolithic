@@ -1,3 +1,5 @@
+[![CI](https://github.com/Sara-Elhefnawy/SchoolPortal-ModularMonolithic/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/Sara-Elhefnawy/SchoolPortal-ModularMonolithic/actions/workflows/ci.yml)
+
 # SchoolPortal
 
 A school management system built as a **modular monolith** with ASP.NET Core. Students, grades and attendance run as separate modules inside one deployable application, with enforced boundaries between them.
