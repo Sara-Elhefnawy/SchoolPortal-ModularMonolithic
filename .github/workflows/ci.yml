@@ -95,10 +95,46 @@ jobs:
           sudo mkdir -p /keys
           sudo chown "$USER" /keys
       
-      # STEP 7: run the tests (this includes SchoolPortal.ArchTests).
+      # STEP 7: run the tests (this includes Architechture and integrations).
       # --no-build: step 4 already compiled, so don't compile again.
       # -c Release: REQUIRED here too. --no-build only skips compiling, it still has to FIND the output, 
       # and without -c Release it looks in bin/Debug, finds nothing, and errors: can’t find the test DLL.
-      # WHY it covers ArchTests: "dotnet test" runs every test project in the solution
+      # "dotnet test" runs every test project in the solution
+      # --logger trx: also write the results to a .trx file, so I can upload it.
+      # --results-directory: where those files go.
+      # WHY no LogFileName: I now have TWO test projects (ArchTests and IntegrationTests).
+      # A fixed file name would make the second overwrite the first.
+      # Without it, each project gets its own unique file name.
       - name: Test
-        run: dotnet test --no-build -c Release
+        run: >
+          dotnet test --no-build -c Release
+          --logger trx
+          --results-directory ./TestResults
+        
+      # STEP 8: Upload test results in artifact
+      # WHY "if: always()": the results matter MOST when tests fail, and a failed
+      # step would normally skip everything after it.
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: TestResults/**/*.trx
+          if-no-files-found: warn
+        
+  # A second, separate job: does the Dockerfile still build?
+  # WHY separate: it runs in parallel and gets its own check name, so I can tell
+  # "tests failed" from "Dockerfile broken" at a glance.
+  docker-build:
+    runs-on: ubuntu-latest
+    steps:
+      # The runner starts empty, so it needs my code (including the Dockerfile).
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # WHY plain "docker build": it does the one job I need. Nothing is pushed
+      # (no registry login, no secrets), and the image is thrown away with the runner.
+      # "." = build from the repo root, where the Dockerfile lives.
+      # Add caching only if builds become painfully slow.
+      - name: Build image (no push)
+        run: docker build -t schoolportal:ci .
