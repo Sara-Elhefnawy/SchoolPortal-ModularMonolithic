@@ -151,6 +151,10 @@ jobs:
     # WHY this if: the workflow also runs on pull requests, and we only want to publish after a push.
     if: github.event_name == 'push'
     
+    # Optional but recommended: don't publish an image unless the tests passed and the Dockerfile builds. 
+    #    # Without it, all three jobs start at the same time.
+    needs: [ build-and-test, docker-build ]
+    
     steps:
       # Step 1: Check out the code from the master branch
       - name: Checkout repository
@@ -183,3 +187,28 @@ jobs:
           # Tags must be entirely lowercase, Uses tags from Step 3
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+  deploy:
+    runs-on: ubuntu-latest
+    
+    # WHY needs: deploy only after the image is published. If build-and-push
+    # is skipped (on a PR), this job is skipped too.
+    needs: build-and-push
+    
+    # WHY if: never run a deploy from a pull request.
+    if: github.event_name == 'push'
+    
+    # WHY this line: it makes the job pause until a required reviewer
+    # approves, and it unlocks the secrets stored in the "production" environment.
+    # With it, the job pauses until a reviewer approves.
+    environment: production
+    
+    steps:
+      - name: Placeholder deploy step
+        # WHY env: the token is only released after approval, and passing it
+        # through env keeps it out of the command text.
+        env:
+          SNAPDEPLOY_API_KEY: ${{ secrets.SNAPDEPLOY_API_KEY }}
+        # WHY only the length: it proves the secret is wired without printing
+        # it. Replace this with the real redeploy call once I confirm which
+        # SnapDeploy API call redeploys an image-based container.
+        run: echo "Approved. Token length is ${#SNAPDEPLOY_API_KEY}. Image tag sha-${GITHUB_SHA::7}"
