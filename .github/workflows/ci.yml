@@ -187,6 +187,7 @@ jobs:
           # Tags must be entirely lowercase, Uses tags from Step 3
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+  # It tells the container host to get the new image instead of the old image the hist has
   deploy:
     runs-on: ubuntu-latest
     
@@ -203,12 +204,16 @@ jobs:
     environment: production
     
     steps:
-      - name: Placeholder deploy step
+      - name: Restart the container on SnapDeploy
         # WHY env: the token is only released after approval, and passing it
         # through env keeps it out of the command text.
         env:
           SNAPDEPLOY_API_KEY: ${{ secrets.SNAPDEPLOY_API_KEY }}
-        # WHY only the length: it proves the secret is wired without printing
-        # it. Replace this with the real redeploy call once I confirm which
-        # SnapDeploy API call redeploys an image-based container.
-        run: echo "Approved. Token length is ${#SNAPDEPLOY_API_KEY}. Image tag sha-${GITHUB_SHA::7}"
+          # WHY vars (not secrets): a container ID is not sensitive.
+          CONTAINER_ID: ${{ vars.SNAPDEPLOY_CONTAINER_ID }}
+        run: |
+          # WHY curl: it sends the web request to SnapDeploy.
+          # WHY --fail-with-body: if SnapDeploy refuses, the job turns red instead of pretending everything worked.
+          curl --fail-with-body --silent --show-error \
+            -X POST "https://snapdeploy.dev/api/mobile/containers/${CONTAINER_ID}/restart" \
+            -H "X-API-Key: ${SNAPDEPLOY_API_KEY}"
