@@ -1,11 +1,11 @@
 # Deployment decision
 
-Last updated: 2026-11-05
+Last updated: 2026-11-07
 
 ## Decision
 
 The SchoolPortal image runs on **SnapDeploy** (free tier). SnapDeploy pulls
-`ghcr.io/yourname/schoolportal` from GitHub Container Registry, and the app
+`ghcr.io/sara-elhefnawy/schoolportal` from GitHub Container Registry, and the app
 connects to a PostgreSQL database that stays on **MonsterASP**.
 
 ## How an update reaches production
@@ -14,13 +14,25 @@ connects to a PostgreSQL database that stays on **MonsterASP**.
 2. The CI workflow builds, tests, and publishes the image to GHCR with two
    tags: `sha-<short commit>` (one exact build, used for rollbacks) and
    `latest` (the newest build).
-3. SnapDeploy runs the image. [Fill in after the first deploy: how a new
-   image is redeployed, automatically or manually.]
+3. After I approve the deployment on the `production` GitHub environment, the
+   `deploy` job asks SnapDeploy to restart the container.
 
 The GHCR package is **public**, because the free tier runs public images. This
 is safe because the image contains no secrets. All settings (connection string,
 seed passwords, email password) are provided as environment variables on
 SnapDeploy and are never committed to the repository.
+
+## Deploy job
+
+- The `deploy` job runs only on a push to `master`, and only after
+  `build-and-push` has published the image.
+- It uses the `production` environment, so it pauses until I approve it and
+  can't read the environment's secrets before that.
+- The SnapDeploy API token is stored as the environment secret
+  `SNAPDEPLOY_API_KEY`. The container ID is stored as the environment variable
+  `SNAPDEPLOY_CONTAINER_ID`. Only the names are written here, never the values.
+- I have not yet verified the job end to end, and in particular I don't know
+  whether a restart picks up a new image.
 
 ## What the app needs from a host
 
@@ -60,16 +72,25 @@ SnapDeploy and are never committed to the repository.
 - The container sleeps after 15 minutes without traffic and takes about a
   minute to wake up.
 - The free tier allows 100 container-hours a month and 10 deploys a day, with
-  512 MB RAM and 0.25 vCPU. [Confirm these on the dashboard.]
-- `/keys` is not persistent [confirm], so Data Protection keys are lost when
-  the container restarts. Users have to log in again after the app wakes up.
-  A later improvement is to store the keys in the database.
+  512 MB RAM and 0.25 vCPU.
+- `/keys` is not persistent, because files written inside a free container are
+  gone after a sleep or a redeploy. Data Protection keys are lost when the
+  container restarts, so users have to log in again after the app wakes up. A
+  later improvement is to store the keys in the database.
 - The database is on another provider, so every query crosses the internet and
   is slower than a database next to the app.
-- Email sending from SnapDeploy is not verified yet. [Update after testing.]
+- Free containers can reach an external database only on ports up to 27017.
+  I still need to confirm which port my MonsterASP database uses.
+- Email sending from SnapDeploy has not been tested yet.
+- Each restart from the deploy job uses one of the 10 free deploys a day.
+- The container runs the `latest` tag. The `sha-` tags stay in GHCR, so I can
+  roll back by hand to an exact build.
+- The SnapDeploy token has the `deploy` scope, and SnapDeploy refuses deletes
+  for API tokens, so a leaked token can't delete anything.
 
 ## What would change this decision
 
-If I need always-on hosting, persistent storage, or a database next to the app,
-I will move to a small VM (Phase 8) and run the app and PostgreSQL with Docker
-Compose.
+SnapDeploy offers no documented way to switch a container to a new image tag
+automatically. If I need automatic deploys, always-on hosting, persistent
+storage, or a database next to the app, I will move to a small VM (Phase 8)
+and run the app and PostgreSQL with Docker Compose.
