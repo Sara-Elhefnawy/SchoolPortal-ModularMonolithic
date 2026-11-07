@@ -212,8 +212,31 @@ jobs:
           # WHY vars (not secrets): a container ID is not sensitive.
           CONTAINER_ID: ${{ vars.SNAPDEPLOY_CONTAINER_ID }}
         run: |
-          # WHY curl: it sends the web request to SnapDeploy.
-          # WHY --fail-with-body: if SnapDeploy refuses, the job turns red instead of pretending everything worked.
-          curl --fail-with-body --silent --show-error \
-            -X POST "https://snapdeploy.dev/api/mobile/containers/${CONTAINER_ID}/restart" \
-            -H "X-API-Key: ${SNAPDEPLOY_API_KEY}"
+          BASE="https://snapdeploy.dev/api/mobile/containers/${CONTAINER_ID}"
+          
+          # WHY try restart first: if the container is running, restart makes it come back up with the latest settings.
+          # WHY --write-out: it prints the HTTP status code so the script can decide what to do next.
+          # The reply body goes to response.json.
+          STATUS=$(curl --silent --show-error --output response.json --write-out "%{http_code}" \
+            -X POST "${BASE}/restart" \
+            -H "X-API-Key: ${SNAPDEPLOY_API_KEY}")
+          
+          # WHY this check: free containers sleep after 15 minutes idle, so at deploy time the container is often stopped,
+          # and restart refuses to act on a stopped container. Only this specific refusal should lead to "start".
+          # Any other error must still fail the job.
+          if [ "$STATUS" = "409" ] && grep -q "CONTAINER_NOT_RUNNING" response.json; then
+            echo "Container is stopped, starting it instead."
+            STATUS=$(curl --silent --show-error --output response.json --write-out "%{http_code}" \
+              -X POST "${BASE}/start" \
+              -H "X-API-Key: ${SNAPDEPLOY_API_KEY}")
+          fi
+          
+          # WHY fail unless the code starts with 2: plain "curl" would pass silently now, 
+          # because --write-out hides the error exit code.
+          # The reply contains no secrets (SnapDeploy never returns values to API keys).
+          cat response.json
+          echo
+          if [ "${STATUS:0:1}" != "2" ]; then
+            echo "SnapDeploy replied with HTTP $STATUS"
+            exit 1
+          fi
