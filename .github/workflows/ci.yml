@@ -173,7 +173,7 @@ jobs:
         id: meta 
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/Sara-Elhefnawy/schoolportal
+          images: ghcr.io/sara-elhefnawy/schoolportal
           tags: |
             type=sha,format=short
             type=raw,value=latest
@@ -214,16 +214,16 @@ jobs:
         run: |
           BASE="https://snapdeploy.dev/api/mobile/containers/${CONTAINER_ID}"
           
-          # WHY try restart first: if the container is running, restart makes it come back up with the latest settings.
+          # WHY try restart first: if the container is running, restart makes it come back up.
           # WHY --write-out: it prints the HTTP status code so the script can decide what to do next.
           # The reply body goes to response.json.
           STATUS=$(curl --silent --show-error --output response.json --write-out "%{http_code}" \
             -X POST "${BASE}/restart" \
             -H "X-API-Key: ${SNAPDEPLOY_API_KEY}")
           
-          # WHY this check: free containers sleep after 15 minutes idle, so at deploy time the container is often stopped,
-          # and restart refuses to act on a stopped container. Only this specific refusal should lead to "start".
-          # Any other error must still fail the job.
+          # WHY this check: free containers sleep after 15 minutes idle, so at deploy time
+          # the container is often stopped, and restart refuses to act on a stopped container.
+          # Only this specific refusal should lead to "start". Any other error must still fail the job.
           if [ "$STATUS" = "409" ] && grep -q "CONTAINER_NOT_RUNNING" response.json; then
             echo "Container is stopped, starting it instead."
             STATUS=$(curl --silent --show-error --output response.json --write-out "%{http_code}" \
@@ -231,8 +231,8 @@ jobs:
               -H "X-API-Key: ${SNAPDEPLOY_API_KEY}")
           fi
           
-          # WHY fail unless the code starts with 2: plain "curl" would pass silently now, 
-          # because --write-out hides the error exit code.
+          # WHY fail unless the code starts with 2: --write-out hides curl's own error exit code,
+          # so the script has to check the status itself.
           # The reply contains no secrets (SnapDeploy never returns values to API keys).
           cat response.json
           echo
@@ -240,3 +240,31 @@ jobs:
             echo "SnapDeploy replied with HTTP $STATUS"
             exit 1
           fi
+
+      - name: Wait until the app is ready
+        # WHY vars: the address is public, so a variable is enough.
+        env:
+          BASE_URL: ${{ vars.APP_BASE_URL }}
+        run: |
+          # WHY ${BASE_URL%/}: removes a trailing slash, so I never build "//health".
+          URL="${BASE_URL%/}/health/ready"
+
+          # WHY a loop: a stopped container needs about a minute to wake up and
+          # the app needs a few seconds to start, so the first tries will fail.
+          for attempt in $(seq 1 20); do
+            # WHY --max-time 15: one slow reply must not hang the whole job.
+            # WHY "|| true": if curl can't connect at all, the script keeps trying
+            # instead of stopping. The status then reads 000.
+            STATUS=$(curl --silent --output /dev/null --write-out "%{http_code}" --max-time 15 "$URL" || true)
+            echo "Attempt $attempt: HTTP $STATUS"
+
+            if [ "$STATUS" = "200" ]; then
+              echo "App is ready."
+              exit 0
+            fi
+            sleep 10
+          done
+
+          # WHY exit 1: this makes the job (and the run) go red.
+          echo "App did not return 200 from $URL in time."
+          exit 1
