@@ -1,6 +1,6 @@
 # Deployment decision
 
-Last updated: 2026-11-07
+Last updated: 2026-11-09
 
 ## Decision
 
@@ -15,7 +15,10 @@ connects to a PostgreSQL database that stays on **MonsterASP**.
    tags: `sha-<short commit>` (one exact build, used for rollbacks) and
    `latest` (the newest build).
 3. After I approve the deployment on the `production` GitHub environment, the
-   `deploy` job asks SnapDeploy to restart the container.
+   `deploy` job asks SnapDeploy to restart the container, or to start it if it
+   is stopped.
+4. The job then checks `/health/ready` and fails if the app does not answer
+   with HTTP 200.
 
 The GHCR package is **public**, because the free tier runs public images. This
 is safe because the image contains no secrets. All settings (connection string,
@@ -30,9 +33,19 @@ SnapDeploy and are never committed to the repository.
   can't read the environment's secrets before that.
 - The SnapDeploy API token is stored as the environment secret
   `SNAPDEPLOY_API_KEY`. The container ID is stored as the environment variable
-  `SNAPDEPLOY_CONTAINER_ID`. Only the names are written here, never the values.
-- I have not yet verified the job end to end, and in particular I don't know
-  whether a restart picks up a new image.
+  `SNAPDEPLOY_CONTAINER_ID`, and the public address of the app (used by the
+  health check) as the environment variable `APP_BASE_URL`. Only the names are
+  written here, never the values.
+- The job first asks SnapDeploy to restart the container. Free containers sleep
+  after 15 minutes without traffic, and SnapDeploy refuses to restart a
+  stopped container (HTTP 409), so in that case the job starts it instead.
+  Any other error fails the job.
+- After that, the job calls `/health/ready` every 10 seconds, up to 20 times,
+  and fails unless it gets HTTP 200. This shows that the app is up, not that
+  the new version is the one running. It does not roll anything back
+  automatically.
+- I have checked that the job reaches SnapDeploy. I have not yet verified that
+  a restart or start picks up a new image.
 
 ## What the app needs from a host
 
@@ -78,15 +91,50 @@ SnapDeploy and are never committed to the repository.
   container restarts, so users have to log in again after the app wakes up. A
   later improvement is to store the keys in the database.
 - The database is on another provider, so every query crosses the internet and
-  is slower than a database next to the app.
-- Free containers can reach an external database only on ports up to 27017.
-  I still need to confirm which port my MonsterASP database uses.
-- Email sending from SnapDeploy has not been tested yet.
-- Each restart from the deploy job uses one of the 10 free deploys a day.
+  is slower than a database next to the app. The app does connect to it from
+  SnapDeploy, which also shows the port is allowed (free containers can reach
+  an external database only on ports up to 27017).
+- SnapDeploy can reach Gmail's SMTP server. Sending needs a real Gmail app
+  password in `Email__AppPassword`, and a wrong password gets an
+  authentication error from Gmail.
+- Each restart or start from the deploy job uses one of the 10 free deploys a
+  day.
 - The container runs the `latest` tag. The `sha-` tags stay in GHCR, so I can
   roll back by hand to an exact build.
+- A failed health check only turns the run red. Rolling back is manual (see
+  below).
 - The SnapDeploy token has the `deploy` scope, and SnapDeploy refuses deletes
   for API tokens, so a leaked token can't delete anything.
+
+## Manual rollback
+
+Every merge to `master` publishes an image tagged `sha-<first 7 characters of
+the commit>`. These tags never change, so rolling back means running the
+previous good tag instead of the bad one.
+
+1. Find the last good version: GitHub, then Packages, then `schoolportal`, then
+   the tags list. Or open the Actions run of the last good merge. The tag is
+   `sha-` plus the first 7 characters of that commit.
+2. In the SnapDeploy dashboard, open the container and change the image tag
+   from `latest` to `sha-<previous>`, then redeploy. If the dashboard has no
+   such option, create a new container from
+   `ghcr.io/sara-elhefnawy/schoolportal:sha-<previous>` with the same port and
+   the same environment variables, and start it.
+3. Check `/health/ready` on the app's address and the container logs, then try
+   the main pages.
+4. After the bug is fixed and a new image is merged, set the container back to
+   `latest` (or to the new `sha-` tag). While it is pinned to an old tag, the
+   deploy job does not change what runs.
+
+Limits of a rollback:
+
+- Rolling back the image does not roll back the database. If the bad release
+  included a migration, the old code may not match the new schema. I avoid
+  destructive migrations, and a backup is needed to undo one.
+- A new container gets a new URL. In that case I update `App__PublicBaseUrl`
+  in SnapDeploy, and `SNAPDEPLOY_CONTAINER_ID` and `APP_BASE_URL` in the GitHub
+  `production` environment, if the pipeline should point at it.
+- Free accounts allow 4 containers and 10 deploys a day.
 
 ## What would change this decision
 
