@@ -1,0 +1,123 @@
+# LEARNING COPY: not used by any build. The real file is "Dockerfile".
+# Same steps as the real one, with the "why" explained.
+
+# ---------- Stage 1: build ----------
+# Why the SDK image: it has the compiler and NuGet tooling needed to build.
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+
+# Why: without it your files sit in the same folder as the Linux system folders,
+# because inside a Docker build you're working in a small Linux filesystem.
+# It works, but it's messy, and your src/ could collide with something system-related.
+# With WORKDIR /repo: your files are untouched and everything of your src/ is in a
+# separate /repo folder. This folder exists only in the build stage.
+WORKDIR /repo
+
+# Why global.json before restore: it pins which SDK version dotnet must use.
+# Restore reads it, so it must be present here, otherwise restore ignores the pin
+# and a version mismatch only shows up later, after the slow steps.
+COPY global.json ./
+
+# Why .csproj files first: restore only needs the project files, so Docker caches
+# the restore layer until a package or project reference changes. Editing a .cs
+# file won't redo it.
+# Why --parents: copies every matching file and KEEPS its folder path
+# (SchoolPortal.Web/SchoolPortal.Web.csproj stays in its own folder), because
+# project references need the same relative layout as the repo.
+# One line replaces 18 COPY lines, which keeps the Dockerfile under SnapDeploy's
+# 3,000-byte limit. Needs a recent BuildKit.
+COPY --parents SchoolPortal.*/*.csproj ./
+
+# Why: downloads the NuGet packages for Web and every project it references,
+# and writes obj/project.assets.json (what the compiler reads).
+# It is the slow, internet-bound step. Because of the COPY above, it re-runs 
+# when global.json or a .csproj changes
+RUN dotnet restore SchoolPortal.Web/SchoolPortal.Web.csproj
+
+# Why the source only now: any code change invalidates the cache from here down,
+# but the slow restore layer above stays cached.
+COPY . .
+
+# Why install dotnet-ef here: the EF Core CLI is an external tool. We install it
+# globally inside the heavy SDK image so we can compile migration bundles.
+RUN dotnet tool install --global dotnet-ef
+# Why: global tools live in /root/.dotnet/tools, which is not on PATH by default.
+ENV PATH="$PATH:/root/.dotnet/tools"
+
+# Why ARG and not ENV: it is visible to RUN steps only during the build and is not
+# baked into the image's environment. It does not reach the final stage either way.
+# Why a fake value: bundle creation only needs the DbContext to CONSTRUCT.
+# It never opens a connection. The real value is passed at run time with --connection.
+ARG ConnectionStrings__SchoolPortalDb="Host=build-time-placeholder;Database=placeholder;Username=placeholder;Password=placeholder"
+
+# Why a loop with a restore inside it: each 'bundle' call re-restores the shared
+# startup project with a linux-x64 runtime and overwrites obj/project.assets.json.
+# Without resetting it, the next bundle starts from a modified file and fails (NETSDK1047).
+# Why 'set -e': stop at the first failure instead of silently continuing to a broken image.
+# Why explicit "Module:Context" pairs: the context names do not all follow one pattern
+# (Identities did not), so each pair states its context name directly.
+# -o: the destination path inside the /app/bundles directory.
+# --self-contained -r linux-x64: the bundle carries its own runtime, so the final
+# image can run it without the SDK.
+RUN set -e; \
+    for pair in \
+      Students:StudentsDbContext \
+      Notifications:NotificationsDbContext \
+      Grades:GradesDbContext \
+      Identities:IdentityDbContext \
+      Attendances:AttendancesDbContext; do \
+      m="${pair%%:*}"; ctx="${pair##*:}"; \
+      lower=$(echo "$m" | tr '[:upper:]' '[:lower:]'); \
+      echo "=== Bundling $m ($ctx) ==="; \
+      dotnet restore SchoolPortal.Web/SchoolPortal.Web.csproj; \
+      dotnet ef migrations bundle --context "$ctx" \
+        --project "SchoolPortal.${m}.Infrastructure/SchoolPortal.${m}.Infrastructure.csproj" \
+        --startup-project SchoolPortal.Web/SchoolPortal.Web.csproj \
+        -o "/app/bundles/migrate-${lower}" --self-contained -r linux-x64; \
+    done
+
+# Why: -c Release turns the compiler optimizer on and removes debug-only code
+# (#if DEBUG, Debug.Assert). Default is Debug, which runs slower and is meant
+# for stepping through code in an IDE.
+# --no-restore: restore already ran in the step above (the bundle loop re-ran it too).
+# -o /app: one known folder for stage 2 to copy.
+RUN dotnet publish SchoolPortal.Web/SchoolPortal.Web.csproj -c Release -o /app --no-restore
+
+
+# ---------- Stage 2: runtime ----------
+# Why aspnet and not sdk: it only has what's needed to run the app.
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
+WORKDIR /app
+
+# Why copy before USER: files stay owned by root, so the app can read but not modify its own binaries.
+COPY --from=build /app .
+
+# Why create /keys here, as root, then chown it: Docker copies a folder's ownership
+# into an EMPTY named volume the first time it is mounted. Without this, the volume
+# is root-owned and the non-root app can't write its keys, so you'd get a permission error.
+RUN mkdir /keys && chown $APP_UID /keys
+
+# Why http://+:8080: "+" means all interfaces. Default localhost binding would
+# be unreachable from outside the container, so -p 8080:8080 would do nothing.
+# Why 8080: a non-root user can't bind ports below 1024.
+# http://+:8080 is the same as http://0.0.0.0:8080
+ENV ASPNETCORE_URLS=http://+:8080
+
+# Why EXPOSE: documentation only. It records "this app listens on 8080" in the image
+# metadata for people and tools. It does NOT open or publish anything.
+# The -p flag at docker run does that.
+EXPOSE 8080
+
+# Why before USER: apt-get needs root. We install only curl and delete the apt cache
+# so the layer stays small.
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends curl \
+ && rm -rf /var/lib/apt/lists/*
+
+# Why non-root: if the app is exploited, the attacker isn't root in the container.
+# APP_UID is defined by the aspnet image for its built-in "app" user.
+USER $APP_UID
+
+# Why exec form (JSON array): dotnet runs directly as PID 1, so docker stop's
+# SIGTERM reaches the app and it shuts down gracefully. Shell form would put
+# /bin/sh in front, and it may not forward the signal.
+ENTRYPOINT ["dotnet", "SchoolPortal.Web.dll"]
