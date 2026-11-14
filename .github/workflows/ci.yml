@@ -15,6 +15,7 @@ permissions:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     
     # Settings shared by every step in this job.
     env:
@@ -81,7 +82,7 @@ jobs:
       - name: Install dotnet-ef
         run: dotnet tool install --global dotnet-ef --version 10.*
 
-      # The CI database is empty. This is the same command you run by handlocally, once per module. 
+      # The CI database is empty. This is the same command you run by hand locally, once per module. 
       # --no-build + --configuration Release reuse the build from the step above.
       - name: Apply migrations (one per module)
         run: |
@@ -187,59 +188,106 @@ jobs:
           # Tags must be entirely lowercase, Uses tags from Step 3
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-  # It tells the container host to get the new image instead of the old image the hist has
+  # It tells SnapDeploy to build a new version from master.
   deploy:
     runs-on: ubuntu-latest
+    # WHY a timeout: a stuck build must not keep the job running for hours.
+    # A cold build took about 10 minutes locally, so 30 is generous but finite.
+    timeout-minutes: 30
     
-    # WHY needs: deploy only after the image is published. If build-and-push
-    # is skipped (on a PR), this job is skipped too.
-    needs: build-and-push
+    # don’t deploy unless tests pass and the Dockerfile builds
+    needs: [ build-and-test, docker-build ]
     
     # WHY if: never run a deploy from a pull request.
     if: github.event_name == 'push'
     
     # WHY this line: it makes the job pause until a required reviewer
     # approves, and it unlocks the secrets stored in the "production" environment.
-    # With it, the job pauses until a reviewer approves.
     environment: production
     
     steps:
-      - name: Restart the container on SnapDeploy
-        # WHY env: the token is only released after approval, and passing it
-        # through env keeps it out of the command text.
+      - name: Trigger a SnapDeploy build
+        id: trigger
         env:
           SNAPDEPLOY_API_KEY: ${{ secrets.SNAPDEPLOY_API_KEY }}
-          # WHY vars (not secrets): a container ID is not sensitive.
-          CONTAINER_ID: ${{ vars.SNAPDEPLOY_CONTAINER_ID }}
+          # WHY vars: an ID is not sensitive, same reasoning as the container ID before.
+          REPO_LINK_ID: ${{ vars.SNAPDEPLOY_REPO_LINK_ID }}
         run: |
-          BASE="https://snapdeploy.dev/api/mobile/containers/${CONTAINER_ID}"
-          
-          # WHY try restart first: if the container is running, restart makes it come back up.
-          # WHY --write-out: it prints the HTTP status code so the script can decide what to do next.
-          # The reply body goes to response.json.
-          STATUS=$(curl --silent --show-error --output response.json --write-out "%{http_code}" \
-            -X POST "${BASE}/restart" \
-            -H "X-API-Key: ${SNAPDEPLOY_API_KEY}")
-          
-          # WHY this check: free containers sleep after 15 minutes idle, so at deploy time
-          # the container is often stopped, and restart refuses to act on a stopped container.
-          # Only this specific refusal should lead to "start". Any other error must still fail the job.
-          if [ "$STATUS" = "409" ] && grep -q "CONTAINER_NOT_RUNNING" response.json; then
-            echo "Container is stopped, starting it instead."
-            STATUS=$(curl --silent --show-error --output response.json --write-out "%{http_code}" \
-              -X POST "${BASE}/start" \
-              -H "X-API-Key: ${SNAPDEPLOY_API_KEY}")
-          fi
-          
-          # WHY fail unless the code starts with 2: --write-out hides curl's own error exit code,
-          # so the script has to check the status itself.
-          # The reply contains no secrets (SnapDeploy never returns values to API keys).
-          cat response.json
-          echo
-          if [ "${STATUS:0:1}" != "2" ]; then
-            echo "SnapDeploy replied with HTTP $STATUS"
+          # WHY: stop on the first error, and treat unset variables as errors.
+          set -euo pipefail
+
+          # WHY Idempotency-Key = commit SHA: re-running this job for the SAME commit
+          # returns the original deployment instead of spending another of the 10 daily deploys.
+          # (The docs say this lasts about 10 minutes. If you re-run after a FAILED build of the
+          # same commit inside that window, you may get the failed deployment back.)
+          # WHY --fail-with-body: curl exits non-zero on HTTP 4xx/5xx but still prints the reason.
+          # WHY X-SnapDeploy-Client: the deployment history then shows the build came from CI.
+          RESPONSE=$(curl --silent --show-error --fail-with-body -X POST \
+            "https://snapdeploy.dev/api/mobile/github/link/${REPO_LINK_ID}/deploy" \
+            -H "X-API-Key: ${SNAPDEPLOY_API_KEY}" \
+            -H "Idempotency-Key: release-${GITHUB_SHA}" \
+            -H "X-SnapDeploy-Client: mcp/ci")
+
+          # WHY print the raw reply: the log then shows exactly what SnapDeploy answered.
+          # The reply contains no secrets (same as your old restart step).
+          # Per SnapDeploy's API reference it looks like {"status":"triggered","deploymentId":"…"}.
+          echo "$RESPONSE"
+
+          # WHY "// empty": if the field is missing, jq prints nothing instead of "null".
+          DEPLOYMENT_ID=$(echo "$RESPONSE" | jq -r '.deploymentId // empty')
+
+          # WHY fail here: no ID means no build started, and the next step would wait for nothing.
+          if [ -z "$DEPLOYMENT_ID" ]; then
+            echo "No deployment id in the reply, so no build was started."
             exit 1
           fi
+
+          # WHY GITHUB_OUTPUT: this is how one step hands a value to the next step.
+          echo "deployment_id=${DEPLOYMENT_ID}" >> "$GITHUB_OUTPUT"
+
+      - name: Wait for the SnapDeploy build to finish
+        env:
+          SNAPDEPLOY_API_KEY: ${{ secrets.SNAPDEPLOY_API_KEY }}
+          DEPLOYMENT_ID: ${{ steps.trigger.outputs.deployment_id }}
+        run: |
+          # WHY no "set -e" here: one failed poll (a network blip) must not kill the job.
+          # Each attempt handles its own errors.
+
+          # WHY a loop: the trigger call returns at once, but the build takes minutes,
+          # and the OLD version keeps answering until the new one is ready.
+          # 60 attempts x 15 s = 15 minutes maximum.
+          for attempt in $(seq 1 60); do
+            # WHY "|| true": if curl fails this time, keep trying instead of stopping.
+            RESPONSE=$(curl --silent --max-time 20 \
+              "https://snapdeploy.dev/api/mobile/deployments/${DEPLOYMENT_ID}" \
+              -H "X-API-Key: ${SNAPDEPLOY_API_KEY}" || true)
+
+            STATUS=$(echo "$RESPONSE" | jq -r '.status // "UNKNOWN"')
+            # WHY "// empty": a successful deployment has errorMessage = null, which becomes "".
+            ERROR=$(echo "$RESPONSE" | jq -r '.errorMessage // empty')
+            echo "Attempt ${attempt}: status = ${STATUS}"
+          
+            # SUCCESS: COMPLETED is the status of a finished deployment.
+            if [ "$STATUS" = "COMPLETED" ]; then
+              echo "Build finished."
+              exit 0
+            fi
+
+            # FAILURE: SnapDeploy's terminal statuses are COMPLETED, FAILED, CANCELLED and ROLLED_BACK.
+            # FAIL|ERROR|CANCEL|ROLLED matches the last three. An error message also counts as a failure.
+            if [ -n "$ERROR" ] || echo "$STATUS" | grep -Eiq 'FAIL|ERROR|CANCEL|ROLLED'; then
+              echo "Build failed: ${ERROR}"
+              # WHY print the log tail: it explains WHY, so you don't have to open the dashboard.
+              echo "$RESPONSE" | jq -r '.buildLogsTail // empty'
+              exit 1
+            fi
+          
+            sleep 15
+          done
+
+          # WHY exit 1: reaching here means no result in 15 minutes, and silence must not look like success.
+          echo "Timed out waiting for the build."
+          exit 1
 
       - name: Wait until the app is ready
         # WHY vars: the address is public, so a variable is enough.
