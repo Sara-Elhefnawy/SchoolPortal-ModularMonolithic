@@ -250,8 +250,12 @@ jobs:
           SNAPDEPLOY_API_KEY: ${{ secrets.SNAPDEPLOY_API_KEY }}
           DEPLOYMENT_ID: ${{ steps.trigger.outputs.deployment_id }}
         run: |
-          # WHY no "set -e" here: one failed poll (a network blip) must not kill the job.
-          # Each attempt handles its own errors.
+          # GitHub runs this step with "bash -e", so a failed command would stop the job.
+          # The "|| true" after curl is what keeps one failed poll (a network blip) from
+          # killing the job. Each attempt handles its own errors.
+
+          # WHY a counter: FAILED must last for several polls before I believe it.
+          FAILED_POLLS=0
 
           # WHY a loop: the trigger call returns at once, but the build takes minutes,
           # and the OLD version keeps answering until the new one is ready.
@@ -273,13 +277,27 @@ jobs:
               exit 0
             fi
 
-            # FAILURE: SnapDeploy's terminal statuses are COMPLETED, FAILED, CANCELLED and ROLLED_BACK.
-            # FAIL|ERROR|CANCEL|ROLLED matches the last three. An error message also counts as a failure.
-            if [ -n "$ERROR" ] || echo "$STATUS" | grep -Eiq 'FAIL|ERROR|CANCEL|ROLLED'; then
-              echo "Build failed: ${ERROR}"
-              # WHY print the log tail: it explains WHY, so you don't have to open the dashboard.
+            # CANCELLED and ROLLED_BACK are treated as final.
+            if echo "$STATUS" | grep -Eiq 'CANCEL|ROLLED'; then
+              echo "Build ended with status ${STATUS}: ${ERROR}"
               echo "$RESPONSE" | jq -r '.buildLogsTail // empty'
               exit 1
+            fi
+
+            # WHY a grace period for FAILED: in a real run SnapDeploy showed FAILED about
+            # 75 seconds in, and the same deployment still finished COMPLETED later.
+            # So only believe FAILED if it stays FAILED.
+            if [ "$STATUS" = "FAILED" ]; then
+              FAILED_POLLS=$((FAILED_POLLS + 1))
+              echo "  FAILED seen ${FAILED_POLLS} time(s) in a row"
+              # 24 polls x 15 s = 6 minutes. Tune this number after more runs.
+              if [ "$FAILED_POLLS" -ge 24 ]; then
+                echo "Build failed: ${ERROR}"
+                echo "$RESPONSE" | jq -r '.buildLogsTail // empty'
+                exit 1
+              fi
+            else
+              FAILED_POLLS=0
             fi
           
             sleep 15
